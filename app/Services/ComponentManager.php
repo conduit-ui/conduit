@@ -4,8 +4,6 @@ namespace App\Services;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\File;
 use GuzzleHttp\Client;
 use Carbon\Carbon;
 
@@ -14,60 +12,92 @@ use Carbon\Carbon;
  * 
  * Handles component discovery, installation, registration, and lifecycle management.
  * Components are external packages that extend Conduit through service providers.
+ * 
+ * Now uses database storage instead of config file mutations.
  */
 class ComponentManager
 {
-    protected string $componentsConfigPath;
-    protected string $appConfigPath;
+    public function __construct(
+        private ComponentStorage $storage
+    ) {}
 
-    public function __construct()
+    /**
+     * Initialize database storage if not already done
+     */
+    public function ensureStorageInitialized(): void
     {
-        $this->componentsConfigPath = config_path('components.php');
-        $this->appConfigPath = config_path('app.php');
+        $this->configureDatabaseIfNeeded();
+        
+        if (!$this->storage->isDatabaseInitialized()) {
+            throw new \RuntimeException(
+                'Conduit database not initialized. Run: php conduit storage:init'
+            );
+        }
+    }
+
+    /**
+     * Configure database connection for Conduit storage
+     */
+    private function configureDatabaseIfNeeded(): void
+    {
+        $dbPath = $this->getDatabasePath();
+        
+        if (file_exists($dbPath)) {
+            config([
+                'database.default' => 'conduit_sqlite',
+                'database.connections.conduit_sqlite' => [
+                    'driver' => 'sqlite',
+                    'database' => $dbPath,
+                    'prefix' => '',
+                    'foreign_key_constraints' => true,
+                ]
+            ]);
+        }
+    }
+
+    /**
+     * Get the database path
+     */
+    private function getDatabasePath(): string
+    {
+        $homeDir = $_SERVER['HOME'] ?? $_SERVER['USERPROFILE'] ?? '';
+        $conduitDir = $homeDir . '/.conduit';
+        
+        return $conduitDir . '/conduit.sqlite';
     }
 
     public function isInstalled(string $name): bool
     {
-        $installed = config('components.installed', []);
-        return isset($installed[$name]) && $installed[$name]['status'] === 'active';
+        $this->ensureStorageInitialized();
+        return $this->storage->isInstalled($name);
     }
 
     public function getInstalled(): array
     {
-        return config('components.installed', []);
+        $this->ensureStorageInitialized();
+        return $this->storage->getInstalled();
     }
 
     public function getRegistry(): array
     {
+        // Registry is still from static config as it's read-only
         return config('components.registry', []);
     }
 
     public function register(string $name, array $componentInfo, string $version = null): void
     {
+        $this->ensureStorageInitialized();
+        
         $componentInfo['status'] = 'active';
         $componentInfo['installed_at'] = Carbon::now()->toISOString();
         
-        if ($version) {
-            $componentInfo['version'] = $version;
-        }
-
-        $this->updateComponentsConfig($name, $componentInfo);
-        $this->registerServiceProviders($componentInfo['service_providers'] ?? []);
+        $this->storage->registerComponent($name, $componentInfo, $version);
     }
 
     public function unregister(string $name): void
     {
-        $installed = config('components.installed', []);
-        
-        if (!isset($installed[$name])) {
-            return;
-        }
-
-        $component = $installed[$name];
-        $this->unregisterServiceProviders($component['service_providers'] ?? []);
-        
-        unset($installed[$name]);
-        $this->writeComponentsConfig(['installed' => $installed]);
+        $this->ensureStorageInitialized();
+        $this->storage->unregisterComponent($name);
     }
 
     public function discoverComponents(): array
@@ -172,7 +202,8 @@ class ComponentManager
      */
     public function getGlobalSetting(string $key, mixed $default = null): mixed
     {
-        return config("components.settings.{$key}", $default);
+        $this->ensureStorageInitialized();
+        return $this->storage->getSetting($key, $default);
     }
 
     /**
@@ -180,9 +211,8 @@ class ComponentManager
      */
     public function updateGlobalSetting(string $key, mixed $value): void
     {
-        $config = config('components', []);
-        $config['settings'][$key] = $value;
-        $this->writeComponentsConfig($config);
+        $this->ensureStorageInitialized();
+        $this->storage->setSetting($key, $value);
     }
 
     /**
@@ -190,88 +220,24 @@ class ComponentManager
      */
     public function getGlobalSettings(): array
     {
-        return config('components.settings', []);
+        $this->ensureStorageInitialized();
+        return $this->storage->getAllSettings();
     }
 
-    protected function updateComponentsConfig(string $name, array $componentInfo): void
+    /**
+     * Get registered service providers
+     */
+    public function getServiceProviders(): array
     {
-        $config = config('components', []);
-        $config['installed'][$name] = $componentInfo;
-        $this->writeComponentsConfig($config);
+        $this->ensureStorageInitialized();
+        return $this->storage->getServiceProviders();
     }
 
-    protected function writeComponentsConfig(array $config): void
+    /**
+     * Migrate existing config data to database storage
+     */
+    public function migrateFromConfig(): array
     {
-        $content = "<?php\n\nreturn " . $this->arrayToString($config) . ";\n";
-        File::put($this->componentsConfigPath, $content);
-        
-        // Reload the config
-        Config::set('components', $config);
-    }
-
-    protected function registerServiceProviders(array $providers): void
-    {
-        $appConfig = include $this->appConfigPath;
-        
-        foreach ($providers as $provider) {
-            if (!in_array($provider, $appConfig['providers'])) {
-                $appConfig['providers'][] = $provider;
-            }
-        }
-
-        $this->writeAppConfig($appConfig);
-    }
-
-    protected function unregisterServiceProviders(array $providers): void
-    {
-        $appConfig = include $this->appConfigPath;
-        
-        $appConfig['providers'] = array_values(
-            array_filter($appConfig['providers'], function ($provider) use ($providers) {
-                return !in_array($provider, $providers);
-            })
-        );
-
-        $this->writeAppConfig($appConfig);
-    }
-
-    protected function writeAppConfig(array $config): void
-    {
-        $content = "<?php\n\nreturn " . $this->arrayToString($config) . ";\n";
-        File::put($this->appConfigPath, $content);
-    }
-
-    protected function arrayToString(array $array, int $depth = 0): string
-    {
-        $indent = str_repeat('  ', $depth);
-        $result = "array (\n";
-
-        foreach ($array as $key => $value) {
-            $result .= $indent . '  ';
-            
-            if (is_string($key)) {
-                $result .= "'{$key}' => ";
-            } else {
-                $result .= "{$key} => ";
-            }
-
-            if (is_array($value)) {
-                $result .= $this->arrayToString($value, $depth + 1);
-            } elseif (is_string($value)) {
-                $escaped = addslashes($value);
-                $result .= "'{$escaped}'";
-            } elseif (is_bool($value)) {
-                $result .= $value ? 'true' : 'false';
-            } elseif (is_null($value)) {
-                $result .= 'null';
-            } else {
-                $result .= $value;
-            }
-
-            $result .= ",\n";
-        }
-
-        $result .= $indent . ')';
-        return $result;
+        return $this->storage->migrateFromConfig();
     }
 }
