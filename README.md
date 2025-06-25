@@ -1,103 +1,45 @@
-# 🚀 Conduit v1.0.0
+# Conduit Core
 
-> Your personal developer API & MCP integration engine - AI-ready GitHub CLI and beyond
+Core functionality library for the Conduit ecosystem - shared services, interfaces, and component management.
 
-[![Latest Version](https://img.shields.io/packagist/v/jordanpartridge/conduit.svg?style=flat-square)](https://packagist.org/packages/jordanpartridge/conduit)
-[![Total Downloads](https://img.shields.io/packagist/dt/jordanpartridge/conduit.svg?style=flat-square)](https://packagist.org/packages/jordanpartridge/conduit)
-[![License](https://img.shields.io/packagist/l/jordanpartridge/conduit.svg?style=flat-square)](https://packagist.org/packages/jordanpartridge/conduit)
-
-Conduit is a **modular, extensible CLI platform** built with Laravel Zero that transforms your development workflow. Starting with powerful GitHub integration, it features a revolutionary component system that makes adding new tools as simple as running `conduit install:service`.
-
-## ✨ What's New in v1.0.0
-
-### 🧩 **Modular Component System**
-- **Dynamic installation**: Add integrations on-demand without rebuilding
-- **GitHub discovery**: Auto-discover components via topics
-- **Clean lifecycle**: Install, configure, and remove components seamlessly
-- **Config-driven**: No database dependencies, pure configuration
-
-### 🐙 **GitHub Zero Integration** 
-- **Interactive workflows**: Rich Laravel Prompts UI for all operations
-- **Smart repository management**: Browse, clone, and manage repos with ease
-- **Environment automation**: Automatic `.env` setup with token validation
-- **Service provider magic**: Seamless Laravel Zero integration
-
-## 🚀 Installation
-
-### Via Composer (Recommended)
-```bash
-composer global require jordanpartridge/conduit
-```
-
-### Via GitHub Releases
-```bash
-# Download latest PHAR
-curl -L https://github.com/jordanpartridge/conduit/releases/latest/download/conduit.phar -o conduit
-chmod +x conduit
-sudo mv conduit /usr/local/bin/conduit
-```
-
-### Development Setup
-```bash
-git clone https://github.com/jordanpartridge/conduit.git
-cd conduit
-composer install
-```
-
-## 🎯 Quick Start
+## Installation
 
 ```bash
-# Install GitHub integration
-conduit install:github
-
-# Browse your repositories interactively
-conduit repos --interactive
-
-# Clone a repository with smart selection  
-conduit clone --interactive
-
-# Manage installed components
-conduit components
-
-# List all available commands
-conduit list
+composer require conduit-io/core
 ```
 
-## 🧩 Component Architecture
+## Usage
 
-Conduit's revolutionary component system allows you to:
+This package provides the foundation for building Conduit components:
 
-```bash
-# Discover available integrations
-conduit components
+- Component interfaces and contracts
+- Database storage for component metadata  
+- Base services for component management
+- Shared utilities and patterns
 
-# Install new integrations dynamically
-conduit install:github
-conduit install:docker    # Coming soon
-conduit install:aws       # Coming soon
+## Component Development
 
-# Remove integrations cleanly
-conduit uninstall:github
+Extend the base `ComponentInterface` to create new Conduit components:
+
+```php
+use ConduitIo\Core\Contracts\ComponentInterface;
+
+class MyComponent implements ComponentInterface
+{
+    public function getName(): string
+    {
+        return 'my-component';
+    }
+    
+    // ... implement other methods
+}
 ```
 
-### Available Components
-- **🐙 GitHub Zero**: Repository management, cloning, and exploration
-- **🐳 Docker** *(planned)*: Container management and orchestration
-- **☁️ AWS Toolkit** *(planned)*: Cloud infrastructure helpers
-- **🗄️ Database Tools** *(planned)*: Migration and seeding utilities
+## Architecture
 
-## 🤖 AI-Ready Architecture
+This package is designed to be used by:
+- `conduit-io/conduit` - Main CLI application
+- `conduit-io/*-connector` - Individual component packages
+- Third-party component developers
 
-Conduit is built from the ground up for AI integration:
-- **Structured commands**: Perfect for AI tool integration
-- **Rich metadata**: Commands expose detailed help and options  
-- **Context-aware**: Smart defaults based on project detection
-- **MCP Protocol ready**: Foundation for Model Context Protocol servers
-
-## Development
-
-This project is built with Laravel Zero and uses the `jordanpartridge/github-client` package for GitHub operations.
-
-## License
-
-MIT
+Co-Authored-By: Conduit Assistant <noreply@conduit.io>
