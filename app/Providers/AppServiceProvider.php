@@ -11,6 +11,7 @@ use App\Services\ComponentInstallationService;
 use App\Services\ComponentManager;
 use App\Services\ComponentPersistence;
 use App\Services\ComponentStorage;
+use App\Services\ContextDetectionService;
 use App\Services\SecurePackageInstaller;
 use App\Services\ServiceProviderDetector;
 use Illuminate\Support\ServiceProvider;
@@ -40,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
         // Register GitHub client with token from environment
         $this->app->singleton(GithubConnector::class, function () {
             $token = env('GITHUB_TOKEN');
+
             return new GithubConnector($token);
         });
 
@@ -47,5 +49,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ComponentDiscoveryService::class);
         $this->app->singleton(ServiceProviderDetector::class);
         $this->app->singleton(ComponentInstallationService::class);
+        $this->app->singleton(ContextDetectionService::class);
     }
 }

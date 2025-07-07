@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use JordanPartridge\GithubClient\GithubConnector;
 use JordanPartridge\GithubClient\Enums\Direction;
+use JordanPartridge\GithubClient\GithubConnector;
 
 /**
  * Service for discovering Conduit components via GitHub search
- * 
+ *
  * This service handles the discovery of Conduit components by searching
- * GitHub repositories with the 'conduit-component' topic. It uses the 
+ * GitHub repositories with the 'conduit-component' topic. It uses the
  * github-client library's search functionality for clean API integration.
  */
 class ComponentDiscoveryService
@@ -20,8 +20,9 @@ class ComponentDiscoveryService
 
     /**
      * Discover available Conduit components from GitHub
-     * 
+     *
      * @return array Array of component data with name, description, URL, etc.
+     *
      * @throws \Exception When GitHub API fails
      */
     public function discoverComponents(): array
@@ -37,7 +38,7 @@ class ComponentDiscoveryService
 
             // Filter out archived and disabled repositories
             $activeRepos = array_filter($searchResults->items, function ($repo) {
-                return !$repo->archived && !$repo->disabled;
+                return ! $repo->archived && ! $repo->disabled;
             });
 
             // Transform RepoData objects to Conduit component format
@@ -56,7 +57,7 @@ class ComponentDiscoveryService
             }, array_values($activeRepos));
 
         } catch (\Exception $e) {
-            throw new \Exception("Failed to discover components: " . $e->getMessage(), 0, $e);
+            throw new \Exception('Failed to discover components: '.$e->getMessage(), 0, $e);
         }
     }
 }

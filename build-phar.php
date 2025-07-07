@@ -1,8 +1,8 @@
 <?php
 
 if (Phar::canWrite()) {
-    if (! is_dir(__DIR__ . '/builds')) {
-        mkdir(__DIR__ . '/builds', 0777, true);
+    if (! is_dir(__DIR__.'/builds')) {
+        mkdir(__DIR__.'/builds', 0777, true);
     }
     $phar = new Phar('builds/conduit.phar');
     $phar->buildFromDirectory(__DIR__, '/\.(php|json)$/');

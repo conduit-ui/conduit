@@ -4,6 +4,7 @@ namespace App\Commands;
 
 use App\Services\ComponentInstallationService;
 use App\Services\ComponentManager;
+use App\Services\ContextDetectionService;
 use LaravelZero\Framework\Commands\Command;
 
 use function Laravel\Prompts\confirm;
@@ -22,11 +23,12 @@ class ComponentsCommand extends Command
     protected $signature = 'components 
                             {action? : Action to perform (list, discover, install, uninstall)}
                             {component? : Component name for install/uninstall operations}
-                            {--non-interactive : Run in non-interactive mode}';
+                            {--non-interactive : Run in non-interactive mode}
+                            {--show-context : Show current context and activation status}';
 
     protected $description = 'Manage Conduit components';
 
-    public function handle(ComponentManager $manager, ComponentInstallationService $installer): int
+    public function handle(ComponentManager $manager, ComponentInstallationService $installer, ContextDetectionService $contextService): int
     {
         try {
             $action = $this->argument('action');
@@ -58,7 +60,7 @@ class ComponentsCommand extends Command
             }
 
             return match ($action) {
-                'list' => $this->listInstalled($manager),
+                'list' => $this->listInstalled($manager, $contextService),
                 'discover' => $this->discoverComponents($manager),
                 'install' => $this->installComponent($manager, $installer),
                 'uninstall' => $this->uninstallComponent($manager, $installer),
@@ -70,7 +72,7 @@ class ComponentsCommand extends Command
         }
     }
 
-    protected function listInstalled(ComponentManager $manager): int
+    protected function listInstalled(ComponentManager $manager, ContextDetectionService $contextService): int
     {
         $installed = $manager->getInstalled();
 
@@ -81,12 +83,29 @@ class ComponentsCommand extends Command
             return Command::SUCCESS;
         }
 
+        // Get current context if requested
+        $currentEvents = [];
+        $showContext = $this->option('show-context');
+        if ($showContext) {
+            $currentEvents = $contextService->getActivationEvents();
+            $this->newLine();
+            $this->line('<fg=yellow>Current Context:</>');
+            foreach ($currentEvents as $event) {
+                $this->line('  • '.$event);
+            }
+        }
+
         $this->newLine();
         $this->line('<fg=green>Installed Components</>');
         $this->newLine();
 
-        $rows = collect($installed)->map(function ($component, $name) {
-            return [
+        $headers = ['Name', 'Package', 'Version', 'Status', 'Installed'];
+        if ($showContext) {
+            $headers[] = 'Active';
+        }
+
+        $rows = collect($installed)->map(function ($component, $name) use ($showContext, $currentEvents) {
+            $row = [
                 'Name' => $name,
                 'Package' => $component['package'] ?? 'N/A',
                 'Version' => $component['version'] ?? 'N/A',
@@ -95,9 +114,25 @@ class ComponentsCommand extends Command
                     ? \Carbon\Carbon::parse($component['installed_at'])->diffForHumans()
                     : 'Unknown',
             ];
+
+            if ($showContext) {
+                // Check if component has activation configuration
+                $activation = isset($component['activation'])
+                    ? \App\ValueObjects\ComponentActivation::fromArray($component['activation'])
+                    : null;
+
+                if ($activation) {
+                    $isActive = $activation->shouldActivate($currentEvents);
+                    $row['Active'] = $isActive ? '✓' : '✗';
+                } else {
+                    $row['Active'] = '✓'; // No activation config means always active
+                }
+            }
+
+            return $row;
         })->values()->toArray();
 
-        table(['Name', 'Package', 'Version', 'Status', 'Installed'], $rows);
+        table($headers, $rows);
 
         $this->showInteractiveStatus($manager);
 

@@ -3,6 +3,7 @@
 namespace App\Commands;
 
 use App\Services\ComponentManager;
+use App\Services\ContextDetectionService;
 use LaravelZero\Framework\Commands\Command;
 use Symfony\Component\Console\Helper\DescriptorHelper;
 
@@ -21,13 +22,15 @@ class SummaryCommand extends Command
 
     protected $description = 'List commands with enhanced status information';
 
-    public function handle(ComponentManager $manager): int
+    protected $hidden = true; // Hide from command list since it's the default
+
+    public function handle(ComponentManager $manager, ContextDetectionService $contextService): int
     {
         // Show standard command list first
         $this->showCommandList();
 
-        // Add enhanced status section
-        $this->showEnhancedStatus($manager);
+        // Add context-aware enhanced status section
+        $this->showContextAwareStatus($manager, $contextService);
 
         return Command::SUCCESS;
     }
@@ -47,15 +50,22 @@ class SummaryCommand extends Command
         );
     }
 
-    protected function showEnhancedStatus(ComponentManager $manager): void
+    protected function showContextAwareStatus(ComponentManager $manager, ContextDetectionService $contextService): void
     {
+        $context = $contextService->getContext();
         $interactiveMode = $manager->getGlobalSetting('interactive_mode', true);
         $installed = $manager->getInstalled();
 
         $this->newLine();
         $this->line('─────────────────────────────────────────────────────');
 
-        // Interactive Mode Status (prominent)
+        // Show context if relevant
+        if ($context['is_git_repo'] || $context['project_type']) {
+            $this->showMinimalContext($context);
+            $this->newLine();
+        }
+
+        // Interactive Mode Status
         if ($interactiveMode) {
             $this->line('🎛️  <fg=green;options=bold>Interactive Mode: ENABLED</> <fg=gray>(conduit interactive disable to change)</>');
         } else {
@@ -64,39 +74,82 @@ class SummaryCommand extends Command
 
         $this->newLine();
 
+        // Context-aware suggestions
+        $this->showContextualSuggestions($context, $installed);
+
         // Component Status
         if (empty($installed)) {
             $this->line('📦 <fg=cyan;options=bold>Components:</> None installed');
-
-            if ($interactiveMode) {
-                $this->line('   💡 <fg=white>Quick start:</> conduit components <fg=gray>(interactive setup)</>');
-                $this->line('   🔍 <fg=white>Browse:</> conduit components discover');
-            } else {
-                $this->line('   🔍 <fg=white>Browse:</> conduit components discover');
-                $this->line('   📥 <fg=white>Install:</> conduit components install <name>');
-            }
+            $this->line('   🔍 <fg=white>Discover:</> conduit components discover');
         } else {
             $componentCount = count($installed);
             $componentNames = implode(', ', array_keys($installed));
-
             $this->line("📦 <fg=green;options=bold>Components:</> {$componentCount} installed <fg=gray>({$componentNames})</>");
-
-            if ($interactiveMode) {
-                $this->line('   🎛️  <fg=white>Manage:</> conduit components <fg=gray>(shows interactive menu)</>');
-            } else {
-                $this->line('   📋 <fg=white>List:</> conduit components list');
-                $this->line('   🔍 <fg=white>Discover:</> conduit components discover');
-            }
+            $this->line('   🎛️  <fg=white>Manage:</> conduit components');
         }
 
         // Quick Tips
         $this->newLine();
-        $this->line('<fg=gray>💡 Tips:</> Run any command with <fg=white>--help</> for detailed usage');
+        $this->line('<fg=gray>💡 Tip:</> conduit context <fg=gray>shows detailed project information</>');
+    }
 
-        if ($interactiveMode) {
-            $this->line('<fg=gray>   •</> Most commands will prompt for missing information');
-        } else {
-            $this->line('<fg=gray>   •</> Specify all required arguments for automated execution');
+    private function showMinimalContext(array $context): void
+    {
+        $parts = [];
+
+        if ($context['is_git_repo']) {
+            $git = $context['git'];
+            if ($git['is_github']) {
+                $parts[] = "<fg=cyan>{$git['github_owner']}/{$git['github_repo']}</>";
+            } else {
+                $parts[] = '<fg=cyan>Git repo</>';
+            }
+
+            if ($git['current_branch']) {
+                $parts[] = "on <fg=yellow>{$git['current_branch']}</>";
+            }
+        }
+
+        if ($context['project_type']) {
+            $parts[] = '<fg=green>'.ucfirst($context['project_type']).' project</>';
+        }
+
+        if (! empty($parts)) {
+            $this->line('📍 '.implode(' • ', $parts));
+        }
+    }
+
+    private function showContextualSuggestions(array $context, array $installed): void
+    {
+        $suggestions = [];
+
+        // Git/GitHub suggestions
+        if (isset($installed['github-zero'])) {
+            if ($context['is_git_repo'] && $context['git']['is_github']) {
+                // In a GitHub repo - show repo-specific commands
+                $suggestions[] = '   📂 <fg=white>Repos:</> conduit repos';
+                // Future: issues, prs when available
+                // Don't show clone when already in a repo
+            } else {
+                // Not in a GitHub repo - show general commands
+                $suggestions[] = '   📂 <fg=white>Repos:</> conduit repos';
+                $suggestions[] = '   📥 <fg=white>Clone:</> conduit clone';
+            }
+        } elseif ($context['is_git_repo'] && $context['git']['is_github']) {
+            $suggestions[] = '   💡 <fg=yellow>Install github-zero for GitHub integration</>';
+        }
+
+        // Laravel suggestions
+        if ($context['project_type'] === 'laravel') {
+            // Future: Add Laravel-specific suggestions when components are available
+        }
+
+        if (! empty($suggestions)) {
+            $this->line('<fg=cyan;options=bold>Contextual Commands:</>');
+            foreach ($suggestions as $suggestion) {
+                $this->line($suggestion);
+            }
+            $this->newLine();
         }
     }
 }

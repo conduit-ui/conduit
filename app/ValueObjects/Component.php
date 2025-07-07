@@ -14,7 +14,8 @@ readonly class Component
         public string $language = 'Unknown',
         public string $license = 'No license',
         public string $status = 'active',
-        public array $requiredCapabilities = []
+        public array $requiredCapabilities = [],
+        public ?ComponentActivation $activation = null
     ) {}
 
     /**
@@ -22,6 +23,12 @@ readonly class Component
      */
     public static function fromArray(array $data): self
     {
+        $activation = null;
+        if (isset($data['activation']) || isset($data['activation_events'])) {
+            $activationData = $data['activation'] ?? ['activation_events' => $data['activation_events'] ?? []];
+            $activation = ComponentActivation::fromArray($activationData);
+        }
+
         return new self(
             name: $data['name'],
             fullName: $data['full_name'],
@@ -32,7 +39,8 @@ readonly class Component
             language: $data['language'] ?? 'Unknown',
             license: $data['license'] ?? 'No license',
             status: $data['status'] ?? 'active',
-            requiredCapabilities: $data['required_capabilities'] ?? []
+            requiredCapabilities: $data['required_capabilities'] ?? [],
+            activation: $activation
         );
     }
 
@@ -41,7 +49,7 @@ readonly class Component
      */
     public function toArray(): array
     {
-        return [
+        $data = [
             'name' => $this->name,
             'full_name' => $this->fullName,
             'description' => $this->description,
@@ -53,5 +61,15 @@ readonly class Component
             'status' => $this->status,
             'required_capabilities' => $this->requiredCapabilities,
         ];
+
+        if ($this->activation) {
+            $data['activation'] = [
+                'activation_events' => $this->activation->events,
+                'always_active' => $this->activation->alwaysActive,
+                'exclude_events' => $this->activation->excludeEvents,
+            ];
+        }
+
+        return $data;
     }
 }
