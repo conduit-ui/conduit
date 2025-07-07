@@ -3,9 +3,10 @@
 namespace App\Services;
 
 use App\Actions\ManagesConduitJson;
+use App\Contracts\ComponentPersistenceInterface;
 use Carbon\Carbon;
 
-class ComponentPersistence
+class ComponentPersistence implements ComponentPersistenceInterface
 {
     use ManagesConduitJson;
 

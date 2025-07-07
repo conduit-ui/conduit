@@ -2,6 +2,7 @@
 
 namespace App\Commands;
 
+use App\Enums\InteractiveAction;
 use App\Services\ComponentManager;
 use LaravelZero\Framework\Commands\Command;
 
@@ -22,16 +23,19 @@ class InteractiveCommand extends Command
     {
         $action = $this->argument('action');
 
-        if (! in_array($action, ['enable', 'disable', 'status'])) {
-            $this->error("Invalid action: {$action}. Valid actions are: enable, disable, status");
+        if (! InteractiveAction::isValid($action)) {
+            $validActions = implode(', ', InteractiveAction::values());
+            $this->error("Invalid action: {$action}. Valid actions are: {$validActions}");
 
             return Command::FAILURE;
         }
 
-        return match ($action) {
-            'enable' => $this->enableInteractive($manager),
-            'disable' => $this->disableInteractive($manager),
-            'status' => $this->showStatus($manager),
+        $interactiveAction = InteractiveAction::from($action);
+
+        return match ($interactiveAction) {
+            InteractiveAction::ENABLE => $this->enableInteractive($manager),
+            InteractiveAction::DISABLE => $this->disableInteractive($manager),
+            InteractiveAction::STATUS => $this->showStatus($manager),
         };
     }
 

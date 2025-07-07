@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Contracts\ComponentManagerInterface;
 use Carbon\Carbon;
-use GuzzleHttp\Client;
 
 /**
  * Service for managing Conduit components
@@ -17,7 +16,8 @@ use GuzzleHttp\Client;
 class ComponentManager implements ComponentManagerInterface
 {
     public function __construct(
-        private ComponentStorage $storage
+        private ComponentStorage $storage,
+        private ComponentDiscoveryService $discoveryService
     ) {}
 
     /**
@@ -41,17 +41,20 @@ class ComponentManager implements ComponentManagerInterface
     {
         $dbPath = $this->getDatabasePath();
 
-        if (file_exists($dbPath)) {
-            config([
-                'database.default' => 'conduit_sqlite',
-                'database.connections.conduit_sqlite' => [
-                    'driver' => 'sqlite',
-                    'database' => $dbPath,
-                    'prefix' => '',
-                    'foreign_key_constraints' => true,
-                ],
-            ]);
+        // Ensure parent directory exists for first-time installs
+        if (! is_dir(dirname($dbPath))) {
+            mkdir(dirname($dbPath), 0700, true);
         }
+
+        config([
+            'database.default' => 'conduit_sqlite',
+            'database.connections.conduit_sqlite' => [
+                'driver' => 'sqlite',
+                'database' => $dbPath,
+                'prefix' => '',
+                'foreign_key_constraints' => true,
+            ],
+        ]);
     }
 
     /**
@@ -103,84 +106,24 @@ class ComponentManager implements ComponentManagerInterface
 
     public function discoverComponents(): array
     {
-        $topic = config('components.discovery.github_topic', 'conduit-component');
-
         try {
-            $client = new Client([
-                'timeout' => 30,
-                'headers' => [
-                    'User-Agent' => 'Conduit/1.0',
-                    'Accept' => 'application/vnd.github.v3+json',
-                ],
-            ]);
-
-            $response = $client->get('https://api.github.com/search/repositories', [
-                'query' => [
-                    'q' => "topic:{$topic}",
-                    'sort' => 'updated',
-                    'order' => 'desc',
-                    'per_page' => 50, // Limit results
-                ],
-            ]);
-
-            if ($response->getStatusCode() !== 200) {
-                error_log('GitHub API Error: '.$response->getStatusCode().' '.$response->getBody());
-
-                // Try fallback to local registry if configured
-                if (config('components.discovery.fallback_to_local', false)) {
-                    return $this->getLocalRegistry();
-                }
-
-                return [];
-            }
-
-            $data = json_decode($response->getBody()->getContents(), true);
-
-            if (! isset($data['items'])) {
-                error_log('GitHub API: No items in response: '.json_encode($data));
-
-                return config('components.discovery.fallback_to_local', false) ? $this->getLocalRegistry() : [];
-            }
-
-            $components = collect($data['items'])
-                ->filter(function ($repo) {
-                    // Filter out archived or disabled repos
-                    return ! ($repo['archived'] ?? false) && ! ($repo['disabled'] ?? false);
-                })
-                ->map(function ($repo) {
-                    return [
-                        'name' => $repo['name'],
-                        'full_name' => $repo['full_name'],
-                        'description' => $repo['description'] ?? 'No description available',
-                        'url' => $repo['html_url'],
-                        'topics' => $repo['topics'] ?? [],
-                        'updated_at' => $repo['updated_at'],
-                        'stars' => $repo['stargazers_count'] ?? 0,
-                        'language' => $repo['language'] ?? 'Unknown',
-                        'license' => $repo['license']['name'] ?? 'No license',
-                    ];
-                })
-                ->toArray();
+            // Use the dedicated ComponentDiscoveryService for clean separation of concerns
+            $components = $this->discoveryService->discoverComponents();
 
             // Log discovery success
             error_log('Component discovery: Found '.count($components).' components');
 
             return $components;
 
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
-            error_log('GitHub API Request failed: '.$e->getMessage());
-
-            // Check if it's a rate limit issue
-            if ($e->hasResponse() && $e->getResponse()->getStatusCode() === 403) {
-                error_log('GitHub API rate limit exceeded');
-            }
-
-            return config('components.discovery.fallback_to_local', false) ? $this->getLocalRegistry() : [];
-
         } catch (\Exception $e) {
             error_log('Component discovery error: '.$e->getMessage());
 
-            return config('components.discovery.fallback_to_local', false) ? $this->getLocalRegistry() : [];
+            // Fallback to local registry if configured
+            if (config('components.discovery.fallback_to_local', false)) {
+                return $this->getLocalRegistry();
+            }
+
+            return [];
         }
     }
 
