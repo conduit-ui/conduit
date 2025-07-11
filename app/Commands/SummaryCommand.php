@@ -6,6 +6,7 @@ use App\Services\ComponentManager;
 use App\Services\ContextDetectionService;
 use LaravelZero\Framework\Commands\Command;
 use Symfony\Component\Console\Helper\DescriptorHelper;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Enhanced summary command showing interactive mode status and contextual guidance
@@ -26,6 +27,10 @@ class SummaryCommand extends Command
 
     public function handle(ComponentManager $manager, ContextDetectionService $contextService): int
     {
+        Log::info('Running summary command', [
+            'interactive_mode' => $manager->getGlobalSetting('interactive_mode', true),
+            'context' => $contextService->getContext(),
+        ]);
         // Show standard command list first
         $this->showCommandList();
 
