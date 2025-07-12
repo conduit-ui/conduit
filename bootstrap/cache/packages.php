@@ -1,78 +1,78 @@
 <?php return array (
-  'jordanpartridge/github-client' => 
+  'jordanpartridge/github-client' =>
   array (
-    'aliases' => 
+    'aliases' =>
     array (
       'Github' => 'JordanPartridge\\GithubClient\\Facades\\Github',
     ),
-    'providers' => 
+    'providers' =>
     array (
       0 => 'JordanPartridge\\GithubClient\\GithubClientServiceProvider',
     ),
   ),
-  'jordanpartridge/github-zero' => 
+  'jordanpartridge/github-zero' =>
   array (
-    'providers' => 
+    'providers' =>
     array (
       0 => 'JordanPartridge\\GitHubZero\\GitHubZeroServiceProvider',
     ),
   ),
-  'nesbot/carbon' => 
+  'nesbot/carbon' =>
   array (
-    'providers' => 
+    'providers' =>
     array (
       0 => 'Carbon\\Laravel\\ServiceProvider',
     ),
   ),
-  'nunomaduro/collision' => 
+  'nunomaduro/collision' =>
   array (
-    'providers' => 
+    'providers' =>
     array (
       0 => 'NunoMaduro\\Collision\\Adapters\\Laravel\\CollisionServiceProvider',
     ),
   ),
-  'nunomaduro/laravel-console-summary' => 
+  'nunomaduro/laravel-console-summary' =>
   array (
-    'providers' => 
+    'providers' =>
     array (
       0 => 'NunoMaduro\\LaravelConsoleSummary\\LaravelConsoleSummaryServiceProvider',
     ),
   ),
-  'nunomaduro/laravel-console-task' => 
+  'nunomaduro/laravel-console-task' =>
   array (
-    'providers' => 
+    'providers' =>
     array (
       0 => 'NunoMaduro\\LaravelConsoleTask\\LaravelConsoleTaskServiceProvider',
     ),
   ),
-  'nunomaduro/laravel-desktop-notifier' => 
+  'nunomaduro/laravel-desktop-notifier' =>
   array (
-    'aliases' => 
+    'aliases' =>
     array (
       'Notifier' => 'NunoMaduro\\LaravelDesktopNotifier\\Facaces\\Notifier',
     ),
-    'providers' => 
+    'providers' =>
     array (
       0 => 'NunoMaduro\\LaravelDesktopNotifier\\LaravelDesktopNotifierServiceProvider',
     ),
   ),
-  'nunomaduro/termwind' => 
+  'nunomaduro/termwind' =>
   array (
-    'providers' => 
+    'providers' =>
     array (
       0 => 'Termwind\\Laravel\\TermwindServiceProvider',
     ),
   ),
-  'spatie/laravel-data' => 
+  'spatie/laravel-data' =>
   array (
-    'providers' => 
+    'providers' =>
     array (
       0 => 'Spatie\\LaravelData\\LaravelDataServiceProvider',
     ),
   ),
-  'spatie/php-structure-discoverer' => 
+  'spatie/php-structure-discoverer' =>
   array (
-    'providers' => 
+    'providers' =>
     array (
       0 => 'Spatie\\StructureDiscoverer\\StructureDiscovererServiceProvider',
     ),

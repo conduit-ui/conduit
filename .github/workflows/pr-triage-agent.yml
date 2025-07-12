@@ -12,20 +12,20 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Run PR Triage Agent
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { context, github } = require('@actions/github');
-            
+
             // Agent Mission: Monitor and categorize incoming PRs
             const agentMission = {
               name: "PR Triage Agent",
@@ -33,71 +33,71 @@ jobs:
               scope: ["github-client", "github-zero", "conduit", "conduit-component"],
               actions: ["label PRs", "assign reviewers", "check CI status", "categorize by type"]
             };
-            
+
             const pr = context.payload.pull_request;
             const repoName = context.repo.repo;
-            
+
             console.log(`🔍 ${agentMission.name} analyzing PR #${pr.number} in ${repoName}`);
-            
+
             // Analyze PR content and files
             const files = await github.rest.pulls.listFiles({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: pr.number
             });
-            
+
             const changedFiles = files.data.map(f => f.filename);
             const title = pr.title.toLowerCase();
             const body = (pr.body || '').toLowerCase();
-            
+
             // Categorization Logic
             let labels = [];
             let category = '';
             let priority = 'medium';
-            
+
             // Component-related changes
             if (changedFiles.some(f => f.includes('Component') || f.includes('component'))) {
               labels.push('component-system');
               category = 'Component System';
             }
-            
+
             // Architecture changes
             if (changedFiles.some(f => f.includes('Command') || f.includes('Provider') || f.includes('config/'))) {
               labels.push('architecture');
               category = category ? `${category}, Architecture` : 'Architecture';
             }
-            
+
             // Documentation updates
             if (changedFiles.some(f => f.includes('README') || f.includes('CLAUDE.md') || f.includes('.md'))) {
               labels.push('documentation');
               category = category ? `${category}, Documentation` : 'Documentation';
             }
-            
+
             // Test changes
             if (changedFiles.some(f => f.includes('test') || f.includes('Test'))) {
               labels.push('tests');
               category = category ? `${category}, Tests` : 'Tests';
             }
-            
+
             // Breaking changes detection
             if (title.includes('break') || body.includes('breaking') || title.includes('!:')) {
               labels.push('breaking-change');
               priority = 'high';
               category = category ? `${category}, Breaking Change` : 'Breaking Change';
             }
-            
+
             // Bug fixes
             if (title.includes('fix') || title.includes('bug') || body.includes('fixes #')) {
               labels.push('bug-fix');
               category = category ? `${category}, Bug Fix` : 'Bug Fix';
             }
-            
+
             // Features
             if (title.includes('feat') || title.includes('add') || body.includes('feature')) {
               labels.push('enhancement');
               category = category ? `${category}, Feature` : 'Feature';
             }
-            
+
             // Repository-specific logic
             if (repoName === 'conduit') {
               if (changedFiles.some(f => f.includes('Components') || f.includes('ComponentManager'))) {
@@ -105,14 +105,14 @@ jobs:
                 priority = 'high';
               }
             }
-            
+
             if (repoName === 'github-zero') {
               labels.push('conduit-component');
               if (changedFiles.some(f => f.includes('ConduitExtension'))) {
                 labels.push('conduit-integration');
               }
             }
-            
+
             // Apply labels
             if (labels.length > 0) {
               await github.rest.issues.addLabels({
@@ -122,7 +122,7 @@ jobs:
                 labels: labels
               });
             }
-            
+
             // Set priority label
             await github.rest.issues.addLabels({
               owner: context.repo.owner,
@@ -130,34 +130,36 @@ jobs:
               issue_number: pr.number,
               labels: [`priority-${priority}`]
             });
-            
+
             // Generate triage report comment
-            const triageReport = `## 🔍 PR Triage Agent Report
-            
-**Mission**: ${agentMission.mission}
-**Analysis Date**: ${new Date().toISOString()}
+            const triageReport = [
+              "## 🔍 PR Triage Agent Report",
+              "",
+              `**Mission**: ${agentMission.mission}`,
+              `**Analysis Date**: ${new Date().toISOString()}`,
+              "",
+              "### 📋 Classification",
+              `- **Category**: ${category || 'General'}`,
+              `- **Priority**: ${priority.toUpperCase()}`,
+              `- **Labels Applied**: ${labels.join(', ') || 'None'}`,
+              "",
+              `### 📁 Files Changed (${changedFiles.length})`,
+              changedFiles.slice(0, 10).map(f => `- \`${f}\``).join('\n'),
+              changedFiles.length > 10 ? `\n... and ${changedFiles.length - 10} more files` : '',
+              "",
+              "### 🎯 Recommended Next Steps",
+              getRecommendations(repoName, category, priority, changedFiles),
+              "",
+              "### 🤖 Agent Pipeline",
+              "- ✅ **Triage Agent** - Complete",
+              "- ⏳ **Quality Gate Agent** - Pending",
+              labels.includes('architecture') ? '- ⏳ **Architecture Agent** - Pending' : '',
+              labels.includes('component-system') ? '- ⏳ **Component Integration Agent** - Pending' : '',
+              "",
+              "---",
+              "*This analysis was performed by the automated PR Triage Agent. Next agents will provide specialized reviews.*"
+            ].filter(Boolean).join('\n');
 
-### 📋 Classification
-- **Category**: ${category || 'General'}
-- **Priority**: ${priority.toUpperCase()}
-- **Labels Applied**: ${labels.join(', ') || 'None'}
-
-### 📁 Files Changed (${changedFiles.length})
-${changedFiles.slice(0, 10).map(f => `- \`${f}\``).join('\n')}
-${changedFiles.length > 10 ? `\n... and ${changedFiles.length - 10} more files` : ''}
-
-### 🎯 Recommended Next Steps
-${getRecommendations(repoName, category, priority, changedFiles)}
-
-### 🤖 Agent Pipeline
-- ✅ **Triage Agent** - Complete
-- ⏳ **Quality Gate Agent** - Pending
-${labels.includes('architecture') ? '- ⏳ **Architecture Agent** - Pending\n' : ''}
-${labels.includes('component-system') ? '- ⏳ **Component Integration Agent** - Pending\n' : ''}
-
----
-*This analysis was performed by the automated PR Triage Agent. Next agents will provide specialized reviews.*`;
-            
             // Post triage report
             await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -165,36 +167,36 @@ ${labels.includes('component-system') ? '- ⏳ **Component Integration Agent** -
               issue_number: pr.number,
               body: triageReport
             });
-            
+
             console.log(`✅ Triage complete for PR #${pr.number}: ${category} (${priority} priority)`);
-            
+
             // Helper function for recommendations
             function getRecommendations(repo, category, priority, files) {
               let recs = [];
-              
+
               if (priority === 'high') {
                 recs.push('⚠️ High priority change - requires careful review');
               }
-              
+
               if (category.includes('Breaking Change')) {
                 recs.push('🚨 Breaking change detected - update documentation and version');
               }
-              
+
               if (category.includes('Component System')) {
                 recs.push('🔧 Component system change - test compatibility across ecosystem');
               }
-              
+
               if (files.some(f => f.includes('CLAUDE.md'))) {
                 recs.push('📚 CLAUDE.md updated - verify development workflow accuracy');
               }
-              
+
               if (repo === 'conduit' && files.some(f => f.includes('ComponentManager'))) {
                 recs.push('🎯 Core component system change - test with existing components');
               }
-              
+
               if (recs.length === 0) {
                 recs.push('✨ Standard review process applies');
               }
-              
+
               return recs.map(r => `- ${r}`).join('\n');
             }

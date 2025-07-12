@@ -30,7 +30,7 @@ This document defines the automated PR review agent system for the jordanpartrid
 
 **Output**: Quality compliance report
 
-### 3. Architecture Agent ⏳ 
+### 3. Architecture Agent ⏳
 **Mission**: Review PRs for Conduit ecosystem architectural consistency
 **Triggers**: PRs labeled with 'architecture' or 'component-system'
 **Focus**:
@@ -42,7 +42,7 @@ This document defines the automated PR review agent system for the jordanpartrid
 **Output**: Architecture compliance assessment
 
 ### 4. Component Integration Agent ⏳
-**Mission**: Validate component PR compatibility across ecosystem  
+**Mission**: Validate component PR compatibility across ecosystem
 **Triggers**: PRs labeled with 'component-system' or 'conduit-component'
 **Actions**:
 - Test component installation process
@@ -97,7 +97,7 @@ This document defines the automated PR review agent system for the jordanpartrid
 - Special attention: ComponentManager changes
 - High priority: Core architecture modifications
 
-### GitHub Zero (`jordanpartridge/github-zero`) 
+### GitHub Zero (`jordanpartridge/github-zero`)
 - Focus: Component compliance
 - Special attention: ConduitExtension changes
 - Integration testing with Conduit
