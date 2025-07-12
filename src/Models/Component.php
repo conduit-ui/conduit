@@ -10,16 +10,16 @@ class Component extends Model
 {
     protected $fillable = [
         'name',
-        'package_name', 
+        'package_name',
         'version',
         'description',
         'metadata',
         'installed_at',
-        'status'
+        'status',
     ];
 
     protected $casts = [
         'metadata' => 'array',
-        'installed_at' => 'datetime'
+        'installed_at' => 'datetime',
     ];
 }

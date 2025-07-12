@@ -1,0 +1,107 @@
+# Conduit Pre-commit Configuration
+# Ensures code quality and consistency across the project
+
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        description: Remove trailing whitespace
+      - id: end-of-file-fixer
+        description: Ensure files end with a newline
+      - id: check-yaml
+        description: Validate YAML files
+      - id: check-json
+        description: Validate JSON files
+      - id: check-merge-conflict
+        description: Check for merge conflict markers
+      - id: check-added-large-files
+        description: Prevent large files from being committed
+        args: ['--maxkb=1000']
+      - id: mixed-line-ending
+        description: Check for mixed line endings
+        args: ['--fix=lf']
+
+  # PHP Syntax and Quality Checks
+  - repo: local
+    hooks:
+      # PHP Syntax Check
+      - id: php-syntax-check
+        name: PHP Syntax Check
+        entry: php -l
+        language: system
+        files: \.php$
+        description: Check PHP syntax errors
+
+      # Laravel Pint (Code Formatting)
+      - id: laravel-pint
+        name: Laravel Pint (Code Formatting)
+        entry: ./vendor/bin/pint
+        language: system
+        files: \.php$
+        pass_filenames: false
+        description: Format PHP code with Laravel Pint
+        stages: [pre-commit]
+
+      # Pest Tests (Fast Test Suite)
+      - id: pest-tests
+        name: Pest Tests
+        entry: ./vendor/bin/pest
+        language: system
+        pass_filenames: false
+        always_run: true
+        description: Run Pest test suite
+        stages: [pre-commit]
+
+      # Composer Validation
+      - id: composer-validate
+        name: Composer Validate
+        entry: composer validate
+        language: system
+        files: composer\.json$
+        pass_filenames: false
+        description: Validate composer.json and composer.lock
+
+      # Security Check (Optional - requires composer audit)
+      - id: composer-audit
+        name: Composer Security Audit
+        entry: composer audit
+        language: system
+        files: composer\.(json|lock)$
+        pass_filenames: false
+        always_run: false
+        description: Check for security vulnerabilities
+        stages: [manual]
+
+  # Commit Message Validation
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.4.0
+    hooks:
+      - id: conventional-pre-commit
+        description: Enforce conventional commit messages
+        stages: [commit-msg]
+        args:
+          - feat
+          - fix
+          - docs
+          - style
+          - refactor
+          - test
+          - chore
+          - perf
+          - ci
+          - build
+          - revert
+
+  # YAML/Config File Validation
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.0
+    hooks:
+      - id: yamllint
+        description: Lint YAML files
+        args: [-c=.yamllint.yaml]
+
+# Global configuration
+default_stages: [pre-commit]
+fail_fast: false

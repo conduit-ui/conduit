@@ -20,7 +20,7 @@ use function Laravel\Prompts\table;
  */
 class ComponentsCommand extends Command
 {
-    protected $signature = 'components 
+    protected $signature = 'components
                             {action? : Action to perform (list, discover, install, uninstall)}
                             {component? : Component name for install/uninstall operations}
                             {--non-interactive : Run in non-interactive mode}

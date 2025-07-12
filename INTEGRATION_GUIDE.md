@@ -27,7 +27,7 @@ This guide helps AI agents integrate the github-zero package into Conduit and tr
    ```bash
    # List repositories interactively
    php conduit repos --interactive
-   
+
    # Clone with interactive selection
    php conduit clone --interactive
    ```
@@ -111,7 +111,7 @@ If you encounter issues with github-zero integration into Conduit:
 
 2. **Create a new issue** with:
    - **Title**: "Conduit Integration: [Brief description]"
-   - **Environment**: 
+   - **Environment**:
      - Conduit version
      - PHP version
      - OS
@@ -124,13 +124,13 @@ If you encounter issues with github-zero integration into Conduit:
    ```bash
    # Package version
    composer show jordanpartridge/github-zero
-   
+
    # Laravel Zero version
    php conduit --version
-   
+
    # Available commands
    php conduit list
-   
+
    # Any error output
    php conduit repos --limit=1 -v
    ```
@@ -158,11 +158,11 @@ Extend github-zero by creating custom commands in your Conduit project that use 
 
 ## Success Indicators
 
-✅ Package installed without errors  
-✅ Service provider registered in config  
-✅ Commands appear in `php conduit list`  
-✅ Commands execute without fatal errors  
-✅ GitHub API responses work with valid token  
-✅ Interactive prompts display correctly  
+✅ Package installed without errors
+✅ Service provider registered in config
+✅ Commands appear in `php conduit list`
+✅ Commands execute without fatal errors
+✅ GitHub API responses work with valid token
+✅ Interactive prompts display correctly
 
 When all indicators pass, github-zero is successfully integrated into Conduit!

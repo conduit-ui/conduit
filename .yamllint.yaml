@@ -1,0 +1,35 @@
+# YAML Lint Configuration for Conduit
+# Controls YAML file formatting and validation
+
+extends: default
+
+rules:
+  # Line length - be more lenient for documentation
+  line-length:
+    max: 120
+    level: warning
+
+  # Indentation - 2 spaces for YAML
+  indentation:
+    spaces: 2
+    indent-sequences: true
+
+  # Comments - allow comments without space after #
+  comments:
+    min-spaces-from-content: 1
+
+  # Document start - not required for all files
+  document-start:
+    present: false
+
+  # Truthy values - allow yes/no, true/false, on/off
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no', 'on', 'off']
+    check-keys: false
+
+# File patterns to ignore
+ignore: |
+  /.git/
+  /vendor/
+  /storage/
+  /bootstrap/cache/

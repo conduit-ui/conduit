@@ -1,7 +1,5 @@
 <?php
 
-use App\Services\ContextDetectionService;
-
 test('context command displays project information', function () {
     $this->artisan('context')
         ->expectsOutput('Current Directory Context')

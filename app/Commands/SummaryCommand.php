@@ -4,9 +4,9 @@ namespace App\Commands;
 
 use App\Services\ComponentManager;
 use App\Services\ContextDetectionService;
+use Illuminate\Support\Facades\Log;
 use LaravelZero\Framework\Commands\Command;
 use Symfony\Component\Console\Helper\DescriptorHelper;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Enhanced summary command showing interactive mode status and contextual guidance

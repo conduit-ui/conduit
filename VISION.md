@@ -6,7 +6,7 @@ Developers today are drowning in tools. We have more development tools than ever
 
 - Hunt for browser tabs with GitHub issues
 - Switch between terminal, IDE, and browser
-- Remember which Slack workspace has the relevant discussion  
+- Remember which Slack workspace has the relevant discussion
 - Fumble with our mouse to change music
 - Context-switch between different tools for the same workflow
 
@@ -34,7 +34,7 @@ conduit morning
 
 Instead of opening 15 browser tabs and checking 8 different tools, get everything you need:
 - Issues assigned to you across all repositories
-- Pull requests waiting for your review  
+- Pull requests waiting for your review
 - Work you started but haven't finished
 - Intelligent prioritization based on your patterns and deadlines
 
@@ -64,7 +64,7 @@ Instead of replacing you, AI becomes your intelligent assistant:
 ### 1. Terminal-First Design
 Your terminal becomes mission control. Everything important is accessible via command line, with smart browser integration when visual interfaces are needed.
 
-### 2. Learn and Adapt  
+### 2. Learn and Adapt
 Conduit doesn't impose workflows - it learns yours and optimizes around them. Every developer is different, and your tools should reflect that.
 
 ### 3. AI Orchestration
@@ -84,7 +84,7 @@ Your workflow patterns and productivity data stay on your machine. AI insights a
 - **Better work-life balance** via proactive suggestions and productivity insights
 - **Increased flow state** by eliminating tool friction
 
-### For Development Teams  
+### For Development Teams
 - **Shared workflow optimization** across team members
 - **Reduced onboarding time** with personalized development environment setup
 - **Better project visibility** through intelligent aggregation of team activity
@@ -105,7 +105,7 @@ Build the core plugin architecture and essential integrations:
 - Browser automation and tab management
 - Basic productivity pattern recognition
 
-### Phase 2: Intelligence (6-12 months)  
+### Phase 2: Intelligence (6-12 months)
 Add AI-powered insights and optimization:
 - Workflow pattern recognition and suggestions
 - Productivity correlation analysis

@@ -14,7 +14,7 @@ use LaravelZero\Framework\Commands\Command;
  */
 class InteractiveCommand extends Command
 {
-    protected $signature = 'interactive 
+    protected $signature = 'interactive
                             {action : Action to perform (enable, disable, status)}';
 
     protected $description = 'Manage global interactive mode setting';

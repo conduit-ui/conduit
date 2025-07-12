@@ -26,7 +26,7 @@ namespace App;
 // Core Services
 ├── Services/
 │   ├── ComponentManager           # Component lifecycle management
-│   ├── ComponentDiscoveryService  # GitHub-based component discovery  
+│   ├── ComponentDiscoveryService  # GitHub-based component discovery
 │   ├── ComponentInstallationService # Secure package installation
 │   ├── ComponentStorage          # SQLite-based persistence
 │   ├── ContextDetectionService   # Environment context analysis
@@ -71,27 +71,27 @@ interface ComponentInterface
      * Get the component's unique identifier
      */
     public function getName(): string;
-    
+
     /**
      * Get the component's human-readable description
      */
     public function getDescription(): string;
-    
+
     /**
      * Get the component's version
      */
     public function getVersion(): string;
-    
+
     /**
      * Get the commands provided by this component
-     * 
+     *
      * @return array<string> Array of command signatures
      */
     public function getCommands(): array;
-    
+
     /**
      * Get the component's activation configuration
-     * 
+     *
      * @return array{
      *     activation_events?: string[],
      *     exclude_events?: string[],
@@ -99,20 +99,20 @@ interface ComponentInterface
      * }
      */
     public function getActivationConfig(): array;
-    
+
     /**
      * Check if the component is active in the current context
      */
     public function isActive(array $context): bool;
-    
+
     /**
      * Validate the component's configuration and dependencies
      */
     public function validate(): bool;
-    
+
     /**
      * Get the component's required environment variables
-     * 
+     *
      * @return array<string> Array of required env var names
      */
     public function getRequiredEnvVars(): array;
@@ -134,17 +134,17 @@ class SpotifyZeroComponent implements ComponentInterface
     {
         return 'spotify-zero';
     }
-    
+
     public function getDescription(): string
     {
         return 'Spotify integration for music control during development';
     }
-    
+
     public function getVersion(): string
     {
         return '1.0.0';
     }
-    
+
     public function getCommands(): array
     {
         return [
@@ -156,7 +156,7 @@ class SpotifyZeroComponent implements ComponentInterface
             'spotify:status'
         ];
     }
-    
+
     public function getActivationConfig(): array
     {
         return [
@@ -165,18 +165,18 @@ class SpotifyZeroComponent implements ComponentInterface
             'exclude_events' => []
         ];
     }
-    
+
     public function isActive(array $context): bool
     {
         return app()->environment('local', 'development');
     }
-    
+
     public function validate(): bool
     {
-        return !empty(env('SPOTIFY_CLIENT_ID')) && 
+        return !empty(env('SPOTIFY_CLIENT_ID')) &&
                !empty(env('SPOTIFY_CLIENT_SECRET'));
     }
-    
+
     public function getRequiredEnvVars(): array
     {
         return [
@@ -205,7 +205,7 @@ class ComponentManager implements ComponentManagerInterface
 {
     /**
      * Register a new component
-     * 
+     *
      * @param string $name Component identifier
      * @param array{
      *     package: string,
@@ -215,46 +215,46 @@ class ComponentManager implements ComponentManagerInterface
      * } $config Component configuration
      */
     public function register(string $name, array $config): bool;
-    
+
     /**
      * Unregister a component
      */
     public function unregister(string $name): bool;
-    
+
     /**
      * Get all registered components
-     * 
+     *
      * @return array<string, Component>
      */
     public function getInstalled(): array;
-    
+
     /**
      * Check if a component is installed
      */
     public function isInstalled(string $name): bool;
-    
+
     /**
      * Check if a component is active in current context
      */
     public function isActive(string $name): bool;
-    
+
     /**
      * Get active components for current context
-     * 
+     *
      * @return array<string, Component>
      */
     public function getActive(): array;
-    
+
     /**
      * Get global settings
      */
     public function getGlobalSetting(string $key, mixed $default = null): mixed;
-    
+
     /**
      * Set global settings
      */
     public function setGlobalSetting(string $key, mixed $value): void;
-    
+
     /**
      * Validate component configuration
      */
@@ -275,14 +275,14 @@ class ComponentDiscoveryService
 {
     /**
      * Discover components via GitHub search
-     * 
+     *
      * @param array{
      *     topic?: string,
      *     organization?: string,
      *     user?: string,
      *     certified_only?: bool
      * } $filters Search filters
-     * 
+     *
      * @return array{
      *     core: Component[],
      *     certified: Component[],
@@ -290,22 +290,22 @@ class ComponentDiscoveryService
      * }
      */
     public function discover(array $filters = []): array;
-    
+
     /**
      * Get component metadata from repository
      */
     public function getComponentMetadata(string $repository): ?array;
-    
+
     /**
      * Check if repository is a valid Conduit component
      */
     public function isValidComponent(string $repository): bool;
-    
+
     /**
      * Get component's composer.json configuration
      */
     public function getComposerConfig(string $repository): ?array;
-    
+
     /**
      * Get component's README content
      */
@@ -326,7 +326,7 @@ class ContextDetectionService
 {
     /**
      * Get current directory context
-     * 
+     *
      * @return array{
      *     working_directory: string,
      *     is_git_repo: bool,
@@ -347,43 +347,43 @@ class ContextDetectionService
      * }
      */
     public function getContext(): array;
-    
+
     /**
      * Detect project type (laravel, wordpress, node, etc.)
      */
     public function detectProjectType(): ?string;
-    
+
     /**
      * Detect programming languages in use
-     * 
+     *
      * @return string[]
      */
     public function detectLanguages(): array;
-    
+
     /**
      * Detect frameworks in use
-     * 
+     *
      * @return string[]
      */
     public function detectFrameworks(): array;
-    
+
     /**
      * Detect package managers
-     * 
+     *
      * @return string[]
      */
     public function detectPackageManagers(): array;
-    
+
     /**
      * Check if directory is a Git repository
      */
     public function isGitRepository(): bool;
-    
+
     /**
      * Get Git repository information
      */
     public function getGitInfo(): ?array;
-    
+
     /**
      * Check if Git repository is hosted on GitHub
      */
@@ -410,44 +410,44 @@ class ComponentStorage implements ComponentStorageInterface
      * Initialize storage database
      */
     public function initialize(): void;
-    
+
     /**
      * Store component metadata
      */
     public function store(Component $component): bool;
-    
+
     /**
      * Retrieve component by name
      */
     public function retrieve(string $name): ?Component;
-    
+
     /**
      * Get all stored components
-     * 
+     *
      * @return Component[]
      */
     public function all(): array;
-    
+
     /**
      * Delete component from storage
      */
     public function delete(string $name): bool;
-    
+
     /**
      * Check if component exists in storage
      */
     public function exists(string $name): bool;
-    
+
     /**
      * Update component metadata
      */
     public function update(string $name, array $data): bool;
-    
+
     /**
      * Store global settings
      */
     public function storeGlobalSetting(string $key, mixed $value): void;
-    
+
     /**
      * Retrieve global settings
      */
@@ -529,7 +529,7 @@ Components can declare activation events:
 'activation' => [
     'activation_events' => [
         'context:git',          // Activate in Git repositories
-        'context:github',       // Activate in GitHub repositories  
+        'context:github',       // Activate in GitHub repositories
         'context:laravel',      // Activate in Laravel projects
         'language:php',         // Activate when PHP files present
         'framework:laravel',    // Activate when Laravel detected
@@ -570,7 +570,7 @@ class SpotifyZeroServiceProvider extends ServiceProvider
             );
         });
     }
-    
+
     public function boot(): void
     {
         // Register commands
@@ -584,12 +584,12 @@ class SpotifyZeroServiceProvider extends ServiceProvider
                 Commands\StatusCommand::class,
             ]);
         }
-        
+
         // Publish configuration
         $this->publishes([
             __DIR__.'/../config/spotify.php' => config_path('spotify.php'),
         ], 'config');
-        
+
         // Merge configuration
         $this->mergeConfigFrom(
             __DIR__.'/../config/spotify.php', 'spotify'
@@ -610,19 +610,19 @@ use JordanPartridge\SpotifyClient\SpotifyClient;
 
 class PlayCommand extends Command
 {
-    protected $signature = 'spotify:play 
+    protected $signature = 'spotify:play
                             {track? : Track name to search and play}
                             {--playlist= : Playlist to play from}
                             {--device= : Spotify device to play on}';
-    
+
     protected $description = 'Play music on Spotify';
-    
+
     public function handle(SpotifyClient $spotify): int
     {
         $track = $this->argument('track');
         $playlist = $this->option('playlist');
         $device = $this->option('device');
-        
+
         try {
             if ($track) {
                 $result = $spotify->searchAndPlay($track, $device);
@@ -634,7 +634,7 @@ class PlayCommand extends Command
                 $result = $spotify->resume($device);
                 $this->info("▶️ Resumed playback");
             }
-            
+
             return Command::SUCCESS;
         } catch (\Exception $e) {
             $this->error("❌ Spotify error: {$e->getMessage()}");
@@ -775,26 +775,26 @@ class SpotifyComponentTest extends TestCase
     public function test_component_implements_interface(): void
     {
         $component = new SpotifyZeroComponent();
-        
+
         $this->assertInstanceOf(ComponentInterface::class, $component);
         $this->assertEquals('spotify-zero', $component->getName());
         $this->assertIsArray($component->getCommands());
         $this->assertContains('spotify:play', $component->getCommands());
     }
-    
+
     public function test_component_activation(): void
     {
         $component = new SpotifyZeroComponent();
         $context = ['project_type' => 'laravel'];
-        
+
         $this->assertTrue($component->isActive($context));
     }
-    
+
     public function test_component_validation(): void
     {
         config(['spotify.client_id' => 'test_id']);
         config(['spotify.client_secret' => 'test_secret']);
-        
+
         $component = new SpotifyZeroComponent();
         $this->assertTrue($component->validate());
     }
@@ -816,20 +816,20 @@ class ComponentManagerTest extends TestCase
     public function test_component_registration(): void
     {
         $manager = app(ComponentManager::class);
-        
+
         $result = $manager->register('test-component', [
             'package' => 'vendor/test-component',
             'description' => 'Test component'
         ]);
-        
+
         $this->assertTrue($result);
         $this->assertTrue($manager->isInstalled('test-component'));
     }
-    
+
     public function test_component_activation(): void
     {
         $manager = app(ComponentManager::class);
-        
+
         // Register component with activation rules
         $manager->register('context-component', [
             'package' => 'vendor/context-component',
@@ -837,10 +837,10 @@ class ComponentManagerTest extends TestCase
                 'activation_events' => ['context:laravel']
             ]
         ]);
-        
+
         // Mock Laravel context
         $this->mockContext(['project_type' => 'laravel']);
-        
+
         $active = $manager->getActive();
         $this->assertArrayHasKey('context-component', $active);
     }

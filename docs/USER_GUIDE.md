@@ -27,7 +27,7 @@ Conduit transforms your terminal into a **Personal Developer Operating System** 
 
 Instead of juggling multiple tools and browser tabs:
 - ❌ Switching between terminal, IDE, browser, and Slack
-- ❌ Hunting for GitHub issues across repositories  
+- ❌ Hunting for GitHub issues across repositories
 - ❌ Remembering which tools to use for which tasks
 - ❌ Context switching that breaks your flow
 
@@ -101,7 +101,7 @@ Conduit's core is **intentionally minimal**. All functionality comes through **c
 ```
 Conduit Core (Minimal)
 ├── Component Management System
-├── Context Detection Engine  
+├── Context Detection Engine
 ├── Command Registration
 └── SQLite Storage
 
@@ -237,7 +237,7 @@ conduit components discover
 
 # Results show:
 # ✓ github-zero (core)
-# ✓ laravel-tools (certified)  
+# ✓ laravel-tools (certified)
 # ○ spotify-control (community)
 
 # Install interactively
@@ -298,7 +298,7 @@ Conduit analyzes your current directory to provide relevant tools:
 conduit context
 Working Directory: /Users/you/projects/my-app
 Git Repository: ✓ (main branch)
-GitHub Integration: ✓ (your-org/my-app)  
+GitHub Integration: ✓ (your-org/my-app)
 Project Type: Laravel
 Languages: PHP, JavaScript
 Package Managers: Composer, npm
@@ -318,7 +318,7 @@ conduit list
 # - git workflow shortcuts
 ```
 
-#### In a Laravel Project  
+#### In a Laravel Project
 ```bash
 conduit list
 # Shows Laravel commands:
@@ -329,7 +329,7 @@ conduit list
 
 #### In a Node.js Project
 ```bash
-conduit list  
+conduit list
 # Shows Node.js commands:
 # - conduit npm:audit
 # - conduit yarn:workspace
@@ -548,12 +548,12 @@ class SpotifyComponent implements ComponentInterface
     {
         return 'spotify-control';
     }
-    
+
     public function getCommands(): array
     {
         return [
             'spotify:play',
-            'spotify:pause', 
+            'spotify:pause',
             'spotify:next'
         ];
     }

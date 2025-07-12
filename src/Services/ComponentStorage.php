@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace ConduitIo\Core\Services;
 
-use ConduitIo\Core\Models\Component;
 use ConduitIo\Core\Contracts\ComponentInterface;
+use ConduitIo\Core\Models\Component;
 use Illuminate\Support\Collection;
 
 class ComponentStorage
@@ -20,7 +20,7 @@ class ComponentStorage
                 'description' => $component->getDescription(),
                 'metadata' => $component->getMetadata(),
                 'status' => 'installed',
-                'installed_at' => now()
+                'installed_at' => now(),
             ]
         );
     }

@@ -53,7 +53,7 @@ conduit github repos                        # List repositories
 conduit github clone <repo>                 # Clone repositories
 conduit github pr create                    # Create pull requests
 
-# Package management (via conduit-composer component)  
+# Package management (via conduit-composer component)
 conduit composer require <package>          # Smart package installation
 conduit composer audit                      # Security and dependency analysis
 
@@ -110,16 +110,40 @@ Components are standard Composer packages with:
 ## Development Workflow
 
 ### First-Time Setup
+
+#### Automated Setup (Recommended)
+```bash
+./scripts/dev-setup.sh  # Complete development environment setup
+```
+
+#### Manual Setup
 1. `composer install` - Install dependencies
 2. `php conduit storage:init` - Initialize SQLite database
-3. `php conduit components discover` - Find available components
-4. `php conduit components install <name>` - Install desired components
+3. `pip3 install pre-commit && pre-commit install` - Setup quality hooks
+4. `php conduit components discover` - Find available components
+5. `php conduit components install <name>` - Install desired components
 
 ### Testing & Quality
-- Tests use Pest framework with PHPUnit under the hood
-- Run `./vendor/bin/pest` for full test suite
-- Code formatting with Laravel Pint: `./vendor/bin/pint`
-- Component installation validation includes security checks
+
+#### Automated Quality Checks
+- **Pre-commit hooks** automatically run on every commit
+- **PHP syntax validation** prevents syntax errors
+- **Laravel Pint formatting** ensures consistent code style
+- **Pest test suite** validates functionality
+- **Conventional commits** enforce clear commit messages
+
+#### Manual Commands
+```bash
+./vendor/bin/pest                # Run test suite
+./vendor/bin/pint               # Format code
+./scripts/quality-check.sh      # Run all quality checks
+pre-commit run --all-files      # Run pre-commit hooks manually
+```
+
+#### Development Scripts
+- `scripts/dev-setup.sh` - Complete environment setup
+- `scripts/quality-check.sh` - Run all quality validations
+- See `docs/DEVELOPMENT_SETUP.md` for comprehensive guide
 
 ### Component Development
 - Components must be Composer packages with Laravel Zero service providers

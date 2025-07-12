@@ -9,7 +9,7 @@ I need you to work on a specific focused task in a separate git branch. Here are
 
 **PROJECT CONTEXT:**
 - Repository: [REPO_NAME]
-- Current working directory: [CURRENT_DIR] 
+- Current working directory: [CURRENT_DIR]
 - Main branch we're working from: [CURRENT_BRANCH]
 - Base commit/state: [COMMIT_HASH or "current HEAD"]
 
@@ -27,7 +27,7 @@ I need you to work on a specific focused task in a separate git branch. Here are
 
 **SUCCESS CRITERIA:**
 - [ ] [CRITERIA_1]
-- [ ] [CRITERIA_2] 
+- [ ] [CRITERIA_2]
 - [ ] [CRITERIA_3]
 - [ ] All tests pass
 - [ ] Code follows project conventions

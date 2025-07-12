@@ -13,7 +13,7 @@ composer require conduit-io/core
 This package provides the foundation for building Conduit components:
 
 - Component interfaces and contracts
-- Database storage for component metadata  
+- Database storage for component metadata
 - Base services for component management
 - Shared utilities and patterns
 
@@ -30,7 +30,7 @@ class MyComponent implements ComponentInterface
     {
         return 'my-component';
     }
-    
+
     // ... implement other methods
 }
 ```
