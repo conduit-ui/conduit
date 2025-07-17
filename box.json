@@ -1,13 +1,16 @@
 {
     "chmod": "0755",
+    "main": "conduit",
     "directories": [
         "app",
         "bootstrap",
         "config",
-        "vendor"
+        "vendor",
+        "conduit-spotify"
     ],
     "files": [
-        "composer.json"
+        "composer.json",
+        "conduit"
     ],
     "exclude-composer-files": false,
     "compression": "GZ",
