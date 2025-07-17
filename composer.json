@@ -16,6 +16,7 @@
         "guzzlehttp/guzzle": "^7.8",
         "illuminate/database": "^11.45",
         "jordanpartridge/github-zero": "^1.0",
+        "jordanpartridge/spotify-client": "dev-master",
         "laravel-zero/framework": "^11.36.1",
         "symfony/process": "^6.0|^7.0"
     },
@@ -26,11 +27,18 @@
         "mockery/mockery": "^1.6.12",
         "pestphp/pest": "^3.7.1"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/jordanpartridge/spotify-client"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
-            "Database\\Seeders\\": "database/seeders/"
+            "Database\\Seeders\\": "database/seeders/",
+            "JordanPartridge\\ConduitSpotify\\": "conduit-spotify/src/"
         }
     },
     "autoload-dev": {

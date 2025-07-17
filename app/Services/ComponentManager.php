@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Contracts\ComponentManagerInterface;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use JordanPartridge\GithubClient\Contracts\GithubConnectorInterface;
 
 /**
  * Service for managing Conduit components
@@ -17,7 +18,8 @@ use GuzzleHttp\Client;
 class ComponentManager implements ComponentManagerInterface
 {
     public function __construct(
-        private ComponentStorage $storage
+        private ComponentStorage $storage,
+        private ?GithubConnectorInterface $githubConnector = null
     ) {}
 
     /**
@@ -106,6 +108,11 @@ class ComponentManager implements ComponentManagerInterface
         $topic = config('components.discovery.github_topic', 'conduit-component');
 
         try {
+            // Use authenticated GitHub client if available, otherwise fallback to direct HTTP
+            if ($this->githubConnector) {
+                return $this->discoverComponentsWithAuth($topic);
+            }
+
             $client = new Client([
                 'timeout' => 30,
                 'headers' => [
@@ -181,6 +188,52 @@ class ComponentManager implements ComponentManagerInterface
             error_log('Component discovery error: '.$e->getMessage());
 
             return config('components.discovery.fallback_to_local', false) ? $this->getLocalRegistry() : [];
+        }
+    }
+
+    /**
+     * Discover components using authenticated GitHub client
+     */
+    private function discoverComponentsWithAuth(string $topic): array
+    {
+        try {
+            $searchRequest = $this->githubConnector->send(
+                new \JordanPartridge\GithubClient\Requests\SearchRepositoriesRequest([
+                    'q' => "topic:{$topic}",
+                    'sort' => 'updated',
+                    'order' => 'desc',
+                    'per_page' => 50,
+                ])
+            );
+
+            $data = $searchRequest->json();
+
+            if (!isset($data['items'])) {
+                return $this->getLocalRegistry();
+            }
+
+            return collect($data['items'])
+                ->filter(function ($repo) {
+                    return !($repo['archived'] ?? false) && !($repo['disabled'] ?? false);
+                })
+                ->map(function ($repo) {
+                    return [
+                        'name' => $repo['name'],
+                        'full_name' => $repo['full_name'],
+                        'description' => $repo['description'] ?? 'No description available',
+                        'html_url' => $repo['html_url'],
+                        'clone_url' => $repo['clone_url'],
+                        'updated_at' => $repo['updated_at'],
+                        'stargazers_count' => $repo['stargazers_count'] ?? 0,
+                        'topics' => $repo['topics'] ?? [],
+                        'source' => 'github_authenticated',
+                    ];
+                })
+                ->values()
+                ->toArray();
+        } catch (\Exception $e) {
+            error_log('Authenticated GitHub discovery error: ' . $e->getMessage());
+            return $this->getLocalRegistry();
         }
     }
 
