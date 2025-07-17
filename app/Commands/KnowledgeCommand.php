@@ -19,7 +19,11 @@ class KnowledgeCommand extends Command
                             {--context : Show context-relevant knowledge}
                             {--tags= : Add tags (comma-separated)}
                             {--json : Output as JSON}
-                            {--limit=10 : Limit number of results}';
+                            {--limit=10 : Limit number of results}
+                            {--todo : Mark as TODO item}
+                            {--todos : List all TODO items}
+                            {--priority=medium : Set priority (low/medium/high)}
+                            {--status=open : Set status (open/in-progress/completed/blocked)}';
 
     /**
      * The console command description.
@@ -34,7 +38,7 @@ class KnowledgeCommand extends Command
         // Ensure database is initialized
         if (! $this->isDatabaseReady()) {
             $this->info('🗄️ Initializing knowledge database...');
-            $exitCode = Artisan::call('storage:init');
+            $exitCode = $this->call('storage:init');
 
             if ($exitCode !== 0) {
                 $this->error('❌ Failed to initialize database');
@@ -51,6 +55,11 @@ class KnowledgeCommand extends Command
         // Context mode
         if ($this->option('context')) {
             return $this->showContext();
+        }
+
+        // Todos mode
+        if ($this->option('todos')) {
+            return $this->listTodos();
         }
 
         // Capture mode
@@ -75,6 +84,11 @@ class KnowledgeCommand extends Command
         try {
             $gitContext = $this->getGitContext();
             $tags = $this->option('tags') ? explode(',', $this->option('tags')) : [];
+            
+            // Handle TODO flag
+            if ($this->option('todo')) {
+                $tags[] = 'todo';
+            }
 
             $id = DB::table('knowledge_entries')->insertGetId([
                 'content' => $content,
@@ -84,6 +98,8 @@ class KnowledgeCommand extends Command
                 'author' => $gitContext['author'],
                 'project_type' => $gitContext['project_type'],
                 'tags' => ! empty($tags) ? json_encode(array_map('trim', $tags)) : null,
+                'priority' => $this->option('priority'),
+                'status' => $this->option('status'),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -303,6 +319,87 @@ class KnowledgeCommand extends Command
 
         if (! empty($details)) {
             $this->line('   '.implode(' | ', $details));
+        }
+    }
+
+    /**
+     * List all TODO items
+     */
+    private function listTodos(): int
+    {
+        try {
+            $query = DB::table('knowledge_entries')
+                ->where('tags', 'LIKE', '%todo%')
+                ->orWhere('status', '!=', 'completed')
+                ->whereIn('status', ['open', 'in-progress', 'blocked'])
+                ->orderBy('priority', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->limit((int) $this->option('limit'));
+
+            $entries = $query->get();
+
+            if ($entries->isEmpty()) {
+                $this->info('📋 No TODO items found');
+                return 0;
+            }
+
+            $this->info("📋 TODO Items ({$entries->count()} total)");
+            $this->newLine();
+
+            foreach ($entries as $entry) {
+                $this->displayTodoEntry($entry);
+                $this->newLine();
+            }
+
+            return 0;
+
+        } catch (\Exception $e) {
+            $this->error("❌ Error listing TODOs: {$e->getMessage()}");
+            return 1;
+        }
+    }
+
+    /**
+     * Display a TODO entry with status indicators
+     */
+    private function displayTodoEntry($entry): void
+    {
+        $statusIcon = match($entry->status ?? 'open') {
+            'open' => '⭕',
+            'in-progress' => '🔄',
+            'completed' => '✅',
+            'blocked' => '🚫',
+            default => '📝'
+        };
+
+        $priorityIcon = match($entry->priority ?? 'medium') {
+            'high' => '🔴',
+            'medium' => '🟡',
+            'low' => '🟢',
+            default => '⚪'
+        };
+
+        $this->line("{$statusIcon} {$priorityIcon} <options=bold>{$entry->content}</>");
+        
+        $details = [];
+        if ($entry->repo && $entry->branch) {
+            $details[] = "📂 {$entry->repo} • {$entry->branch}";
+        }
+        
+        if ($entry->status) {
+            $details[] = "Status: {$entry->status}";
+        }
+        
+        if ($entry->priority) {
+            $details[] = "Priority: {$entry->priority}";
+        }
+        
+        if ($entry->created_at) {
+            $details[] = '📅 ' . \Carbon\Carbon::parse($entry->created_at)->diffForHumans();
+        }
+
+        if (!empty($details)) {
+            $this->line('   ' . implode(' | ', $details));
         }
     }
 

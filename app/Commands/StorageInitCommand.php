@@ -35,7 +35,7 @@ class StorageInitCommand extends Command
         $this->info('📦 Running database migrations...');
 
         try {
-            Artisan::call('migrate', [
+            $this->call('migrate', [
                 '--path' => 'database/migrations',
                 '--force' => true,
             ]);
