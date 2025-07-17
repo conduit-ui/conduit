@@ -65,7 +65,7 @@ return [
     'activation' => [
         'events' => [
             'coding.start',
-            'git.working', 
+            'git.working',
             'time.work_hours',
             'project.laravel',
             'project.php',

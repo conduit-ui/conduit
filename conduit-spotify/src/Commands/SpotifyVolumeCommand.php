@@ -18,9 +18,10 @@ class SpotifyVolumeCommand extends Command
 
     public function handle(SpotifyAuthInterface $auth, SpotifyApiInterface $api): int
     {
-        if (!$auth->isAuthenticated()) {
+        if (! $auth->isAuthenticated()) {
             $this->error('❌ Not authenticated with Spotify');
             $this->info('💡 Run: php conduit spotify:auth');
+
             return 1;
         }
 
@@ -56,6 +57,7 @@ class SpotifyVolumeCommand extends Command
                 } else {
                     $this->info('🔇 No active playback device found');
                 }
+
                 return 0;
             }
 
@@ -63,22 +65,25 @@ class SpotifyVolumeCommand extends Command
             $success = $api->setVolume($targetVolume, $deviceId);
 
             if ($success) {
-                $emoji = match(true) {
+                $emoji = match (true) {
                     $targetVolume == 0 => '🔇',
                     $targetVolume < 30 => '🔈',
                     $targetVolume < 70 => '🔉',
                     default => '🔊'
                 };
-                
+
                 $this->info("{$emoji} Volume set to {$targetVolume}%");
+
                 return 0;
             } else {
                 $this->error('❌ Failed to set volume');
+
                 return 1;
             }
 
         } catch (\Exception $e) {
             $this->error("❌ Error: {$e->getMessage()}");
+
             return 1;
         }
     }

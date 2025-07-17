@@ -32,12 +32,13 @@ class KnowledgeCommand extends Command
     public function handle(): int
     {
         // Ensure database is initialized
-        if (!$this->isDatabaseReady()) {
+        if (! $this->isDatabaseReady()) {
             $this->info('🗄️ Initializing knowledge database...');
             $exitCode = Artisan::call('storage:init');
-            
+
             if ($exitCode !== 0) {
                 $this->error('❌ Failed to initialize database');
+
                 return 1;
             }
         }
@@ -47,18 +48,19 @@ class KnowledgeCommand extends Command
             return $this->searchKnowledge($this->option('search'));
         }
 
-        // Context mode  
+        // Context mode
         if ($this->option('context')) {
             return $this->showContext();
         }
 
         // Capture mode
         $content = $this->argument('content');
-        if (!$content) {
+        if (! $content) {
             $this->error('💭 Please provide knowledge content to capture');
             $this->info('💡 Usage: conduit know "Redis better than Memcached for our use case"');
             $this->info('🔍 Search: conduit know --search="auth"');
             $this->info('📍 Context: conduit know --context');
+
             return 1;
         }
 
@@ -81,25 +83,26 @@ class KnowledgeCommand extends Command
                 'commit_sha' => $gitContext['commit_sha'],
                 'author' => $gitContext['author'],
                 'project_type' => $gitContext['project_type'],
-                'tags' => !empty($tags) ? json_encode(array_map('trim', $tags)) : null,
+                'tags' => ! empty($tags) ? json_encode(array_map('trim', $tags)) : null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
             $this->info("✅ Knowledge captured (ID: {$id})");
-            
+
             if ($gitContext['repo']) {
                 $this->line("📍 Context: {$gitContext['repo']} • {$gitContext['branch']} • {$gitContext['commit_sha']}");
             }
 
-            if (!empty($tags)) {
-                $this->line("🏷️  Tags: " . implode(', ', $tags));
+            if (! empty($tags)) {
+                $this->line('🏷️  Tags: '.implode(', ', $tags));
             }
 
             return 0;
 
         } catch (\Exception $e) {
             $this->error("❌ Error capturing knowledge: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -119,11 +122,13 @@ class KnowledgeCommand extends Command
 
             if ($entries->isEmpty()) {
                 $this->info("🔍 No knowledge found for: {$query}");
+
                 return 0;
             }
 
             if ($this->option('json')) {
                 $this->line(json_encode($entries, JSON_PRETTY_PRINT));
+
                 return 0;
             }
 
@@ -139,6 +144,7 @@ class KnowledgeCommand extends Command
 
         } catch (\Exception $e) {
             $this->error("❌ Error searching knowledge: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -150,9 +156,9 @@ class KnowledgeCommand extends Command
     {
         try {
             $gitContext = $this->getGitContext();
-            
+
             $query = DB::table('knowledge_entries');
-            
+
             if ($gitContext['repo']) {
                 $query->where('repo', $gitContext['repo']);
             }
@@ -162,10 +168,11 @@ class KnowledgeCommand extends Command
                 ->get();
 
             if ($entries->isEmpty()) {
-                $this->info("📍 No knowledge found for current context");
+                $this->info('📍 No knowledge found for current context');
                 if ($gitContext['repo']) {
                     $this->line("   Repository: {$gitContext['repo']}");
                 }
+
                 return 0;
             }
 
@@ -184,6 +191,7 @@ class KnowledgeCommand extends Command
 
         } catch (\Exception $e) {
             $this->error("❌ Error showing context: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -237,7 +245,7 @@ class KnowledgeCommand extends Command
         try {
             $process = new Process($command);
             $process->run();
-            
+
             return $process->isSuccessful() ? trim($process->getOutput()) : null;
         } catch (\Exception $e) {
             return null;
@@ -251,15 +259,15 @@ class KnowledgeCommand extends Command
     {
         if (file_exists('composer.json')) {
             $composer = json_decode(file_get_contents('composer.json'), true);
-            
+
             if (isset($composer['require']['laravel-zero/framework'])) {
                 return 'laravel-zero';
             }
-            
+
             if (isset($composer['require']['laravel/framework'])) {
                 return 'laravel';
             }
-            
+
             return 'php';
         }
 
@@ -276,25 +284,25 @@ class KnowledgeCommand extends Command
     private function displayEntry($entry): void
     {
         $this->line("💡 <options=bold>{$entry->content}</>");
-        
+
         $details = [];
         if ($entry->repo && $entry->branch) {
             $details[] = "📂 {$entry->repo} • {$entry->branch}";
         }
-        
+
         if ($entry->created_at) {
-            $details[] = "📅 " . \Carbon\Carbon::parse($entry->created_at)->diffForHumans();
+            $details[] = '📅 '.\Carbon\Carbon::parse($entry->created_at)->diffForHumans();
         }
 
         if ($entry->tags) {
             $tags = json_decode($entry->tags, true);
             if ($tags) {
-                $details[] = "🏷️  " . implode(', ', $tags);
+                $details[] = '🏷️  '.implode(', ', $tags);
             }
         }
 
-        if (!empty($details)) {
-            $this->line("   " . implode(' | ', $details));
+        if (! empty($details)) {
+            $this->line('   '.implode(' | ', $details));
         }
     }
 

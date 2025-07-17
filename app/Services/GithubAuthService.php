@@ -13,13 +13,13 @@ class GithubAuthService
     {
         // Strategy 1: Environment variable
         $envToken = env('GITHUB_TOKEN');
-        if (!empty($envToken)) {
+        if (! empty($envToken)) {
             return $envToken;
         }
 
         // Strategy 2: GitHub CLI authentication
         $ghToken = $this->getGitHubCliToken();
-        if (!empty($ghToken)) {
+        if (! empty($ghToken)) {
             return $ghToken;
         }
 
@@ -51,7 +51,7 @@ class GithubAuthService
      */
     public function isAuthenticated(): bool
     {
-        return !empty($this->getToken());
+        return ! empty($this->getToken());
     }
 
     /**
@@ -64,9 +64,9 @@ class GithubAuthService
 
         return [
             'authenticated' => $this->isAuthenticated(),
-            'env_token' => !empty($envToken),
-            'gh_cli' => !empty($ghToken),
-            'method' => !empty($envToken) ? 'environment' : (!empty($ghToken) ? 'github-cli' : 'none'),
+            'env_token' => ! empty($envToken),
+            'gh_cli' => ! empty($ghToken),
+            'method' => ! empty($envToken) ? 'environment' : (! empty($ghToken) ? 'github-cli' : 'none'),
         ];
     }
 }

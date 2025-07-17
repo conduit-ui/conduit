@@ -35,9 +35,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Set a default GitHub token to prevent errors during service provider registration
         if (empty(config('github-client.token'))) {
-            $authService = new GithubAuthService();
+            $authService = new GithubAuthService;
             $token = $authService->getToken();
-            
+
             // Set the token in config so other providers don't throw errors
             config(['github-client.token' => $token ?: 'dummy_token_for_startup']);
         }

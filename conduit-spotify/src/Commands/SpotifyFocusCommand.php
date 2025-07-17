@@ -18,9 +18,10 @@ class SpotifyFocusCommand extends Command
 
     public function handle(SpotifyAuthInterface $auth, SpotifyApiInterface $api): int
     {
-        if (!$auth->isAuthenticated()) {
+        if (! $auth->isAuthenticated()) {
             $this->error('❌ Not authenticated with Spotify');
             $this->info('💡 Run: php conduit spotify:auth');
+
             return 1;
         }
 
@@ -34,16 +35,17 @@ class SpotifyFocusCommand extends Command
             $shuffle = $this->option('shuffle');
 
             $presets = config('spotify.presets', []);
-            
-            if (!isset($presets[$mode])) {
+
+            if (! isset($presets[$mode])) {
                 $this->error("❌ Unknown focus mode: {$mode}");
-                $this->line('💡 Available modes: ' . implode(', ', array_keys($presets)));
+                $this->line('💡 Available modes: '.implode(', ', array_keys($presets)));
                 $this->line('   Or run: php conduit spotify:focus --list');
+
                 return 1;
             }
 
             $playlistUri = $presets[$mode];
-            
+
             // Set volume if specified or use default
             $targetVolume = $volume ?? config('spotify.auto_play.volume', 70);
             if ($targetVolume) {
@@ -54,7 +56,7 @@ class SpotifyFocusCommand extends Command
             // Enable shuffle if requested
             if ($shuffle) {
                 $api->setShuffle(true);
-                $this->line("🔀 Shuffle enabled");
+                $this->line('🔀 Shuffle enabled');
             }
 
             // Start focus playlist
@@ -63,10 +65,10 @@ class SpotifyFocusCommand extends Command
             if ($success) {
                 $emoji = $this->getFocusEmoji($mode);
                 $description = $this->getFocusDescription($mode);
-                
+
                 $this->info("{$emoji} {$description}");
                 $this->line("🎵 Playing: {$mode} focus playlist");
-                
+
                 // Show current track after a moment
                 sleep(1);
                 $current = $api->getCurrentTrack();
@@ -83,11 +85,13 @@ class SpotifyFocusCommand extends Command
                 return 0;
             } else {
                 $this->error('❌ Failed to start focus music');
+
                 return 1;
             }
 
         } catch (\Exception $e) {
             $this->error("❌ Error: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -95,7 +99,7 @@ class SpotifyFocusCommand extends Command
     private function listFocusModes(): int
     {
         $presets = config('spotify.presets', []);
-        
+
         $this->info('🎵 Available Focus Modes:');
         $this->newLine();
 
@@ -114,7 +118,7 @@ class SpotifyFocusCommand extends Command
 
     private function getFocusEmoji(string $mode): string
     {
-        return match($mode) {
+        return match ($mode) {
             'coding' => '💻',
             'break' => '☕',
             'deploy' => '🚀',
@@ -126,9 +130,9 @@ class SpotifyFocusCommand extends Command
 
     private function getFocusDescription(string $mode): string
     {
-        return match($mode) {
+        return match ($mode) {
             'coding' => 'Deep focus coding music activated',
-            'break' => 'Relaxing break music started', 
+            'break' => 'Relaxing break music started',
             'deploy' => 'Celebration music for successful deployments',
             'debug' => 'Calm debugging music to help concentration',
             'testing' => 'Focused testing music for quality assurance',

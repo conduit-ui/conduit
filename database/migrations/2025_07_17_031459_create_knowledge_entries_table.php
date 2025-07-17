@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('file_path')->nullable(); // Current file context (future)
             $table->json('tags')->nullable(); // Searchable tags
             $table->timestamps();
-            
+
             // Indexes for search performance
             $table->index(['repo', 'branch']);
             $table->index('created_at');

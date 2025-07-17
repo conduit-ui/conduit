@@ -23,38 +23,40 @@ class SpotifySetupCommand extends Command
 
     private function handleReset(): int
     {
-        if (!$this->confirm('This will remove your stored Spotify credentials. Continue?')) {
+        if (! $this->confirm('This will remove your stored Spotify credentials. Continue?')) {
             $this->info('Setup cancelled.');
+
             return 0;
         }
 
         $this->clearStoredCredentials();
         $this->info('✅ Spotify credentials cleared');
         $this->line('   Run: php conduit spotify:setup');
-        
+
         return 0;
     }
 
     private function handleSetup(): int
     {
         // Check if already configured
-        if ($this->hasStoredCredentials() && !$this->option('reset')) {
+        if ($this->hasStoredCredentials() && ! $this->option('reset')) {
             $this->info('✅ Spotify is already configured');
             $this->line('   Run: php conduit spotify:auth (if not authenticated)');
             $this->line('   Run: php conduit spotify:setup --reset (to reconfigure)');
+
             return 0;
         }
 
         $this->displayWelcome();
 
-        if (!$this->confirmProceed()) {
+        if (! $this->confirmProceed()) {
             return 0;
         }
 
         $this->step1CreateApp();
         $credentials = $this->step2GetCredentials();
 
-        if (!$credentials) {
+        if (! $credentials) {
             return 1;
         }
 
@@ -87,7 +89,7 @@ class SpotifySetupCommand extends Command
 
         $this->line('Opening Spotify Developer Dashboard...');
         $this->openBrowser('https://developer.spotify.com/dashboard/applications');
-        
+
         $this->newLine();
         $this->line('<options=bold>In your browser:</options>');
         $this->line('1. Click "<options=bold>Create App</options>" button');
@@ -95,7 +97,7 @@ class SpotifySetupCommand extends Command
 
         $username = $this->getSystemUsername();
         $appName = "Conduit CLI - {$username}";
-        
+
         $this->line('<options=bold>Use these app settings:</options>');
         $this->line("   App Name: <comment>{$appName}</comment>");
         $this->line('   App Description: <comment>Personal music control for development workflows</comment>');
@@ -106,7 +108,7 @@ class SpotifySetupCommand extends Command
 
         $this->line('💡 <options=bold>Important:</options> Spotify requires 127.0.0.1 (not localhost) for security.');
         $this->line('   Use exactly: <comment>http://127.0.0.1:8888/callback</comment>');
-        
+
         $this->newLine();
         $this->ask('Press Enter when you\'ve created the app and are viewing its details...');
     }
@@ -123,20 +125,23 @@ class SpotifySetupCommand extends Command
         $this->newLine();
 
         $clientId = $this->ask('Paste your Client ID');
-        if (!$clientId) {
+        if (! $clientId) {
             $this->error('❌ Client ID is required');
+
             return null;
         }
 
         $clientSecret = $this->secret('Paste your Client Secret');
-        if (!$clientSecret) {
+        if (! $clientSecret) {
             $this->error('❌ Client Secret is required');
+
             return null;
         }
 
         // Basic validation
         if (strlen($clientId) < 20 || strlen($clientSecret) < 20) {
             $this->error('❌ Credentials appear to be invalid (too short)');
+
             return null;
         }
 
@@ -150,16 +155,16 @@ class SpotifySetupCommand extends Command
     {
         // Use file cache store to ensure persistence across command runs
         $fileCache = Cache::store('file');
-        
+
         // Store credentials with long TTL (30 days)
         $fileCache->put('spotify_client_id', $credentials['client_id'], now()->addDays(30));
         $fileCache->put('spotify_client_secret', $credentials['client_secret'], now()->addDays(30));
-        
+
         // Verify storage worked
         $storedId = $fileCache->get('spotify_client_id');
         $storedSecret = $fileCache->get('spotify_client_secret');
-        
-        if (!$storedId || !$storedSecret) {
+
+        if (! $storedId || ! $storedSecret) {
             $this->error('❌ Failed to store credentials');
             throw new \Exception('File storage failed');
         }
@@ -180,6 +185,7 @@ class SpotifySetupCommand extends Command
     private function hasStoredCredentials(): bool
     {
         $fileCache = Cache::store('file');
+
         return $fileCache->has('spotify_client_id') && $fileCache->has('spotify_client_secret');
     }
 
@@ -188,7 +194,7 @@ class SpotifySetupCommand extends Command
         $fileCache = Cache::store('file');
         $fileCache->forget('spotify_client_id');
         $fileCache->forget('spotify_client_secret');
-        
+
         // Also clear any stored tokens
         $fileCache->forget('spotify_access_token');
         $fileCache->forget('spotify_refresh_token');
@@ -203,7 +209,7 @@ class SpotifySetupCommand extends Command
     private function openBrowser(string $url): void
     {
         $os = PHP_OS_FAMILY;
-        
+
         try {
             switch ($os) {
                 case 'Darwin': // macOS

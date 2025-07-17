@@ -208,13 +208,13 @@ class ComponentManager implements ComponentManagerInterface
 
             $data = $searchRequest->json();
 
-            if (!isset($data['items'])) {
+            if (! isset($data['items'])) {
                 return $this->getLocalRegistry();
             }
 
             return collect($data['items'])
                 ->filter(function ($repo) {
-                    return !($repo['archived'] ?? false) && !($repo['disabled'] ?? false);
+                    return ! ($repo['archived'] ?? false) && ! ($repo['disabled'] ?? false);
                 })
                 ->map(function ($repo) {
                     return [
@@ -232,7 +232,8 @@ class ComponentManager implements ComponentManagerInterface
                 ->values()
                 ->toArray();
         } catch (\Exception $e) {
-            error_log('Authenticated GitHub discovery error: ' . $e->getMessage());
+            error_log('Authenticated GitHub discovery error: '.$e->getMessage());
+
             return $this->getLocalRegistry();
         }
     }

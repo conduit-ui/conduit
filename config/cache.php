@@ -10,7 +10,7 @@ return [
 
         'file' => [
             'driver' => 'file',
-            'path' => $_SERVER['HOME'] . '/.conduit/cache',
+            'path' => $_SERVER['HOME'].'/.conduit/cache',
         ],
     ],
 

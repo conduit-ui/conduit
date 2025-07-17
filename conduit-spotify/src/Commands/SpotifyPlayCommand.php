@@ -18,9 +18,10 @@ class SpotifyPlayCommand extends Command
 
     public function handle(SpotifyAuthInterface $auth, SpotifyApiInterface $api): int
     {
-        if (!$auth->isAuthenticated()) {
+        if (! $auth->isAuthenticated()) {
             $this->error('❌ Not authenticated with Spotify');
             $this->info('💡 Run: php conduit spotify:auth');
+
             return 1;
         }
 
@@ -31,7 +32,7 @@ class SpotifyPlayCommand extends Command
             $volume = $this->option('volume');
 
             // Handle preset shortcuts
-            if ($uri && !str_starts_with($uri, 'spotify:')) {
+            if ($uri && ! str_starts_with($uri, 'spotify:')) {
                 $presets = config('spotify.presets', []);
                 if (isset($presets[$uri])) {
                     $uri = $presets[$uri];
@@ -49,7 +50,7 @@ class SpotifyPlayCommand extends Command
             // Enable shuffle if requested
             if ($shuffle) {
                 $api->setShuffle(true, $deviceId);
-                $this->info("🔀 Shuffle enabled");
+                $this->info('🔀 Shuffle enabled');
             }
 
             // Start playback
@@ -59,7 +60,7 @@ class SpotifyPlayCommand extends Command
                 if ($uri) {
                     $this->info("▶️  Playing: {$uri}");
                 } else {
-                    $this->info("▶️  Resuming playback");
+                    $this->info('▶️  Resuming playback');
                 }
 
                 // Show current track after a moment
@@ -74,12 +75,13 @@ class SpotifyPlayCommand extends Command
                 return 0;
             } else {
                 $this->error('❌ Failed to start playback');
+
                 return 1;
             }
 
         } catch (\Exception $e) {
             $this->error("❌ Error: {$e->getMessage()}");
-            
+
             if (str_contains($e->getMessage(), 'No active')) {
                 $this->newLine();
                 $this->info('💡 Make sure Spotify is open on a device:');
