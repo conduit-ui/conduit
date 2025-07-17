@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b3a500dc6bcc33e92d0b97c7fa01efa4",
+    "content-hash": "3f60753fbac01d82a9416baf980376a8",
     "packages": [
         {
             "name": "amphp/amp",
@@ -2981,16 +2981,16 @@
         },
         {
             "name": "jordanpartridge/spotify-client",
-            "version": "dev-master",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jordanpartridge/spotify-client.git",
-                "reference": "9eb0e05d59cafc0dd06d7f975ccbbbb0dc7d5375"
+                "reference": "fe76b508114d8714fb1d5041ba46bdacf2825887"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jordanpartridge/spotify-client/zipball/9eb0e05d59cafc0dd06d7f975ccbbbb0dc7d5375",
-                "reference": "9eb0e05d59cafc0dd06d7f975ccbbbb0dc7d5375",
+                "url": "https://api.github.com/repos/jordanpartridge/spotify-client/zipball/fe76b508114d8714fb1d5041ba46bdacf2825887",
+                "reference": "fe76b508114d8714fb1d5041ba46bdacf2825887",
                 "shasum": ""
             },
             "require": {
@@ -3007,7 +3007,6 @@
                 "orchestra/testbench": "^8.0|^9.0",
                 "pestphp/pest": "^2.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -3058,10 +3057,10 @@
                 "spotify"
             ],
             "support": {
-                "source": "https://github.com/jordanpartridge/spotify-client/tree/v1.1.0",
+                "source": "https://github.com/jordanpartridge/spotify-client/tree/v1.2.0",
                 "issues": "https://github.com/jordanpartridge/spotify-client/issues"
             },
-            "time": "2025-07-17T02:36:27+00:00"
+            "time": "2025-07-17T03:41:04+00:00"
         },
         {
             "name": "kelunik/certificate",
@@ -10510,9 +10509,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "jordanpartridge/spotify-client": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
