@@ -1,8 +1,8 @@
 {
-    "name": "jordanpartridge/conduit",
+    "name": "conduit-ui/conduit",
     "description": "Your personal developer API & MCP integration engine - AI-ready GitHub CLI and beyond",
     "keywords": ["github", "cli", "mcp", "ai", "laravel-zero", "developer-tools", "integration"],
-    "homepage": "https://github.com/jordanpartridge/conduit",
+    "homepage": "https://github.com/conduit-ui/conduit",
     "type": "project",
     "license": "MIT",
     "authors": [
