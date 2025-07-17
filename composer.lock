@@ -2985,12 +2985,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/jordanpartridge/spotify-client.git",
-                "reference": "9eb0e05d59cafc0dd06d7f975ccbbbb0dc7d5375"
+                "reference": "fe76b508114d8714fb1d5041ba46bdacf2825887"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jordanpartridge/spotify-client/zipball/9eb0e05d59cafc0dd06d7f975ccbbbb0dc7d5375",
-                "reference": "9eb0e05d59cafc0dd06d7f975ccbbbb0dc7d5375",
+                "url": "https://api.github.com/repos/jordanpartridge/spotify-client/zipball/fe76b508114d8714fb1d5041ba46bdacf2825887",
+                "reference": "fe76b508114d8714fb1d5041ba46bdacf2825887",
                 "shasum": ""
             },
             "require": {
@@ -3058,10 +3058,10 @@
                 "spotify"
             ],
             "support": {
-                "source": "https://github.com/jordanpartridge/spotify-client/tree/v1.1.0",
+                "source": "https://github.com/jordanpartridge/spotify-client/tree/master",
                 "issues": "https://github.com/jordanpartridge/spotify-client/issues"
             },
-            "time": "2025-07-17T02:36:27+00:00"
+            "time": "2025-07-17T03:41:04+00:00"
         },
         {
             "name": "kelunik/certificate",
