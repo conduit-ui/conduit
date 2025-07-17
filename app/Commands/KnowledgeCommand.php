@@ -2,7 +2,9 @@
 
 namespace App\Commands;
 
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use LaravelZero\Framework\Commands\Command;
 use Symfony\Component\Process\Process;
 
@@ -29,6 +31,17 @@ class KnowledgeCommand extends Command
      */
     public function handle(): int
     {
+        // Ensure database is initialized
+        if (!$this->isDatabaseReady()) {
+            $this->info('🗄️ Initializing knowledge database...');
+            $exitCode = Artisan::call('storage:init');
+            
+            if ($exitCode !== 0) {
+                $this->error('❌ Failed to initialize database');
+                return 1;
+            }
+        }
+
         // Search mode
         if ($this->option('search')) {
             return $this->searchKnowledge($this->option('search'));
@@ -282,6 +295,18 @@ class KnowledgeCommand extends Command
 
         if (!empty($details)) {
             $this->line("   " . implode(' | ', $details));
+        }
+    }
+
+    /**
+     * Check if the knowledge database is ready
+     */
+    private function isDatabaseReady(): bool
+    {
+        try {
+            return Schema::hasTable('knowledge_entries');
+        } catch (\Exception $e) {
+            return false;
         }
     }
 }
