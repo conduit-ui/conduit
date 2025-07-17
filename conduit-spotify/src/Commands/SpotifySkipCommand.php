@@ -16,9 +16,10 @@ class SpotifySkipCommand extends Command
 
     public function handle(SpotifyAuthInterface $auth, SpotifyApiInterface $api): int
     {
-        if (!$auth->isAuthenticated()) {
+        if (! $auth->isAuthenticated()) {
             $this->error('❌ Not authenticated with Spotify');
             $this->info('💡 Run: php conduit spotify:auth');
+
             return 1;
         }
 
@@ -38,7 +39,7 @@ class SpotifySkipCommand extends Command
 
             if ($success) {
                 $this->info("{$emoji} Skipped to {$action} track");
-                
+
                 // Show new current track after a moment
                 sleep(1);
                 $current = $api->getCurrentTrack();
@@ -51,11 +52,13 @@ class SpotifySkipCommand extends Command
                 return 0;
             } else {
                 $this->error("❌ Failed to skip to {$action} track");
+
                 return 1;
             }
 
         } catch (\Exception $e) {
             $this->error("❌ Error: {$e->getMessage()}");
+
             return 1;
         }
     }

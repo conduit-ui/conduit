@@ -34,13 +34,15 @@ class SpotifyAuthCommand extends Command
 
     private function handleLogout(SpotifyAuthInterface $auth): int
     {
-        if (!$auth->isAuthenticated()) {
+        if (! $auth->isAuthenticated()) {
             $this->info('❌ Not currently authenticated');
+
             return 0;
         }
 
         $auth->revoke();
         $this->info('✅ Logged out from Spotify');
+
         return 0;
     }
 
@@ -61,6 +63,7 @@ class SpotifyAuthCommand extends Command
     {
         if ($auth->isAuthenticated()) {
             $this->info('✅ Already authenticated with Spotify');
+
             return 0;
         }
 
@@ -69,7 +72,7 @@ class SpotifyAuthCommand extends Command
         $clientId = $fileCache->get('spotify_client_id') ?: config('spotify.client_id');
         $clientSecret = $fileCache->get('spotify_client_secret') ?: config('spotify.client_secret');
 
-        if (!$clientId || !$clientSecret) {
+        if (! $clientId || ! $clientSecret) {
             $this->error('❌ Spotify not configured');
             $this->newLine();
             $this->line('<options=bold>Quick Setup:</options>');
@@ -77,6 +80,7 @@ class SpotifyAuthCommand extends Command
             $this->newLine();
             $this->line('This will guide you through creating a Spotify app and storing credentials.');
             $this->newLine();
+
             return 1;
         }
 
@@ -84,12 +88,12 @@ class SpotifyAuthCommand extends Command
             $this->info('🌐 Starting temporary authentication server...');
             $this->line('   This will automatically handle the OAuth callback');
             $this->newLine();
-            
+
             $this->info('🔗 Opening Spotify authorization in your browser...');
-            
+
             // Use the enhanced local server flow
             $tokenData = $auth->authenticateWithLocalServer();
-            
+
             $this->info('✅ Successfully authenticated with Spotify!');
             $this->line('   Authentication server stopped');
             $this->line('   You can now use Spotify commands');
@@ -100,14 +104,14 @@ class SpotifyAuthCommand extends Command
 
         } catch (\Exception $e) {
             $this->error("❌ Authentication failed: {$e->getMessage()}");
-            
+
             // Fallback instructions
             if (str_contains($e->getMessage(), 'Port') || str_contains($e->getMessage(), 'not available')) {
                 $this->newLine();
                 $this->line('<options=bold>Alternative:</options> Use manual authentication');
                 $this->line('Run: php conduit spotify:auth --manual');
             }
-            
+
             return 1;
         }
     }
@@ -116,39 +120,39 @@ class SpotifyAuthCommand extends Command
     {
         $this->line('<options=bold>Spotify Debug Information:</options>');
         $this->newLine();
-        
+
         // Check stored credentials
         $fileCache = Cache::store('file');
         $storedClientId = $fileCache->get('spotify_client_id');
         $storedClientSecret = $fileCache->get('spotify_client_secret');
-        
+
         // Check config credentials
         $configClientId = config('spotify.client_id');
         $configClientSecret = config('spotify.client_secret');
-        
+
         $this->line('Stored Credentials:');
-        $this->line("  Client ID: " . ($storedClientId ? '✅ SET (' . substr($storedClientId, 0, 8) . '...)' : '❌ NOT SET'));
-        $this->line("  Client Secret: " . ($storedClientSecret ? '✅ SET (' . substr($storedClientSecret, 0, 8) . '...)' : '❌ NOT SET'));
-        
+        $this->line('  Client ID: '.($storedClientId ? '✅ SET ('.substr($storedClientId, 0, 8).'...)' : '❌ NOT SET'));
+        $this->line('  Client Secret: '.($storedClientSecret ? '✅ SET ('.substr($storedClientSecret, 0, 8).'...)' : '❌ NOT SET'));
+
         $this->newLine();
         $this->line('Config Credentials:');
-        $this->line("  Client ID: " . ($configClientId ? '✅ SET (' . substr($configClientId, 0, 8) . '...)' : '❌ NOT SET'));
-        $this->line("  Client Secret: " . ($configClientSecret ? '✅ SET (' . substr($configClientSecret, 0, 8) . '...)' : '❌ NOT SET'));
-        
+        $this->line('  Client ID: '.($configClientId ? '✅ SET ('.substr($configClientId, 0, 8).'...)' : '❌ NOT SET'));
+        $this->line('  Client Secret: '.($configClientSecret ? '✅ SET ('.substr($configClientSecret, 0, 8).'...)' : '❌ NOT SET'));
+
         $this->newLine();
         $this->line('Authentication tokens:');
         $accessToken = $fileCache->get('spotify_access_token');
         $refreshToken = $fileCache->get('spotify_refresh_token');
-        $this->line("  Access Token: " . ($accessToken ? '✅ SET' : '❌ NOT SET'));
-        $this->line("  Refresh Token: " . ($refreshToken ? '✅ SET' : '❌ NOT SET'));
-        
+        $this->line('  Access Token: '.($accessToken ? '✅ SET' : '❌ NOT SET'));
+        $this->line('  Refresh Token: '.($refreshToken ? '✅ SET' : '❌ NOT SET'));
+
         return 0;
     }
 
     private function openBrowser(string $url): void
     {
         $os = PHP_OS_FAMILY;
-        
+
         try {
             switch ($os) {
                 case 'Darwin': // macOS

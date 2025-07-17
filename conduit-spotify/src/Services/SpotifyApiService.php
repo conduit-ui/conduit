@@ -10,6 +10,7 @@ use JordanPartridge\ConduitSpotify\Contracts\SpotifyAuthInterface;
 class SpotifyApiService implements SpotifyApiInterface
 {
     private Client $httpClient;
+
     private SpotifyAuthInterface $auth;
 
     public function __construct(SpotifyAuthInterface $auth)
@@ -44,6 +45,7 @@ class SpotifyApiService implements SpotifyApiInterface
         }
 
         $result = $this->makeRequest('PUT', $url, $data);
+
         return $result !== false;
     }
 
@@ -55,6 +57,7 @@ class SpotifyApiService implements SpotifyApiInterface
         }
 
         $result = $this->makeRequest('PUT', $url);
+
         return $result !== false;
     }
 
@@ -66,6 +69,7 @@ class SpotifyApiService implements SpotifyApiInterface
         }
 
         $result = $this->makeRequest('POST', $url);
+
         return $result !== false;
     }
 
@@ -77,38 +81,42 @@ class SpotifyApiService implements SpotifyApiInterface
         }
 
         $result = $this->makeRequest('POST', $url);
+
         return $result !== false;
     }
 
     public function setVolume(int $volume, ?string $deviceId = null): bool
     {
         $volume = max(0, min(100, $volume)); // Clamp between 0-100
-        
+
         $url = "me/player/volume?volume_percent={$volume}";
         if ($deviceId) {
             $url .= "&device_id={$deviceId}";
         }
 
         $result = $this->makeRequest('PUT', $url);
+
         return $result !== false;
     }
 
     public function setShuffle(bool $shuffle, ?string $deviceId = null): bool
     {
         $shuffleState = $shuffle ? 'true' : 'false';
-        
+
         $url = "me/player/shuffle?state={$shuffleState}";
         if ($deviceId) {
             $url .= "&device_id={$deviceId}";
         }
 
         $result = $this->makeRequest('PUT', $url);
+
         return $result !== false;
     }
 
     public function getUserPlaylists(int $limit = 20, int $offset = 0): array
     {
         $result = $this->makeRequest('GET', "me/playlists?limit={$limit}&offset={$offset}");
+
         return $result['items'] ?? [];
     }
 
@@ -116,13 +124,14 @@ class SpotifyApiService implements SpotifyApiInterface
     {
         $typeString = implode(',', $types);
         $encodedQuery = urlencode($query);
-        
+
         return $this->makeRequest('GET', "search?q={$encodedQuery}&type={$typeString}&limit={$limit}") ?? [];
     }
 
     public function getAvailableDevices(): array
     {
         $result = $this->makeRequest('GET', 'me/player/devices');
+
         return $result['devices'] ?? [];
     }
 
@@ -134,6 +143,7 @@ class SpotifyApiService implements SpotifyApiInterface
         ];
 
         $result = $this->makeRequest('PUT', 'me/player', $data);
+
         return $result !== false;
     }
 
@@ -143,8 +153,8 @@ class SpotifyApiService implements SpotifyApiInterface
     private function makeRequest(string $method, string $endpoint, array $data = []): array|false
     {
         $accessToken = $this->auth->getAccessToken();
-        
-        if (!$accessToken) {
+
+        if (! $accessToken) {
             throw new \Exception('Spotify authentication required. Run: conduit spotify auth');
         }
 
@@ -156,7 +166,7 @@ class SpotifyApiService implements SpotifyApiInterface
                 ],
             ];
 
-            if (!empty($data) && in_array($method, ['POST', 'PUT', 'PATCH'])) {
+            if (! empty($data) && in_array($method, ['POST', 'PUT', 'PATCH'])) {
                 $options['json'] = $data;
             }
 
@@ -168,17 +178,18 @@ class SpotifyApiService implements SpotifyApiInterface
             }
 
             $body = $response->getBody()->getContents();
+
             return json_decode($body, true) ?? [];
 
         } catch (RequestException $e) {
             if ($e->hasResponse()) {
                 $statusCode = $e->getResponse()->getStatusCode();
-                
+
                 // Handle token expiration
                 if ($statusCode === 401) {
                     throw new \Exception('Spotify token expired. Please re-authenticate: conduit spotify auth');
                 }
-                
+
                 // Handle rate limiting
                 if ($statusCode === 429) {
                     $retryAfter = $e->getResponse()->getHeader('Retry-After')[0] ?? 1;
@@ -191,7 +202,7 @@ class SpotifyApiService implements SpotifyApiInterface
                 }
             }
 
-            throw new \Exception('Spotify API error: ' . $e->getMessage());
+            throw new \Exception('Spotify API error: '.$e->getMessage());
         }
     }
 }

@@ -25,7 +25,7 @@ class SpotifyServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Merge config
-        $this->mergeConfigFrom(__DIR__ . '/../config/spotify.php', 'spotify');
+        $this->mergeConfigFrom(__DIR__.'/../config/spotify.php', 'spotify');
 
         // Register services
         $this->app->singleton(SpotifyAuthInterface::class, SpotifyAuthService::class);
@@ -53,7 +53,7 @@ class SpotifyServiceProvider extends ServiceProvider
         // Publish config if needed
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../config/spotify.php' => config_path('spotify.php'),
+                __DIR__.'/../config/spotify.php' => config_path('spotify.php'),
             ], 'spotify-config');
         }
     }

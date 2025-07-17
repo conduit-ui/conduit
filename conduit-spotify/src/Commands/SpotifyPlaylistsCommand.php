@@ -18,15 +18,16 @@ class SpotifyPlaylistsCommand extends Command
 
     public function handle(SpotifyAuthInterface $auth, SpotifyApiInterface $api): int
     {
-        if (!$auth->isAuthenticated()) {
+        if (! $auth->isAuthenticated()) {
             $this->error('❌ Not authenticated with Spotify');
             $this->info('💡 Run: php conduit spotify:auth');
+
             return 1;
         }
 
         $action = $this->argument('action') ?? 'list';
-        
-        return match($action) {
+
+        return match ($action) {
             'list' => $this->listPlaylists($api),
             'play' => $this->playPlaylist($api),
             'search' => $this->searchPlaylists($api),
@@ -42,11 +43,13 @@ class SpotifyPlaylistsCommand extends Command
 
             if (empty($playlists)) {
                 $this->info('📭 No playlists found');
+
                 return 0;
             }
 
             if ($this->option('json')) {
                 $this->line(json_encode($playlists, JSON_PRETTY_PRINT));
+
                 return 0;
             }
 
@@ -58,10 +61,10 @@ class SpotifyPlaylistsCommand extends Command
                 $name = $playlist['name'];
                 $trackCount = $playlist['tracks']['total'] ?? 0;
                 $owner = $playlist['owner']['display_name'] ?? 'Unknown';
-                
+
                 $this->line("  <info>{$number}.</info> <comment>{$name}</comment>");
                 $this->line("      {$trackCount} tracks • by {$owner}");
-                
+
                 if ($index < count($playlists) - 1) {
                     $this->newLine();
                 }
@@ -75,6 +78,7 @@ class SpotifyPlaylistsCommand extends Command
 
         } catch (\Exception $e) {
             $this->error("❌ Error: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -82,10 +86,11 @@ class SpotifyPlaylistsCommand extends Command
     private function playPlaylist(SpotifyApiInterface $api): int
     {
         $query = $this->argument('query');
-        
-        if (!$query) {
+
+        if (! $query) {
             $this->error('❌ Please specify a playlist name');
             $this->line('💡 Usage: php conduit spotify:playlists play "My Playlist"');
+
             return 1;
         }
 
@@ -101,9 +106,10 @@ class SpotifyPlaylistsCommand extends Command
                 }
             }
 
-            if (!$matchedPlaylist) {
+            if (! $matchedPlaylist) {
                 $this->error("❌ Playlist not found: {$query}");
                 $this->line('💡 Try: php conduit spotify:playlists list');
+
                 return 1;
             }
 
@@ -113,7 +119,7 @@ class SpotifyPlaylistsCommand extends Command
             if ($success) {
                 $name = $matchedPlaylist['name'];
                 $trackCount = $matchedPlaylist['tracks']['total'] ?? 0;
-                
+
                 $this->info("▶️  Playing playlist: {$name}");
                 $this->line("🎵 {$trackCount} tracks");
 
@@ -129,11 +135,13 @@ class SpotifyPlaylistsCommand extends Command
                 return 0;
             } else {
                 $this->error('❌ Failed to play playlist');
+
                 return 1;
             }
 
         } catch (\Exception $e) {
             $this->error("❌ Error: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -141,18 +149,20 @@ class SpotifyPlaylistsCommand extends Command
     private function searchPlaylists(SpotifyApiInterface $api): int
     {
         $query = $this->argument('query');
-        
-        if (!$query) {
+
+        if (! $query) {
             $this->error('❌ Please specify a search query');
             $this->line('💡 Usage: php conduit spotify:playlists search "chill"');
+
             return 1;
         }
 
         try {
             $results = $api->search($query, ['playlist'], 20);
 
-            if (!isset($results['playlists']['items']) || empty($results['playlists']['items'])) {
+            if (! isset($results['playlists']['items']) || empty($results['playlists']['items'])) {
                 $this->info("🔍 No playlists found for: {$query}");
+
                 return 0;
             }
 
@@ -160,6 +170,7 @@ class SpotifyPlaylistsCommand extends Command
 
             if ($this->option('json')) {
                 $this->line(json_encode($playlists, JSON_PRETTY_PRINT));
+
                 return 0;
             }
 
@@ -172,27 +183,28 @@ class SpotifyPlaylistsCommand extends Command
                 $trackCount = $playlist['tracks']['total'] ?? 0;
                 $owner = $playlist['owner']['display_name'] ?? 'Unknown';
                 $description = $playlist['description'] ?? '';
-                
+
                 $this->line("  <info>{$number}.</info> <comment>{$name}</comment>");
                 $this->line("      {$trackCount} tracks • by {$owner}");
-                
+
                 if ($description) {
-                    $shortDesc = strlen($description) > 60 ? substr($description, 0, 60) . '...' : $description;
+                    $shortDesc = strlen($description) > 60 ? substr($description, 0, 60).'...' : $description;
                     $this->line("      {$shortDesc}");
                 }
-                
+
                 if ($index < count($playlists) - 1) {
                     $this->newLine();
                 }
             }
 
             $this->newLine();
-            $this->line('💡 To play: php conduit spotify:play ' . $playlists[0]['uri']);
+            $this->line('💡 To play: php conduit spotify:play '.$playlists[0]['uri']);
 
             return 0;
 
         } catch (\Exception $e) {
             $this->error("❌ Error: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -205,6 +217,7 @@ class SpotifyPlaylistsCommand extends Command
         $this->line('     php conduit spotify:playlists list');
         $this->line('     php conduit spotify:playlists play "My Coding Playlist"');
         $this->line('     php conduit spotify:playlists search "chill"');
+
         return 1;
     }
 }

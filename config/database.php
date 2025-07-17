@@ -34,7 +34,7 @@ return [
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
-            'database' => env('DB_DATABASE', $_SERVER['HOME'] . '/.conduit/database.sqlite'),
+            'database' => env('DB_DATABASE', $_SERVER['HOME'].'/.conduit/database.sqlite'),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
         ],

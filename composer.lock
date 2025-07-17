@@ -2985,19 +2985,19 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/jordanpartridge/spotify-client.git",
-                "reference": "15a52dbd8acf4e23264647f9878950fab5a36493"
+                "reference": "9eb0e05d59cafc0dd06d7f975ccbbbb0dc7d5375"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jordanpartridge/spotify-client/zipball/15a52dbd8acf4e23264647f9878950fab5a36493",
-                "reference": "15a52dbd8acf4e23264647f9878950fab5a36493",
+                "url": "https://api.github.com/repos/jordanpartridge/spotify-client/zipball/9eb0e05d59cafc0dd06d7f975ccbbbb0dc7d5375",
+                "reference": "9eb0e05d59cafc0dd06d7f975ccbbbb0dc7d5375",
                 "shasum": ""
             },
             "require": {
                 "illuminate/contracts": "^10.0|^11.0|^12.0",
                 "php": "^8.2",
-                "react/http": "^1.0",
-                "react/socket": "^1.0",
+                "react/http": "^1.11",
+                "react/socket": "^1.16",
                 "saloonphp/saloon": "^3.14",
                 "spatie/laravel-package-tools": "^1.92"
             },
@@ -3058,10 +3058,10 @@
                 "spotify"
             ],
             "support": {
-                "source": "https://github.com/jordanpartridge/spotify-client/tree/v1.0.0",
+                "source": "https://github.com/jordanpartridge/spotify-client/tree/v1.1.0",
                 "issues": "https://github.com/jordanpartridge/spotify-client/issues"
             },
-            "time": "2025-07-17T01:24:46+00:00"
+            "time": "2025-07-17T02:36:27+00:00"
         },
         {
             "name": "kelunik/certificate",

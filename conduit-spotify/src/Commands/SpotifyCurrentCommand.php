@@ -16,22 +16,25 @@ class SpotifyCurrentCommand extends Command
 
     public function handle(SpotifyAuthInterface $auth, SpotifyApiInterface $api): int
     {
-        if (!$auth->isAuthenticated()) {
+        if (! $auth->isAuthenticated()) {
             $this->error('❌ Not authenticated with Spotify');
             $this->info('💡 Run: php conduit spotify:auth');
+
             return 1;
         }
 
         try {
             $current = $api->getCurrentPlayback();
 
-            if (!$current || !isset($current['item'])) {
+            if (! $current || ! isset($current['item'])) {
                 $this->info('🔇 Nothing currently playing');
+
                 return 0;
             }
 
             if ($this->option('json')) {
                 $this->line(json_encode($current, JSON_PRETTY_PRINT));
+
                 return 0;
             }
 
@@ -53,18 +56,19 @@ class SpotifyCurrentCommand extends Command
             if ($this->option('compact')) {
                 $status = $isPlaying ? '▶️' : '⏸️';
                 $this->line("{$status} <info>{$track['name']}</info> by <comment>{$artist}</comment> [{$progress}/{$duration}]");
+
                 return 0;
             }
 
             // Full display
             $this->newLine();
-            $this->line("🎵 <options=bold>Now Playing</>");
+            $this->line('🎵 <options=bold>Now Playing</>');
             $this->newLine();
 
             $this->line("  <info>Track:</info>   {$track['name']}");
             $this->line("  <info>Artist:</info>  {$artist}");
             $this->line("  <info>Album:</info>   {$album}");
-            
+
             if ($device) {
                 $this->line("  <info>Device:</info>  {$device['name']} ({$device['type']})");
                 if (isset($device['volume_percent'])) {
@@ -77,15 +81,15 @@ class SpotifyCurrentCommand extends Command
             // Progress bar
             $barLength = 40;
             $filledLength = (int) (($progressPercent / 100) * $barLength);
-            $bar = str_repeat('█', $filledLength) . str_repeat('░', $barLength - $filledLength);
-            
+            $bar = str_repeat('█', $filledLength).str_repeat('░', $barLength - $filledLength);
+
             $status = $isPlaying ? '▶️' : '⏸️';
             $this->line("  {$status} [{$bar}] {$progressPercent}%");
             $this->line("     {$progress} / {$duration}");
 
             if (isset($current['shuffle_state'])) {
                 $shuffle = $current['shuffle_state'] ? '🔀 Shuffle ON' : '🔀 Shuffle OFF';
-                $repeat = match($current['repeat_state'] ?? 'off') {
+                $repeat = match ($current['repeat_state'] ?? 'off') {
                     'track' => '🔂 Repeat Track',
                     'context' => '🔁 Repeat All',
                     default => '🔁 Repeat OFF'
@@ -100,6 +104,7 @@ class SpotifyCurrentCommand extends Command
 
         } catch (\Exception $e) {
             $this->error("❌ Error: {$e->getMessage()}");
+
             return 1;
         }
     }

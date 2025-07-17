@@ -10,9 +10,13 @@ use JordanPartridge\ConduitSpotify\Contracts\SpotifyAuthInterface;
 class SpotifyAuthService implements SpotifyAuthInterface
 {
     private Client $httpClient;
+
     private ?string $clientId;
+
     private ?string $clientSecret;
+
     private string $redirectUri;
+
     private array $defaultScopes;
 
     public function __construct()
@@ -39,7 +43,7 @@ class SpotifyAuthService implements SpotifyAuthInterface
     {
         $scopes = empty($scopes) ? $this->defaultScopes : $scopes;
         $state = bin2hex(random_bytes(16));
-        
+
         // Store state for validation
         Cache::put("spotify_auth_state_{$state}", true, now()->addMinutes(10));
 
@@ -51,7 +55,7 @@ class SpotifyAuthService implements SpotifyAuthInterface
             'state' => $state,
         ];
 
-        return 'https://accounts.spotify.com/authorize?' . http_build_query($params);
+        return 'https://accounts.spotify.com/authorize?'.http_build_query($params);
     }
 
     public function exchangeCodeForToken(string $code): array
@@ -77,7 +81,7 @@ class SpotifyAuthService implements SpotifyAuthInterface
 
             return $data;
         } catch (RequestException $e) {
-            throw new \Exception('Failed to exchange code for token: ' . $e->getMessage());
+            throw new \Exception('Failed to exchange code for token: '.$e->getMessage());
         }
     }
 
@@ -88,9 +92,9 @@ class SpotifyAuthService implements SpotifyAuthInterface
     {
         // Use configured redirect URI (extract port from it)
         $port = $this->extractPortFromRedirectUri();
-        
+
         // Check if port is available, suggest alternatives if not
-        if (!$this->isPortAvailable($port)) {
+        if (! $this->isPortAvailable($port)) {
             throw new \Exception("Port {$port} is not available. Please ensure nothing else is running on this port, or update your Spotify app settings to use a different redirect URI.");
         }
 
@@ -105,7 +109,7 @@ class SpotifyAuthService implements SpotifyAuthInterface
             // Wait for callback with timeout
             $code = $this->waitForCallback($port, 120); // 2 minute timeout
 
-            if (!$code) {
+            if (! $code) {
                 throw new \Exception('Authentication timed out or was cancelled');
             }
 
@@ -121,12 +125,12 @@ class SpotifyAuthService implements SpotifyAuthInterface
     private function extractPortFromRedirectUri(): int
     {
         $parsedUrl = parse_url($this->redirectUri);
-        
-        if (!isset($parsedUrl['port'])) {
+
+        if (! isset($parsedUrl['port'])) {
             // Default ports based on scheme
             return $parsedUrl['scheme'] === 'https' ? 443 : 80;
         }
-        
+
         return (int) $parsedUrl['port'];
     }
 
@@ -135,15 +139,17 @@ class SpotifyAuthService implements SpotifyAuthInterface
         $socket = @fsockopen('localhost', $port, $errno, $errstr, 1);
         if ($socket) {
             fclose($socket);
+
             return false; // Port is in use
         }
+
         return true; // Port is available
     }
 
     private function startTemporaryServer(int $port): array
     {
         $serverScript = $this->createServerScript($port);
-        $scriptPath = sys_get_temp_dir() . '/spotify_oauth_server.php';
+        $scriptPath = sys_get_temp_dir().'/spotify_oauth_server.php';
         file_put_contents($scriptPath, $serverScript);
 
         // Start PHP built-in server on 127.0.0.1 to match redirect URI
@@ -191,23 +197,23 @@ PHP;
 
     private function waitForCallback(int $port, int $timeoutSeconds): ?string
     {
-        $resultFile = sys_get_temp_dir() . '/spotify_oauth_result';
-        $shutdownFile = sys_get_temp_dir() . '/spotify_oauth_shutdown';
-        
+        $resultFile = sys_get_temp_dir().'/spotify_oauth_result';
+        $shutdownFile = sys_get_temp_dir().'/spotify_oauth_shutdown';
+
         // Clean up any existing files
         @unlink($resultFile);
         @unlink($shutdownFile);
 
         $startTime = time();
-        
+
         while (time() - $startTime < $timeoutSeconds) {
             if (file_exists($shutdownFile)) {
                 @unlink($shutdownFile);
-                
+
                 if (file_exists($resultFile)) {
                     $result = file_get_contents($resultFile);
                     @unlink($resultFile);
-                    
+
                     if (strpos($result, 'SUCCESS:') === 0) {
                         return substr($result, 8); // Extract code
                     } elseif (strpos($result, 'ERROR:') === 0) {
@@ -217,10 +223,10 @@ PHP;
                 }
                 break;
             }
-            
+
             usleep(500000); // 0.5 second
         }
-        
+
         return null;
     }
 
@@ -230,21 +236,21 @@ PHP;
             // Kill the server process
             shell_exec("kill {$serverProcess['pid']} 2>/dev/null");
         }
-        
+
         if (isset($serverProcess['script'])) {
             // Clean up script file
             @unlink($serverProcess['script']);
         }
-        
+
         // Clean up any remaining temp files
-        @unlink(sys_get_temp_dir() . '/spotify_oauth_result');
-        @unlink(sys_get_temp_dir() . '/spotify_oauth_shutdown');
+        @unlink(sys_get_temp_dir().'/spotify_oauth_result');
+        @unlink(sys_get_temp_dir().'/spotify_oauth_shutdown');
     }
 
     private function openBrowser(string $url): void
     {
         $os = PHP_OS_FAMILY;
-        
+
         try {
             switch ($os) {
                 case 'Darwin': // macOS
@@ -284,7 +290,7 @@ PHP;
 
             return $data;
         } catch (RequestException $e) {
-            throw new \Exception('Failed to refresh token: ' . $e->getMessage());
+            throw new \Exception('Failed to refresh token: '.$e->getMessage());
         }
     }
 
@@ -292,8 +298,8 @@ PHP;
     {
         $fileCache = Cache::store('file');
         $token = $fileCache->get('spotify_access_token');
-        
-        if (!$token) {
+
+        if (! $token) {
             return null;
         }
 
@@ -304,10 +310,12 @@ PHP;
             if ($refreshToken) {
                 try {
                     $this->refreshToken($refreshToken);
+
                     return $fileCache->get('spotify_access_token');
                 } catch (\Exception $e) {
                     // Refresh failed, clear tokens
                     $this->clearTokens();
+
                     return null;
                 }
             }
@@ -318,12 +326,13 @@ PHP;
 
     public function isAuthenticated(): bool
     {
-        return !empty($this->getAccessToken());
+        return ! empty($this->getAccessToken());
     }
 
     public function revoke(): bool
     {
         $this->clearTokens();
+
         return true;
     }
 
@@ -339,7 +348,7 @@ PHP;
 
         $fileCache->put('spotify_access_token', $accessToken, now()->addSeconds($expiresIn - 60));
         $fileCache->put('spotify_token_expires_at', now()->addSeconds($expiresIn), now()->addHours(24));
-        
+
         if ($refreshToken) {
             $fileCache->put('spotify_refresh_token', $refreshToken, now()->addDays(30));
         }
