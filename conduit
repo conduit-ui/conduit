@@ -38,17 +38,25 @@ if (!file_exists($autoloaderPath)) {
     }
 }
 
+// Load the autoloader first
+$autoloader = require $autoloaderPath;
+
 // For global packages, we need to set up paths differently
 if ($isGlobalPackage) {
-    // When installed globally, we need to create our own bootstrap
-    $autoloader = require $autoloaderPath;
-    
-    // Create application with proper global paths
+    // Global installation - use custom bootstrap
     $app = require_once __DIR__.'/bootstrap/global.php';
 } else {
-    // Local installation - use standard paths
-    $autoloader = require $autoloaderPath;
+    // Local installation - use standard bootstrap
     $app = require_once $bootstrapPath;
+}
+
+// Ensure we have a valid Laravel application
+if (!$app || !method_exists($app, 'make')) {
+    echo "Error: Failed to initialize Laravel Zero application.\n";
+    echo "Package root: " . __DIR__ . "\n";
+    echo "Is global: " . ($isGlobalPackage ? 'yes' : 'no') . "\n";
+    echo "Bootstrap path: " . ($isGlobalPackage ? __DIR__.'/bootstrap/global.php' : $bootstrapPath) . "\n";
+    exit(1);
 }
 
 /*

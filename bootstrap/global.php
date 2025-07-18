@@ -65,10 +65,18 @@ if (is_dir($sourceConfigDir)) {
 }
 
 // Create the Laravel Zero application with global paths
-$app = Application::configure(basePath: $packageRoot)->create();
+try {
+    $app = Application::configure(basePath: $packageRoot)->create();
 
-// Override storage and config paths for global installation
-$app->useStoragePath($conduitHome.'/storage');
-$app->useConfigPath($conduitHome.'/config');
+    // Override storage and config paths for global installation
+    $app->useStoragePath($conduitHome.'/storage');
+    $app->useConfigPath($conduitHome.'/config');
 
-return $app;
+    return $app;
+} catch (\Exception $e) {
+    echo 'Error creating Laravel Zero application: '.$e->getMessage()."\n";
+    echo 'Package root: '.$packageRoot."\n";
+    echo 'Conduit home: '.$conduitHome."\n";
+    echo 'Stack trace: '.$e->getTraceAsString()."\n";
+    exit(1);
+}
