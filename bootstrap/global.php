@@ -48,21 +48,19 @@ foreach ($directories as $directory) {
     }
 }
 
-// Copy default config files if they don't exist
-$configFiles = [
-    'app.php',
-    'database.php',
-    'cache.php',
-    'filesystems.php',
-    'spotify.php',
-];
+// Copy all config files from source to user directory
+$sourceConfigDir = $packageRoot.'/config';
+$targetConfigDir = $conduitHome.'/config';
 
-foreach ($configFiles as $configFile) {
-    $sourceConfig = $packageRoot.'/config/'.$configFile;
-    $targetConfig = $conduitHome.'/config/'.$configFile;
+if (is_dir($sourceConfigDir)) {
+    $configFiles = glob($sourceConfigDir.'/*.php');
+    foreach ($configFiles as $sourceConfig) {
+        $filename = basename($sourceConfig);
+        $targetConfig = $targetConfigDir.'/'.$filename;
 
-    if (file_exists($sourceConfig) && ! file_exists($targetConfig)) {
-        copy($sourceConfig, $targetConfig);
+        if (! file_exists($targetConfig)) {
+            copy($sourceConfig, $targetConfig);
+        }
     }
 }
 
