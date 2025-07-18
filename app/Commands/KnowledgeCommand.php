@@ -2,6 +2,7 @@
 
 namespace App\Commands;
 
+use App\Services\DatabaseSchemaManager;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use LaravelZero\Framework\Commands\Command;
@@ -37,13 +38,7 @@ class KnowledgeCommand extends Command
         // Ensure database is initialized
         if (! $this->isDatabaseReady()) {
             $this->info('🗄️ Initializing knowledge database...');
-            $exitCode = $this->call('storage:init');
-
-            if ($exitCode !== 0) {
-                $this->error('❌ Failed to initialize database');
-
-                return 1;
-            }
+            $this->initializeDatabase();
         }
 
         // Search mode
@@ -414,5 +409,39 @@ class KnowledgeCommand extends Command
         } catch (\Exception $e) {
             return false;
         }
+    }
+
+    private function initializeDatabase(): void
+    {
+        try {
+            $schemaManager = new DatabaseSchemaManager;
+
+            // For global installations, initialize the database schema
+            if ($this->isGlobalInstallation()) {
+                $schemaManager->initializeGlobalDatabase();
+                $this->info('🗄️ Initialized Conduit database storage...');
+                $this->line('🔧 Configured SQLite database: '.$schemaManager->getDatabasePath());
+            } else {
+                // For local installations, try to run migrations
+                $this->info('📦 Running database migrations...');
+                $exitCode = $this->call('migrate', ['--force' => true]);
+
+                if ($exitCode !== 0) {
+                    // Fallback to schema manager if migrations fail
+                    $schemaManager->ensureSchemaExists();
+                    $this->info('🔧 Created database schema programmatically');
+                }
+            }
+        } catch (\Exception $e) {
+            $this->error('❌ Failed to initialize database: '.$e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function isGlobalInstallation(): bool
+    {
+        // Check if we're running from a global composer installation
+        return strpos(__DIR__, '/.composer/') !== false ||
+               strpos(__DIR__, '/vendor/conduit-ui/conduit') !== false;
     }
 }

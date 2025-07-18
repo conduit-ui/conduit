@@ -72,6 +72,25 @@ try {
     $app->useStoragePath($conduitHome.'/storage');
     $app->useConfigPath($conduitHome.'/config');
 
+    // Configure database for global installation
+    $app->singleton('db.schema', function () {
+        return new \App\Services\DatabaseSchemaManager;
+    });
+
+    // Set up global database configuration
+    $app->afterResolving('db', function ($db) {
+        $schemaManager = new \App\Services\DatabaseSchemaManager;
+
+        // Update database configuration for global installation
+        config([
+            'database.default' => 'sqlite',
+            'database.connections.sqlite' => $schemaManager->getGlobalDatabaseConfig(),
+        ]);
+
+        // Initialize database schema
+        $schemaManager->initializeGlobalDatabase();
+    });
+
     return $app;
 } catch (\Exception $e) {
     echo 'Error creating Laravel Zero application: '.$e->getMessage()."\n";
