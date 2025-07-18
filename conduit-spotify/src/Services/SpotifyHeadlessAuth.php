@@ -2,18 +2,19 @@
 
 namespace Conduit\Spotify\Services;
 
-use Laravel\Dusk\Browser;
-use Laravel\Dusk\Chrome\ChromeProcess;
-use Laravel\Dusk\DuskServiceProvider;
-use Illuminate\Support\Facades\Cache;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
+use Illuminate\Support\Facades\Cache;
+use Laravel\Dusk\Browser;
+use Laravel\Dusk\Chrome\ChromeProcess;
 
 class SpotifyHeadlessAuth
 {
     private string $clientId;
+
     private string $redirectUri;
+
     private array $scopes;
 
     public function __construct()
@@ -50,7 +51,7 @@ class SpotifyHeadlessAuth
 
             // Wait for redirect and extract code
             $callbackUrl = $this->waitForCallback($browser);
-            
+
             return $this->extractCodeFromUrl($callbackUrl);
 
         } finally {
@@ -68,12 +69,12 @@ class SpotifyHeadlessAuth
             'state' => bin2hex(random_bytes(16)),
         ];
 
-        return 'https://accounts.spotify.com/authorize?' . http_build_query($params);
+        return 'https://accounts.spotify.com/authorize?'.http_build_query($params);
     }
 
     private function createHeadlessDriver(): RemoteWebDriver
     {
-        $options = (new ChromeOptions())->addArguments([
+        $options = (new ChromeOptions)->addArguments([
             '--disable-gpu',
             '--headless',
             '--no-sandbox',
@@ -102,8 +103,8 @@ class SpotifyHeadlessAuth
 
         // Fill login form
         $browser->type('#login-username', $username)
-                ->type('#login-password', $password)
-                ->press('#login-button');
+            ->type('#login-password', $password)
+            ->press('#login-button');
 
         // Wait for login to complete
         $browser->waitUntil('window.location.href.includes("authorize") || window.location.href.includes("callback")', 10);
@@ -117,7 +118,7 @@ class SpotifyHeadlessAuth
         $currentUrl = $browser->driver->getCurrentURL();
 
         // If we're on the auth page, click accept
-        if (str_contains($currentUrl, 'authorize') && !str_contains($currentUrl, 'callback')) {
+        if (str_contains($currentUrl, 'authorize') && ! str_contains($currentUrl, 'callback')) {
             $browser->press('[data-testid=auth-accept]');
             $browser->waitUntil('window.location.href.includes("callback")', 10);
         }
@@ -128,14 +129,14 @@ class SpotifyHeadlessAuth
     private function extractCodeFromUrl(string $url): string
     {
         $parsed = parse_url($url);
-        
-        if (!isset($parsed['query'])) {
+
+        if (! isset($parsed['query'])) {
             throw new \Exception('No query parameters found in callback URL');
         }
 
         parse_str($parsed['query'], $params);
 
-        if (!isset($params['code'])) {
+        if (! isset($params['code'])) {
             throw new \Exception('No authorization code found in callback URL');
         }
 
@@ -147,9 +148,9 @@ class SpotifyHeadlessAuth
      */
     public function ensureChromeDriverRunning(): void
     {
-        $process = new ChromeProcess();
-        
-        if (!$process->isRunning()) {
+        $process = new ChromeProcess;
+
+        if (! $process->isRunning()) {
             $process->start();
             sleep(2); // Give it time to start
         }

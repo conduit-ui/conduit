@@ -25,7 +25,7 @@ class SpotifyClientPlayCommand extends Command
             if ($volume !== null) {
                 $volume = max(0, min(100, (int) $volume));
                 $response = $client->player()->volume($volume, $deviceId);
-                
+
                 if ($response->successful()) {
                     $this->info("🔊 Volume set to {$volume}%");
                 } else {
@@ -57,7 +57,7 @@ class SpotifyClientPlayCommand extends Command
                 // Show current track after a moment
                 sleep(1);
                 $currentResponse = $client->player()->currentlyPlaying();
-                
+
                 if ($currentResponse->successful()) {
                     $current = $currentResponse->json();
                     if ($current && isset($current['item'])) {
@@ -70,6 +70,7 @@ class SpotifyClientPlayCommand extends Command
                 return 0;
             } else {
                 $this->error("❌ Failed to start playback: {$response->status()} {$response->body()}");
+
                 return 1;
             }
 

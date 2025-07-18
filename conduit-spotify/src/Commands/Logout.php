@@ -2,8 +2,8 @@
 
 namespace Conduit\Spotify\Commands;
 
-use Illuminate\Console\Command;
 use Conduit\Spotify\Contracts\AuthInterface;
+use Illuminate\Console\Command;
 
 class Logout extends Command
 {
@@ -13,8 +13,9 @@ class Logout extends Command
 
     public function handle(AuthInterface $auth): int
     {
-        if (!$auth->isAuthenticated()) {
+        if (! $auth->isAuthenticated()) {
             $this->info('❌ Not currently logged in to Spotify');
+
             return 0;
         }
 

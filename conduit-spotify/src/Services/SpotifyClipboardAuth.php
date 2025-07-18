@@ -38,16 +38,16 @@ class SpotifyClipboardAuth
         if ($this->isCallbackUrl($currentClipboard)) {
             return $currentClipboard;
         }
-        
+
         $lastClipboard = $currentClipboard;
 
         while ((time() - $startTime) < $timeoutSeconds) {
             $currentClipboard = $this->getClipboard();
-            
+
             // Check if clipboard changed
             if ($currentClipboard !== $lastClipboard) {
                 $lastClipboard = $currentClipboard;
-                
+
                 // Check if it looks like a callback URL
                 if ($this->isCallbackUrl($currentClipboard)) {
                     return $currentClipboard;
@@ -67,13 +67,13 @@ class SpotifyClipboardAuth
     public function extractCodeFromUrl(string $url): ?string
     {
         $parsedUrl = parse_url($url);
-        
-        if (!isset($parsedUrl['query'])) {
+
+        if (! isset($parsedUrl['query'])) {
             return null;
         }
 
         parse_str($parsedUrl['query'], $params);
-        
+
         return $params['code'] ?? null;
     }
 
@@ -88,17 +88,18 @@ class SpotifyClipboardAuth
             switch ($os) {
                 case 'Darwin': // macOS
                     return trim(shell_exec('pbpaste') ?? '');
-                    
+
                 case 'Linux':
                     // Try different clipboard tools
-                    $result = shell_exec('xclip -selection clipboard -o 2>/dev/null') 
+                    $result = shell_exec('xclip -selection clipboard -o 2>/dev/null')
                            ?? shell_exec('xsel --clipboard --output 2>/dev/null')
                            ?? '';
+
                     return trim($result);
-                    
+
                 case 'Windows':
                     return trim(shell_exec('powershell -command "Get-Clipboard"') ?? '');
-                    
+
                 default:
                     return '';
             }
@@ -127,7 +128,7 @@ class SpotifyClipboardAuth
         ];
 
         $lowerUrl = strtolower($url);
-        
+
         foreach ($callbackPatterns as $pattern) {
             if (str_contains($lowerUrl, $pattern)) {
                 return true;
@@ -152,17 +153,17 @@ class SpotifyClipboardAuth
     public function isClipboardMonitoringSupported(): bool
     {
         $os = PHP_OS_FAMILY;
-        
+
         switch ($os) {
             case 'Darwin': // macOS
                 return $this->command_exists('pbpaste');
-                
+
             case 'Linux':
                 return $this->command_exists('xclip') || $this->command_exists('xsel');
-                
+
             case 'Windows':
                 return true; // PowerShell is usually available
-                
+
             default:
                 return false;
         }
@@ -174,6 +175,7 @@ class SpotifyClipboardAuth
     private function command_exists($command): bool
     {
         $which = shell_exec("which $command 2>/dev/null");
-        return !empty($which);
+
+        return ! empty($which);
     }
 }

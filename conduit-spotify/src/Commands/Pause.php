@@ -2,9 +2,9 @@
 
 namespace Conduit\Spotify\Commands;
 
-use Illuminate\Console\Command;
 use Conduit\Spotify\Contracts\ApiInterface;
 use Conduit\Spotify\Contracts\AuthInterface;
+use Illuminate\Console\Command;
 
 class Pause extends Command
 {

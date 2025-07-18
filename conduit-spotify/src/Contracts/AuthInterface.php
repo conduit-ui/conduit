@@ -34,7 +34,6 @@ interface AuthInterface
      */
     public function ensureAuthenticated(): bool;
 
-
     /**
      * Revoke current authentication.
      */

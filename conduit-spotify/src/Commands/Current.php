@@ -2,9 +2,9 @@
 
 namespace Conduit\Spotify\Commands;
 
-use Illuminate\Console\Command;
 use Conduit\Spotify\Contracts\ApiInterface;
 use Conduit\Spotify\Contracts\AuthInterface;
+use Illuminate\Console\Command;
 
 class Current extends Command
 {
@@ -56,7 +56,7 @@ class Current extends Command
             if ($this->option('compact')) {
                 $status = $isPlaying ? '▶️' : '⏸️';
                 $trackUrl = $track['external_urls']['spotify'] ?? null;
-                $trackLink = $trackUrl ? " <href={$trackUrl}>🔗</>" : "";
+                $trackLink = $trackUrl ? " <href={$trackUrl}>🔗</>" : '';
                 $this->line("{$status} <info>{$track['name']}</info> by <comment>{$artist}</comment> [{$progress}/{$duration}]{$trackLink}");
 
                 return 0;
@@ -76,12 +76,12 @@ class Current extends Command
             if ($trackUrl) {
                 $this->line("          <comment>{$trackUrl}</comment>");
             }
-            
+
             $this->line("  <info>Artist:</info>  {$artist}");
             if ($artistUrl) {
                 $this->line("          <comment>{$artistUrl}</comment>");
             }
-            
+
             $this->line("  <info>Album:</info>   {$album}");
             if ($albumUrl) {
                 $this->line("          <comment>{$albumUrl}</comment>");

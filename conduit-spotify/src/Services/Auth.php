@@ -2,10 +2,10 @@
 
 namespace Conduit\Spotify\Services;
 
+use Conduit\Spotify\Contracts\AuthInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Cache;
-use Conduit\Spotify\Contracts\AuthInterface;
 
 class Auth implements AuthInterface
 {
@@ -337,8 +337,8 @@ PHP;
     {
         // This will auto-refresh if needed
         $token = $this->getAccessToken();
-        
-        if (!empty($token)) {
+
+        if (! empty($token)) {
             return true;
         }
 
@@ -355,24 +355,23 @@ PHP;
         $username = $fileCache->get('spotify_username');
         $password = $fileCache->get('spotify_password');
 
-        if (!$username || !$password) {
+        if (! $username || ! $password) {
             return false;
         }
 
         try {
-            $headlessAuth = new \Conduit\Spotify\Services\SpotifyHeadlessAuth();
+            $headlessAuth = new \Conduit\Spotify\Services\SpotifyHeadlessAuth;
             $headlessAuth->ensureChromeDriverRunning();
-            
+
             $code = $headlessAuth->authenticateHeadless($username, $password);
             $this->exchangeCodeForToken($code);
-            
+
             return true;
         } catch (\Exception $e) {
             // Headless auth failed, fall back to manual
             return false;
         }
     }
-
 
     public function revoke(): bool
     {

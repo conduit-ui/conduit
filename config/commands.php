@@ -70,14 +70,14 @@ return [
         LaravelZero\Framework\Commands\MakeCommand::class,
         LaravelZero\Framework\Commands\TestMakeCommand::class,
         LaravelZero\Framework\Commands\InstallCommand::class,
-        
+
         // Laravel development commands (hide from end users)
         Illuminate\Database\Console\Factories\FactoryMakeCommand::class,
         Illuminate\Database\Console\Migrations\MigrateMakeCommand::class,
         Illuminate\Foundation\Console\ModelMakeCommand::class,
         Illuminate\Database\Console\Seeds\SeederMakeCommand::class,
         LaravelZero\Framework\Commands\TestMakeCommand::class,
-        
+
         // Database commands (dangerous/internal)
         Illuminate\Database\Console\Migrations\FreshCommand::class,
         Illuminate\Database\Console\Migrations\InstallCommand::class,
@@ -87,9 +87,9 @@ return [
         Illuminate\Database\Console\Migrations\StatusCommand::class,
         Illuminate\Database\Console\Seeds\SeedCommand::class,
         Illuminate\Database\Console\WipeCommand::class,
-        
+
         // Internal commands (auto-handled)
-        App\Commands\StorageInitCommand::class
+        App\Commands\StorageInitCommand::class,
     ],
 
     /*

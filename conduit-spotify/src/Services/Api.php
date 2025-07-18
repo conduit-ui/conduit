@@ -2,10 +2,10 @@
 
 namespace Conduit\Spotify\Services;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
 use Conduit\Spotify\Contracts\ApiInterface;
 use Conduit\Spotify\Contracts\AuthInterface;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
 class Api implements ApiInterface
 {
@@ -155,7 +155,7 @@ class Api implements ApiInterface
 
     public function addToQueue(string $uri, ?string $deviceId = null): bool
     {
-        $url = "me/player/queue?uri=" . urlencode($uri);
+        $url = 'me/player/queue?uri='.urlencode($uri);
         if ($deviceId) {
             $url .= "&device_id={$deviceId}";
         }
@@ -219,16 +219,16 @@ class Api implements ApiInterface
                     throw new \Exception('No active Spotify device found. Please open Spotify on a device and try again.');
                 }
 
-                // Handle already playing same track or playlist conflicts  
+                // Handle already playing same track or playlist conflicts
                 if ($statusCode === 403) {
                     $responseBody = $e->getResponse()->getBody()->getContents();
                     $errorData = json_decode($responseBody, true);
                     $reason = $errorData['error']['reason'] ?? 'forbidden';
-                    
+
                     if ($reason === 'PREMIUM_REQUIRED') {
                         throw new \Exception('Premium Spotify subscription required for this action.');
                     }
-                    
+
                     // For other 403 errors, treat as already playing
                     throw new \Exception('Already playing or action not allowed.');
                 }

@@ -2,7 +2,6 @@
 
 namespace App\Commands;
 
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use LaravelZero\Framework\Commands\Command;
@@ -84,7 +83,7 @@ class KnowledgeCommand extends Command
         try {
             $gitContext = $this->getGitContext();
             $tags = $this->option('tags') ? explode(',', $this->option('tags')) : [];
-            
+
             // Handle TODO flag
             if ($this->option('todo')) {
                 $tags[] = 'todo';
@@ -340,6 +339,7 @@ class KnowledgeCommand extends Command
 
             if ($entries->isEmpty()) {
                 $this->info('📋 No TODO items found');
+
                 return 0;
             }
 
@@ -355,6 +355,7 @@ class KnowledgeCommand extends Command
 
         } catch (\Exception $e) {
             $this->error("❌ Error listing TODOs: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -364,7 +365,7 @@ class KnowledgeCommand extends Command
      */
     private function displayTodoEntry($entry): void
     {
-        $statusIcon = match($entry->status ?? 'open') {
+        $statusIcon = match ($entry->status ?? 'open') {
             'open' => '⭕',
             'in-progress' => '🔄',
             'completed' => '✅',
@@ -372,7 +373,7 @@ class KnowledgeCommand extends Command
             default => '📝'
         };
 
-        $priorityIcon = match($entry->priority ?? 'medium') {
+        $priorityIcon = match ($entry->priority ?? 'medium') {
             'high' => '🔴',
             'medium' => '🟡',
             'low' => '🟢',
@@ -380,26 +381,26 @@ class KnowledgeCommand extends Command
         };
 
         $this->line("{$statusIcon} {$priorityIcon} <options=bold>{$entry->content}</>");
-        
+
         $details = [];
         if ($entry->repo && $entry->branch) {
             $details[] = "📂 {$entry->repo} • {$entry->branch}";
         }
-        
+
         if ($entry->status) {
             $details[] = "Status: {$entry->status}";
         }
-        
+
         if ($entry->priority) {
             $details[] = "Priority: {$entry->priority}";
         }
-        
+
         if ($entry->created_at) {
-            $details[] = '📅 ' . \Carbon\Carbon::parse($entry->created_at)->diffForHumans();
+            $details[] = '📅 '.\Carbon\Carbon::parse($entry->created_at)->diffForHumans();
         }
 
-        if (!empty($details)) {
-            $this->line('   ' . implode(' | ', $details));
+        if (! empty($details)) {
+            $this->line('   '.implode(' | ', $details));
         }
     }
 

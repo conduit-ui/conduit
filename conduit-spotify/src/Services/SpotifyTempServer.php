@@ -5,8 +5,11 @@ namespace Conduit\Spotify\Services;
 class SpotifyTempServer
 {
     private $socket;
+
     private int $port;
+
     private ?string $authCode = null;
+
     private bool $isRunning = false;
 
     public function __construct(int $port = 9876)
@@ -19,7 +22,7 @@ class SpotifyTempServer
      */
     public function startAndWaitForCallback(int $timeoutSeconds = 300): ?string
     {
-        if (!$this->start()) {
+        if (! $this->start()) {
             throw new \Exception("Failed to start server on port {$this->port}");
         }
 
@@ -36,25 +39,28 @@ class SpotifyTempServer
     private function start(): bool
     {
         $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-        
-        if (!$this->socket) {
+
+        if (! $this->socket) {
             return false;
         }
 
         // Allow socket reuse
         socket_set_option($this->socket, SOL_SOCKET, SO_REUSEADDR, 1);
 
-        if (!socket_bind($this->socket, '127.0.0.1', $this->port)) {
+        if (! socket_bind($this->socket, '127.0.0.1', $this->port)) {
             socket_close($this->socket);
+
             return false;
         }
 
-        if (!socket_listen($this->socket, 1)) {
+        if (! socket_listen($this->socket, 1)) {
             socket_close($this->socket);
+
             return false;
         }
 
         $this->isRunning = true;
+
         return true;
     }
 
@@ -67,20 +73,20 @@ class SpotifyTempServer
 
         while ($this->isRunning && (time() - $startTime) < $timeoutSeconds) {
             // Set socket timeout to 1 second for non-blocking behavior
-            socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, array('sec' => 1, 'usec' => 0));
-            
+            socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, ['sec' => 1, 'usec' => 0]);
+
             $clientSocket = @socket_accept($this->socket);
-            
+
             if ($clientSocket === false) {
                 continue; // Timeout, try again
             }
 
             try {
                 $request = socket_read($clientSocket, 2048);
-                
+
                 if ($request) {
                     $this->handleRequest($request, $clientSocket);
-                    
+
                     if ($this->authCode) {
                         return $this->authCode;
                     }
@@ -101,16 +107,16 @@ class SpotifyTempServer
         // Parse the HTTP request
         $lines = explode("\r\n", $request);
         $requestLine = $lines[0] ?? '';
-        
+
         // Extract path from "GET /callback?code=... HTTP/1.1"
         if (preg_match('/^GET ([^\s]+)/', $requestLine, $matches)) {
             $path = $matches[1];
-            
+
             // Parse query parameters
             $urlParts = parse_url($path);
             if (isset($urlParts['query'])) {
                 parse_str($urlParts['query'], $params);
-                
+
                 if (isset($params['code'])) {
                     $this->authCode = $params['code'];
                 }
@@ -127,10 +133,10 @@ class SpotifyTempServer
     private function sendResponse($clientSocket): void
     {
         $html = $this->getSuccessPage();
-        
+
         $response = "HTTP/1.1 200 OK\r\n";
         $response .= "Content-Type: text/html\r\n";
-        $response .= "Content-Length: " . strlen($html) . "\r\n";
+        $response .= 'Content-Length: '.strlen($html)."\r\n";
         $response .= "Connection: close\r\n";
         $response .= "\r\n";
         $response .= $html;
@@ -179,7 +185,7 @@ class SpotifyTempServer
     private function stop(): void
     {
         $this->isRunning = false;
-        
+
         if ($this->socket) {
             socket_close($this->socket);
             $this->socket = null;
@@ -192,14 +198,14 @@ class SpotifyTempServer
     public function isPortAvailable(): bool
     {
         $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-        
-        if (!$socket) {
+
+        if (! $socket) {
             return false;
         }
 
         $result = @socket_bind($socket, '127.0.0.1', $this->port);
         socket_close($socket);
-        
+
         return $result !== false;
     }
 

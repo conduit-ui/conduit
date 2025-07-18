@@ -4,7 +4,6 @@ namespace App\Commands;
 
 use App\Services\ComponentStorage;
 use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use LaravelZero\Framework\Commands\Command;

@@ -7,7 +7,9 @@ use Symfony\Component\Process\Process;
 class BuiltinServer
 {
     private ?Process $serverProcess = null;
+
     private int $port;
+
     private string $callbackFile;
 
     public function __construct(int $port = 9876)
@@ -24,7 +26,7 @@ class BuiltinServer
         // Clean up any previous auth files
         $this->cleanupTempFiles();
 
-        if (!$this->startServer()) {
+        if (! $this->startServer()) {
             throw new \Exception("Failed to start server on port {$this->port}");
         }
 
@@ -41,7 +43,7 @@ class BuiltinServer
      */
     public function startServer(): bool
     {
-        if (!$this->isPortAvailable()) {
+        if (! $this->isPortAvailable()) {
             throw new \Exception("Port {$this->port} is not available");
         }
 
@@ -49,7 +51,7 @@ class BuiltinServer
             'php',
             '-S',
             "127.0.0.1:{$this->port}",
-            $this->callbackFile
+            $this->callbackFile,
         ];
 
         $this->serverProcess = new Process($command);
@@ -58,9 +60,9 @@ class BuiltinServer
         // Give the server a moment to start
         sleep(1);
 
-        if (!$this->serverProcess->isRunning()) {
+        if (! $this->serverProcess->isRunning()) {
             $error = $this->serverProcess->getErrorOutput();
-            throw new \Exception("Server failed to start: " . ($error ?: 'Unknown error'));
+            throw new \Exception('Server failed to start: '.($error ?: 'Unknown error'));
         }
 
         return true;
@@ -90,6 +92,7 @@ class BuiltinServer
             // Check for auth code
             if (file_exists($authCodeFile)) {
                 $authData = json_decode(file_get_contents($authCodeFile), true);
+
                 return $authData['code'] ?? null;
             }
 
@@ -100,8 +103,8 @@ class BuiltinServer
             }
 
             // Check if server is still running
-            if (!$this->serverProcess->isRunning()) {
-                throw new \Exception("Auth server stopped unexpectedly");
+            if (! $this->serverProcess->isRunning()) {
+                throw new \Exception('Auth server stopped unexpectedly');
             }
 
             usleep(500000); // Check every 500ms
@@ -116,7 +119,7 @@ class BuiltinServer
     public function isPortAvailable(): bool
     {
         $socket = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-        if (!$socket) {
+        if (! $socket) {
             return false;
         }
 

@@ -62,6 +62,7 @@ class UserPreferencesCommand extends Command
 
         if (empty($preferences)) {
             $this->info('📝 No user preferences set');
+
             return 0;
         }
 
@@ -81,13 +82,14 @@ class UserPreferencesCommand extends Command
         $preferences = Cache::get('user_preferences', []);
 
         foreach ($settings as $setting) {
-            if (!str_contains($setting, '=')) {
+            if (! str_contains($setting, '=')) {
                 $this->error("❌ Invalid format: {$setting}. Use key=value");
+
                 continue;
             }
 
             [$key, $value] = explode('=', $setting, 2);
-            
+
             // Handle special value types
             if ($value === 'true') {
                 $value = true;
@@ -112,14 +114,15 @@ class UserPreferencesCommand extends Command
     {
         $preferences = Cache::get('user_preferences', []);
 
-        if (!isset($preferences[$key])) {
+        if (! isset($preferences[$key])) {
             $this->error("❌ Preference '{$key}' not found");
+
             return 1;
         }
 
         $value = $preferences[$key];
         $displayValue = is_array($value) ? json_encode($value, JSON_PRETTY_PRINT) : $value;
-        
+
         $this->line($displayValue);
 
         return 0;
@@ -127,8 +130,9 @@ class UserPreferencesCommand extends Command
 
     private function resetPreferences(): int
     {
-        if (!$this->confirm('Are you sure you want to reset all preferences?')) {
+        if (! $this->confirm('Are you sure you want to reset all preferences?')) {
             $this->info('Operation cancelled');
+
             return 0;
         }
 
@@ -142,14 +146,14 @@ class UserPreferencesCommand extends Command
     {
         $preferences = Cache::get('user_preferences', []);
         $homeDir = $_SERVER['HOME'] ?? $_SERVER['USERPROFILE'] ?? '';
-        $filePath = $homeDir . '/.conduit/preferences.json';
+        $filePath = $homeDir.'/.conduit/preferences.json';
 
-        if (!file_exists(dirname($filePath))) {
+        if (! file_exists(dirname($filePath))) {
             mkdir(dirname($filePath), 0755, true);
         }
 
         file_put_contents($filePath, json_encode($preferences, JSON_PRETTY_PRINT));
-        
+
         $this->info("✅ Preferences exported to {$filePath}");
 
         return 0;
@@ -157,8 +161,9 @@ class UserPreferencesCommand extends Command
 
     private function importPreferences(string $filePath): int
     {
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             $this->error("❌ File not found: {$filePath}");
+
             return 1;
         }
 
@@ -167,6 +172,7 @@ class UserPreferencesCommand extends Command
 
         if ($preferences === null) {
             $this->error("❌ Invalid JSON in file: {$filePath}");
+
             return 1;
         }
 

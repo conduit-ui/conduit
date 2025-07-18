@@ -2,24 +2,24 @@
 
 namespace Conduit\Spotify;
 
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-use Conduit\Spotify\Commands\Login;
-use Conduit\Spotify\Commands\Logout;
-use Conduit\Spotify\Commands\Queue;
-use Conduit\Spotify\Commands\Search;
+use Conduit\Spotify\Commands\Analytics;
 use Conduit\Spotify\Commands\Current;
 use Conduit\Spotify\Commands\Focus;
+use Conduit\Spotify\Commands\Login;
+use Conduit\Spotify\Commands\Logout;
 use Conduit\Spotify\Commands\Pause;
 use Conduit\Spotify\Commands\Play;
 use Conduit\Spotify\Commands\Playlists;
+use Conduit\Spotify\Commands\Queue;
+use Conduit\Spotify\Commands\Search;
 use Conduit\Spotify\Commands\Setup;
 use Conduit\Spotify\Commands\Skip;
 use Conduit\Spotify\Commands\Volume;
-use Conduit\Spotify\Commands\Analytics;
 use Conduit\Spotify\Contracts\ApiInterface;
 use Conduit\Spotify\Contracts\AuthInterface;
 use Conduit\Spotify\Services\Api;
 use Conduit\Spotify\Services\Auth;
+use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider
 {

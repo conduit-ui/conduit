@@ -2,9 +2,9 @@
 
 namespace Conduit\Spotify\Commands;
 
+use Conduit\Spotify\Contracts\AuthInterface;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
-use Conduit\Spotify\Contracts\AuthInterface;
 
 class Login extends Command
 {
@@ -36,13 +36,13 @@ class Login extends Command
     {
         $this->line('<options=bold>🎵 Spotify Authentication Help</options>');
         $this->newLine();
-        
+
         $this->line('<info>Basic Usage:</info>');
         $this->line('  conduit spotify:login              Login to Spotify (auto-opens browser)');
         $this->line('  conduit spotify:logout             Logout from Spotify');
         $this->line('  conduit spotify:login --status     Check login status');
         $this->newLine();
-        
+
         $this->line('<info>Manual Authentication:</info>');
         $this->line('If automatic browser opening fails, you can:');
         $this->line('1. Copy the authorization URL from the login output');
@@ -50,7 +50,7 @@ class Login extends Command
         $this->line('3. Complete the authorization');
         $this->line('4. The callback page will auto-close');
         $this->newLine();
-        
+
         $this->line('<info>Troubleshooting:</info>');
         $this->line('• Use --debug to see credential status');
         $this->line('• Run "conduit spotify:setup" to configure credentials');
@@ -159,8 +159,8 @@ class Login extends Command
         $this->newLine();
 
         try {
-            $deviceFlow = new \Conduit\Spotify\Services\SpotifyDeviceFlow();
-            
+            $deviceFlow = new \Conduit\Spotify\Services\SpotifyDeviceFlow;
+
             // Get device code
             $deviceInfo = $deviceFlow->authenticateDevice();
             $instructions = $deviceFlow->getAuthInstructions($deviceInfo);
@@ -182,6 +182,7 @@ class Login extends Command
 
         } catch (\Exception $e) {
             $this->error("❌ Device flow failed: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -193,11 +194,11 @@ class Login extends Command
 
         // Show the steps with emojis
         $this->line('1. 🌐 Visit: <comment>https://spotify.com/pair</comment>');
-        $this->line('2. 🔑 Enter code: <info>' . $instructions['user_code'] . '</info>');
+        $this->line('2. 🔑 Enter code: <info>'.$instructions['user_code'].'</info>');
         $this->line('3. ✅ Authorize Conduit');
-        
+
         $this->newLine();
-        $this->line('<fg=yellow>Code expires in ' . ($instructions['expires_in'] / 60) . ' minutes</fg>');
+        $this->line('<fg=yellow>Code expires in '.($instructions['expires_in'] / 60).' minutes</fg>');
         $this->newLine();
     }
 
@@ -218,23 +219,26 @@ class Login extends Command
             $this->line('After authorizing, copy the full callback URL and paste it here:');
             $callbackUrl = $this->ask('Callback URL');
 
-            if (!$callbackUrl) {
+            if (! $callbackUrl) {
                 $this->error('❌ No callback URL provided');
+
                 return 1;
             }
 
             // Extract code from URL
             $parsedUrl = parse_url($callbackUrl);
-            if (!$parsedUrl || !isset($parsedUrl['query'])) {
+            if (! $parsedUrl || ! isset($parsedUrl['query'])) {
                 $this->error('❌ Invalid callback URL');
+
                 return 1;
             }
 
             parse_str($parsedUrl['query'], $queryParams);
             $code = $queryParams['code'] ?? null;
 
-            if (!$code) {
+            if (! $code) {
                 $this->error('❌ No authorization code found');
+
                 return 1;
             }
 
@@ -248,6 +252,7 @@ class Login extends Command
 
         } catch (\Exception $e) {
             $this->error("❌ Authentication failed: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -259,20 +264,21 @@ class Login extends Command
         $this->newLine();
 
         try {
-            $clipboardAuth = new \Conduit\Spotify\Services\SpotifyClipboardAuth();
-            
+            $clipboardAuth = new \Conduit\Spotify\Services\SpotifyClipboardAuth;
+
             // Check if clipboard monitoring is supported
-            if (!$clipboardAuth->isClipboardMonitoringSupported()) {
+            if (! $clipboardAuth->isClipboardMonitoringSupported()) {
                 $this->warn('⚠️  Clipboard monitoring not supported on this platform');
+
                 return $this->handleSimpleManualAuth($auth);
             }
 
             // Generate auth URL
             $authUrl = $auth->getAuthorizationUrl();
-            
+
             // Display clean URL
             $this->displayCleanAuthUrl($authUrl);
-            
+
             // Monitor clipboard
             $this->info('📋 Monitoring clipboard for authorization...');
             $this->line('   After authorizing, copy the callback URL from your browser');
@@ -280,16 +286,18 @@ class Login extends Command
 
             $callbackUrl = $clipboardAuth->monitorClipboardForCallback(300); // 5 minutes
 
-            if (!$callbackUrl) {
+            if (! $callbackUrl) {
                 $this->warn('⏰ Clipboard monitoring timed out');
+
                 return $this->fallbackToManualPaste($auth);
             }
 
             // Extract code
             $code = $clipboardAuth->extractCodeFromUrl($callbackUrl);
-            
-            if (!$code) {
+
+            if (! $code) {
                 $this->error('❌ Could not extract authorization code from URL');
+
                 return $this->fallbackToManualPaste($auth);
             }
 
@@ -306,6 +314,7 @@ class Login extends Command
 
         } catch (\Exception $e) {
             $this->error("❌ Smart auth failed: {$e->getMessage()}");
+
             return $this->fallbackToManualPaste($auth);
         }
     }
@@ -328,23 +337,25 @@ class Login extends Command
 
         try {
             $authUrl = $auth->getAuthorizationUrl();
-            
+
             $this->line('If the URL is not in your clipboard, copy this:');
             $this->line("<comment>{$authUrl}</comment>");
             $this->newLine();
 
             $callbackUrl = $this->ask('Paste the callback URL here');
 
-            if (!$callbackUrl) {
+            if (! $callbackUrl) {
                 $this->error('❌ No callback URL provided');
+
                 return 1;
             }
 
-            $clipboardAuth = new \Conduit\Spotify\Services\SpotifyClipboardAuth();
+            $clipboardAuth = new \Conduit\Spotify\Services\SpotifyClipboardAuth;
             $code = $clipboardAuth->extractCodeFromUrl($callbackUrl);
 
-            if (!$code) {
+            if (! $code) {
                 $this->error('❌ Could not extract authorization code');
+
                 return 1;
             }
 
@@ -357,6 +368,7 @@ class Login extends Command
 
         } catch (\Exception $e) {
             $this->error("❌ Authentication failed: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -368,7 +380,7 @@ class Login extends Command
         $this->newLine();
 
         try {
-            $server = new \Conduit\Spotify\Services\BuiltinServer();
+            $server = new \Conduit\Spotify\Services\BuiltinServer;
             $authUrl = null;
             $authCode = null;
 
@@ -380,7 +392,8 @@ class Login extends Command
             // Task 2: Generate auth URL
             $this->task('Generating authorization URL', function () use ($auth, &$authUrl) {
                 $authUrl = $auth->getAuthorizationUrl();
-                return !empty($authUrl);
+
+                return ! empty($authUrl);
             });
 
             // Display the auth URL and open browser
@@ -393,19 +406,22 @@ class Login extends Command
             // Task 3: Wait for user authorization
             $this->task('Waiting for authorization', function () use ($server, &$authCode) {
                 $authCode = $this->waitForAuthCode($server, 300); // 5 minutes
-                return !empty($authCode);
+
+                return ! empty($authCode);
             });
 
             // Task 4: Complete authentication
             $this->task('Processing authentication', function () use ($auth, $authCode) {
                 $tokenData = $auth->exchangeCodeForToken($authCode);
-                return !empty($tokenData['access_token'] ?? null);
+
+                return ! empty($tokenData['access_token'] ?? null);
             });
 
             // Task 5: Cleanup
             $this->task('Stopping server', function () use ($server) {
                 $server->stopServer();
                 $this->cleanupTempFiles();
+
                 return true;
             });
 
@@ -419,13 +435,13 @@ class Login extends Command
 
         } catch (\Exception $e) {
             $this->error("❌ Authentication failed: {$e->getMessage()}");
-            
+
             // Cleanup on error
             if (isset($server)) {
                 $server->stopServer();
                 $this->cleanupTempFiles();
             }
-            
+
             return 1;
         }
     }
@@ -440,6 +456,7 @@ class Login extends Command
             // Check for auth code
             if (file_exists($authCodeFile)) {
                 $authData = json_decode(file_get_contents($authCodeFile), true);
+
                 return $authData['code'] ?? null;
             }
 
@@ -450,8 +467,8 @@ class Login extends Command
             }
 
             // Check if server is still running
-            if (!$server->isRunning()) {
-                throw new \Exception("Server stopped unexpectedly");
+            if (! $server->isRunning()) {
+                throw new \Exception('Server stopped unexpectedly');
             }
 
             usleep(500000); // Check every 500ms
