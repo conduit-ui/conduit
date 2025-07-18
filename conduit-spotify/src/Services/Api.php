@@ -126,6 +126,35 @@ class Api implements ApiInterface
         return $result['items'] ?? [];
     }
 
+    public function getPlaylistTracks(string $playlistId, int $limit = 50, int $offset = 0): array
+    {
+        $result = $this->makeRequest('GET', "playlists/{$playlistId}/tracks?limit={$limit}&offset={$offset}");
+
+        return $result['items'] ?? [];
+    }
+
+    public function createPlaylist(string $name, string $description = '', bool $public = false): array
+    {
+        $userProfile = $this->makeRequest('GET', 'me');
+        $userId = $userProfile['id'];
+
+        $data = [
+            'name' => $name,
+            'description' => $description,
+            'public' => $public,
+        ];
+
+        return $this->makeRequest('POST', "users/{$userId}/playlists", $data);
+    }
+
+    public function addTracksToPlaylist(string $playlistId, array $trackUris): bool
+    {
+        $data = ['uris' => $trackUris];
+        $result = $this->makeRequest('POST', "playlists/{$playlistId}/tracks", $data);
+
+        return $result !== false;
+    }
+
     public function search(string $query, array $types = ['track'], int $limit = 20): array
     {
         $typeString = implode(',', $types);
