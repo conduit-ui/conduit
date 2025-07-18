@@ -19,8 +19,9 @@ class Focus extends Command
 
     public function handle(AuthInterface $auth, ApiInterface $api): int
     {
+        // Use ensureAuthenticated which handles auto-login and token refresh
         if (! $auth->ensureAuthenticated()) {
-            $this->error('❌ Not authenticated with Spotify');
+            $this->error('❌ Unable to authenticate with Spotify');
             $this->info('💡 Run: php conduit spotify:login');
 
             return 1;
@@ -50,6 +51,9 @@ class Focus extends Command
             }
 
             $playlistUri = $presets[$mode];
+
+            // Smart device selection - try to use the last active device or activate one
+            $this->ensureActiveDevice($api);
 
             // Set volume if specified or use default
             $targetVolume = $volume ?? config('spotify.auto_play.volume', 70);
@@ -415,5 +419,57 @@ class Focus extends Command
         }
 
         return 'Mixed';
+    }
+
+    /**
+     * Ensure there's an active Spotify device available for playback.
+     */
+    private function ensureActiveDevice(ApiInterface $api): void
+    {
+        try {
+            // First check if we have a currently active device
+            $currentPlayback = $api->getCurrentPlayback();
+            if ($currentPlayback && isset($currentPlayback['device']) && $currentPlayback['device']['is_active']) {
+                $device = $currentPlayback['device'];
+                $this->line("🎵 Using active device: {$device['name']}");
+
+                return;
+            }
+
+            // No active device, try to find and activate one
+            $devices = $api->getAvailableDevices();
+
+            if (empty($devices)) {
+                $this->warn('⚠️  No Spotify devices found');
+                $this->line('💡 Make sure Spotify is open on a device:');
+                $this->line('  • Open Spotify on your phone, computer, or web player');
+                $this->line('  • Then try this command again');
+
+                return;
+            }
+
+            // Check if any device is already active
+            $activeDevice = collect($devices)->firstWhere('is_active', true);
+            if ($activeDevice) {
+                $this->line("🎵 Using active device: {$activeDevice['name']}");
+
+                return;
+            }
+
+            // No active device, try to activate the first available one
+            $firstDevice = $devices[0];
+            $this->line("🔄 Activating device: {$firstDevice['name']}");
+
+            if ($api->transferPlayback($firstDevice['id'], false)) {
+                sleep(1); // Give device time to activate
+                $this->line('✅ Device activated successfully');
+            } else {
+                $this->warn("⚠️  Could not activate device: {$firstDevice['name']}");
+            }
+
+        } catch (\Exception $e) {
+            // If device detection fails, continue anyway - the play command will handle it
+            $this->warn("⚠️  Device detection failed: {$e->getMessage()}");
+        }
     }
 }
