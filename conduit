@@ -15,9 +15,41 @@ define('LARAVEL_START', microtime(true));
 |
 */
 
-$autoloader = require file_exists(__DIR__.'/vendor/autoload.php') ?  __DIR__.'/vendor/autoload.php' : __DIR__.'/../../autoload.php';
+// Detect if we're running as a global composer package or local installation
+$isGlobalPackage = false;
+$autoloaderPath = __DIR__.'/vendor/autoload.php';
+$bootstrapPath = __DIR__.'/bootstrap/app.php';
 
-$app = require_once __DIR__.'/bootstrap/app.php';
+// Check for global installation patterns
+if (!file_exists($autoloaderPath)) {
+    // Try common global installation paths
+    $globalPaths = [
+        __DIR__.'/../../autoload.php',           // Standard global composer location
+        __DIR__.'/../autoload.php',              // Alternative global location  
+        __DIR__.'/../../../autoload.php',        // Deep global location
+    ];
+    
+    foreach ($globalPaths as $path) {
+        if (file_exists($path)) {
+            $autoloaderPath = $path;
+            $isGlobalPackage = true;
+            break;
+        }
+    }
+}
+
+// For global packages, we need to set up paths differently
+if ($isGlobalPackage) {
+    // When installed globally, we need to create our own bootstrap
+    $autoloader = require $autoloaderPath;
+    
+    // Create application with proper global paths
+    $app = require_once __DIR__.'/bootstrap/global.php';
+} else {
+    // Local installation - use standard paths
+    $autoloader = require $autoloaderPath;
+    $app = require_once $bootstrapPath;
+}
 
 /*
 |--------------------------------------------------------------------------

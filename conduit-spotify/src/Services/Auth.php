@@ -136,7 +136,7 @@ class Auth implements AuthInterface
 
     private function isPortAvailable(int $port): bool
     {
-        $socket = @fsockopen('localhost', $port, $errno, $errstr, 1);
+        $socket = @fsockopen('127.0.0.1', $port, $errno, $errstr, 1);
         if ($socket) {
             fclose($socket);
 

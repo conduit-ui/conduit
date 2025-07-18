@@ -1347,8 +1347,20 @@ class Analytics extends Command
                         }
                     }
 
-                    // Only include tracks with high adrenaline potential
-                    if ($score >= 4) {
+                    // Filter out holiday/Christmas tracks - they're not adrenaline!
+                    $holidayKeywords = ['christmas', 'holiday', 'xmas', 'santa', 'winter', 'jingle'];
+                    $isHoliday = false;
+                    foreach ($holidayKeywords as $keyword) {
+                        if (str_contains($playlistLower, $keyword) ||
+                            str_contains($trackLower, $keyword) ||
+                            str_contains($artistLower, $keyword)) {
+                            $isHoliday = true;
+                            break;
+                        }
+                    }
+
+                    // Only include tracks with high adrenaline potential and not holiday tracks
+                    if ($score >= 4 && ! $isHoliday) {
                         $adrenalineTracks[] = [
                             'id' => $trackId,
                             'name' => $trackName,

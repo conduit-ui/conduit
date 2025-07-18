@@ -13,7 +13,7 @@ return [
 
     'client_id' => env('SPOTIFY_CLIENT_ID'),
     'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
-    'redirect_uri' => env('SPOTIFY_REDIRECT_URI', 'http://localhost:8888/callback'),
+    'redirect_uri' => env('SPOTIFY_REDIRECT_URI', 'http://127.0.0.1:9876/callback'),
 
     /*
     |--------------------------------------------------------------------------
