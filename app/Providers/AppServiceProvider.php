@@ -2,6 +2,16 @@
 
 namespace App\Providers;
 
+use App\Commands\Know\AddCommand;
+use App\Commands\Know\AutoCaptureCommand;
+use App\Commands\Know\ContextCommand;
+use App\Commands\Know\ForgetCommand;
+use App\Commands\Know\ListCommand;
+use App\Commands\Know\MigrateCommand;
+use App\Commands\Know\OptimizeCommand;
+use App\Commands\Know\SearchCommand;
+use App\Commands\Know\SetupCommand;
+use App\Commands\Know\ShowCommand;
 use App\Contracts\ComponentManagerInterface;
 use App\Contracts\ComponentStorageInterface;
 use App\Contracts\PackageInstallerInterface;
@@ -9,6 +19,7 @@ use App\Services\ComponentInstallationService;
 use App\Services\ComponentManager;
 use App\Services\ComponentStorage;
 use App\Services\GithubAuthService;
+use App\Services\KnowledgeService;
 use App\Services\SecurePackageInstaller;
 use App\Services\ServiceProviderDetector;
 use Illuminate\Support\ServiceProvider;
@@ -22,7 +33,21 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Register knowledge commands
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                AddCommand::class,
+                SearchCommand::class,
+                ListCommand::class,
+                ShowCommand::class,
+                ForgetCommand::class,
+                ContextCommand::class,
+                OptimizeCommand::class,
+                SetupCommand::class,
+                AutoCaptureCommand::class,
+                MigrateCommand::class,
+            ]);
+        }
     }
 
     /**
@@ -62,5 +87,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SecurePackageInstaller::class);
         $this->app->singleton(ServiceProviderDetector::class);
         $this->app->singleton(ComponentInstallationService::class);
+        $this->app->singleton(KnowledgeService::class);
     }
 }

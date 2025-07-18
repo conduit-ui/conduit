@@ -35,6 +35,23 @@ class KnowledgeCommand extends Command
      */
     public function handle(): int
     {
+        // Show help and guide users to new commands
+        $content = $this->argument('content');
+
+        if (! $content && ! $this->hasAnyOptions()) {
+            return $this->showKnowledgeHelp();
+        }
+
+        // Legacy support - warn about deprecation
+        if ($content || $this->hasAnyOptions()) {
+            $this->warn('⚠️  The "know" command interface is being updated for better usability.');
+            $this->info('💡 New commands available:');
+            $this->line('   • conduit know:add "your knowledge"');
+            $this->line('   • conduit know:search "query"');
+            $this->line('   • conduit know:list');
+            $this->newLine();
+        }
+
         // Ensure database is initialized
         if (! $this->isDatabaseReady()) {
             $this->info('🗄️ Initializing knowledge database...');
@@ -57,7 +74,6 @@ class KnowledgeCommand extends Command
         }
 
         // Capture mode
-        $content = $this->argument('content');
         if (! $content) {
             $this->error('💭 Please provide knowledge content to capture');
             $this->info('💡 Usage: conduit know "Redis better than Memcached for our use case"');
@@ -68,6 +84,62 @@ class KnowledgeCommand extends Command
         }
 
         return $this->captureKnowledge($content);
+    }
+
+    private function showKnowledgeHelp(): int
+    {
+        $this->info('💡 Conduit Knowledge System');
+        $this->newLine();
+
+        $this->line('📝 <options=bold>Manage Knowledge:</options>');
+        $this->line('   conduit know:add "your insight"     Add knowledge with git context');
+        $this->line('   conduit know:search "query"         Search with advanced filtering');
+        $this->line('   conduit know:list                   Browse all knowledge entries');
+        $this->line('   conduit know:context                Show context-relevant knowledge');
+        $this->line('   conduit know:show 123               Show full details for entry #123');
+        $this->line('   conduit know:forget 123             Remove knowledge entry #123');
+        $this->newLine();
+
+        $this->line('🎯 <options=bold>Common Usage:</options>');
+        $this->line('   conduit know:add "Redis outperforms Memcached for our use case" --tags=performance');
+        $this->line('   conduit know:add "OAuth tokens expire after 1 hour" --todo --priority=high');
+        $this->line('   conduit know:search "redis" --tags=performance');
+        $this->line('   conduit know:list --todo --priority=high');
+        $this->newLine();
+
+        $this->line('🎣 <options=bold>Auto-Capture:</options>');
+        $this->line('   conduit know:setup                  Install git hooks for auto-capture');
+        $this->line('   conduit know:list --tags=auto-capture  View auto-captured knowledge');
+        $this->newLine();
+
+        $this->line('💡 <options=bold>Legacy Support:</options>');
+        $this->line('   conduit know "content"              Still works (forwards to know:add)');
+        $this->line('   conduit know --search="query"       Still works (forwards to know:search)');
+        $this->newLine();
+
+        // Check database status
+        if ($this->isDatabaseReady()) {
+            $count = DB::table('knowledge_entries')->count();
+            if ($count > 0) {
+                $this->info("📊 Your knowledge base contains {$count} entries");
+            } else {
+                $this->info('🌱 Your knowledge base is empty - start adding insights!');
+            }
+        } else {
+            $this->info('🗄️ Knowledge database not yet initialized - will be created automatically');
+        }
+
+        return 0;
+    }
+
+    private function hasAnyOptions(): bool
+    {
+        return $this->option('search') ||
+               $this->option('context') ||
+               $this->option('todos') ||
+               $this->option('tags') ||
+               $this->option('todo') ||
+               $this->option('json');
     }
 
     /**
