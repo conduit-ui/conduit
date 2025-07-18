@@ -20,9 +20,35 @@ class Play extends Command
     {
         if (! $auth->ensureAuthenticated()) {
             $this->error('❌ Not authenticated with Spotify');
-            $this->info('💡 Run: conduit spotify:login');
 
-            return 1;
+            // Ask if they want to login now
+            if ($this->confirm('Would you like to login now?', true)) {
+                $this->info('🔐 Starting Spotify login...');
+
+                // Run the login command
+                $loginResult = $this->call('spotify:login');
+
+                if ($loginResult === 0) {
+                    $this->newLine();
+                    $this->info('✅ Login successful! Continuing...');
+                    $this->newLine();
+
+                    // Retry auth check
+                    if (! $auth->ensureAuthenticated()) {
+                        $this->error('❌ Authentication failed. Please try again.');
+
+                        return 1;
+                    }
+                } else {
+                    $this->error('❌ Login failed. Please try again.');
+
+                    return 1;
+                }
+            } else {
+                $this->info('💡 Run: conduit spotify:login');
+
+                return 1;
+            }
         }
 
         try {
