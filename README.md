@@ -1,4 +1,4 @@
-# 🚀 Conduit v1.0.0
+# 🚀 Conduit v1.11.0
 
 > Your personal developer API & MCP integration engine - AI-ready GitHub CLI and beyond
 
@@ -8,19 +8,23 @@
 
 Conduit is a **modular, extensible CLI platform** built with Laravel Zero that transforms your development workflow. Starting with powerful GitHub integration, it features a revolutionary component system that makes adding new tools as simple as running `conduit install:service`.
 
-## ✨ What's New in v1.0.0
+## ✨ What's New in v1.11.0
 
-### 🧩 **Modular Component System**
-- **Dynamic installation**: Add integrations on-demand without rebuilding
-- **GitHub discovery**: Auto-discover components via topics
-- **Clean lifecycle**: Install, configure, and remove components seamlessly
-- **Config-driven**: No database dependencies, pure configuration
+### 🗄️ **Shared Knowledge Database**
+- **Personal knowledge base**: Capture and search development insights with git context
+- **Shared storage**: Knowledge persists across local and global installations
+- **TODO management**: Track tasks with priority and status
+- **Smart search**: Find knowledge by content, tags, or repository context
 
-### 🐙 **GitHub Zero Integration** 
-- **Interactive workflows**: Rich Laravel Prompts UI for all operations
-- **Smart repository management**: Browse, clone, and manage repos with ease
-- **Environment automation**: Automatic `.env` setup with token validation
-- **Service provider magic**: Seamless Laravel Zero integration
+### 🎵 **Spotify Integration**
+- **Playlist generation**: 13 intelligent playlists based on your listening habits
+- **Smart device control**: Auto-device selection and authentication
+- **Duplicate analysis**: Intelligent duplicate detection with auto-cleanup
+
+### 🧩 **Component System**
+- **Modular architecture**: Discoverable, installable components
+- **Component registry**: Curated and community components
+- **Self-validation**: Components can test their own health
 
 ## 🚀 Installation
 
@@ -47,41 +51,58 @@ composer install
 ## 🎯 Quick Start
 
 ```bash
-# Install GitHub integration
-conduit install:github
+# Initialize your knowledge database
+conduit storage:init
 
-# Browse your repositories interactively
-conduit repos --interactive
+# Capture development insights
+conduit know "Redis better than Memcached for our use case" --tags="architecture,performance"
 
-# Clone a repository with smart selection  
-conduit clone --interactive
+# Search your knowledge base
+conduit know --search="auth" --limit=5
 
-# Manage installed components
-conduit components
+# Track TODOs with priority
+conduit know "Implement OAuth refresh tokens" --todo --priority=high
 
-# List all available commands
-conduit list
+# List all TODOs
+conduit know --todos
+
+# Set up Spotify integration
+conduit spotify:setup
+
+# Generate intelligent playlists
+conduit spotify:generate-playlists
+
+# Control playback
+conduit spotify:focus --device=Desktop
+
+# Manage components
+conduit components discover
+conduit components install github
 ```
 
 ## 🧩 Component Architecture
 
-Conduit's revolutionary component system allows you to:
+Conduit's component system provides modular functionality:
 
 ```bash
-# Discover available integrations
-conduit components
+# Discover available components
+conduit components discover
 
-# Install new integrations dynamically
-conduit install:github
-conduit install:docker    # Coming soon
-conduit install:aws       # Coming soon
+# Install components
+conduit components install github
+conduit components install spotify
 
-# Remove integrations cleanly
-conduit uninstall:github
+# List installed components
+conduit components list
+
+# Component management
+conduit components activate github
+conduit components deactivate spotify
 ```
 
 ### Available Components
-- **🐙 GitHub Zero**: Repository management, cloning, and exploration
+- **🎵 Spotify**: Music control, playlist generation, and analytics
+- **🐙 GitHub** *(planned)*: Repository management and automation
 - **🐳 Docker** *(planned)*: Container management and orchestration
 - **☁️ AWS Toolkit** *(planned)*: Cloud infrastructure helpers
 - **🗄️ Database Tools** *(planned)*: Migration and seeding utilities
@@ -89,10 +110,12 @@ conduit uninstall:github
 ## 🤖 AI-Ready Architecture
 
 Conduit is built from the ground up for AI integration:
+- **Knowledge capture**: Automatic git context for all insights
 - **Structured commands**: Perfect for AI tool integration
 - **Rich metadata**: Commands expose detailed help and options  
 - **Context-aware**: Smart defaults based on project detection
 - **MCP Protocol ready**: Foundation for Model Context Protocol servers
+- **Shared intelligence**: Personal knowledge base across installations
 
 ## Development
 
