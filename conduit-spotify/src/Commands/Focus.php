@@ -12,6 +12,7 @@ class Focus extends Command
                            {mode? : Focus mode (coding, break, deploy, debug, testing)}
                            {--volume= : Set volume (0-100)}
                            {--shuffle : Enable shuffle}
+                           {--generate : Generate focus mood playlists}
                            {--list : List available focus modes}';
 
     protected $description = 'Start focus music for coding workflows';
@@ -27,6 +28,10 @@ class Focus extends Command
 
         if ($this->option('list')) {
             return $this->listFocusModes();
+        }
+
+        if ($this->option('generate')) {
+            return $this->generateFocusMoodPlaylists($api);
         }
 
         try {
@@ -151,5 +156,264 @@ class Focus extends Command
         ];
 
         return $tips[$mode] ?? '💡 Tip: Stay focused and productive!';
+    }
+
+    private function generateFocusMoodPlaylists(ApiInterface $api): int
+    {
+        $this->info('🎯 FOCUS MOOD PLAYLIST GENERATOR');
+        $this->line('   Creating curated focus playlists for different work modes...');
+        $this->newLine();
+
+        $playlists = $api->getUserPlaylists(50);
+        $allTracks = [];
+        $focusMoods = [
+            'coding' => [
+                'keywords' => ['code', 'coding', 'hacker', 'focus', 'work', 'flow', 'programming', 'dev', 'electronic', 'ambient', 'lofi', 'chill'],
+                'name' => '💻 Deep Code Focus',
+                'description' => 'Ultimate coding focus playlist with electronic, ambient, and lo-fi tracks perfect for deep programming sessions.',
+                'track_count' => 50,
+                'genres' => ['Electronic/Dance', 'Ambient', 'Chill', 'Lo-Fi', 'Video Game', 'Tech', 'Focus'],
+            ],
+            'break' => [
+                'keywords' => ['chill', 'relax', 'break', 'coffee', 'cafe', 'ambient', 'acoustic', 'soft', 'calm', 'peaceful'],
+                'name' => '☕ Break & Recharge',
+                'description' => 'Relaxing break music to help you decompress and recharge between coding sessions.',
+                'track_count' => 30,
+                'genres' => ['Chill', 'Ambient', 'Cafe/Lounge', 'Acoustic', 'Soft', 'Calm'],
+            ],
+            'deploy' => [
+                'keywords' => ['celebration', 'energy', 'victory', 'success', 'pump', 'epic', 'achievement', 'win', 'rock', 'electronic'],
+                'name' => '🚀 Deploy Victory',
+                'description' => 'High-energy celebration music for successful deployments and project completions.',
+                'track_count' => 25,
+                'genres' => ['Rock', 'Electronic/Dance', 'Pop', 'Energy', 'Victory'],
+            ],
+            'debug' => [
+                'keywords' => ['calm', 'focus', 'patience', 'zen', 'meditation', 'instrumental', 'classical', 'ambient', 'slow'],
+                'name' => '🐛 Debug Zen',
+                'description' => 'Calm, focused music to help maintain patience and clarity while debugging complex issues.',
+                'track_count' => 40,
+                'genres' => ['Ambient', 'Classical', 'Instrumental', 'Calm', 'Focus'],
+            ],
+            'testing' => [
+                'keywords' => ['systematic', 'methodical', 'focus', 'precision', 'quality', 'instrumental', 'electronic', 'minimal'],
+                'name' => '🧪 Testing Flow',
+                'description' => 'Systematic, methodical music for quality assurance and testing workflows.',
+                'track_count' => 35,
+                'genres' => ['Electronic/Dance', 'Instrumental', 'Minimal', 'Focus', 'Systematic'],
+            ],
+        ];
+
+        $this->task('Analyzing music library for focus mood curation', function () use ($api, $playlists, &$allTracks) {
+            foreach ($playlists as $playlist) {
+                $tracks = $api->getPlaylistTracks($playlist['id']);
+                $playlistLower = strtolower($playlist['name']);
+
+                foreach ($tracks as $track) {
+                    $trackId = $track['track']['id'] ?? null;
+                    $trackUri = $track['track']['uri'] ?? null;
+                    $trackName = $track['track']['name'] ?? 'Unknown';
+                    $artistName = $track['track']['artists'][0]['name'] ?? 'Unknown';
+
+                    if (! $trackId || ! $trackUri) {
+                        continue;
+                    }
+
+                    $allTracks[] = [
+                        'id' => $trackId,
+                        'name' => $trackName,
+                        'artist' => $artistName,
+                        'uri' => $trackUri,
+                        'playlist' => $playlist['name'],
+                        'playlist_lower' => $playlistLower,
+                        'genre' => $this->inferGenreFromPlaylist($playlist['name'], $artistName),
+                    ];
+                }
+            }
+
+            return true;
+        });
+
+        $this->info('🎵 FOCUS MOOD ANALYSIS:');
+        $this->line('   📊 Total Tracks Analyzed: '.count($allTracks));
+        $this->newLine();
+
+        $createdPlaylists = 0;
+        foreach ($focusMoods as $mode => $config) {
+            $this->info("🎯 Generating {$config['name']} playlist...");
+
+            $selectedTracks = $this->selectTracksForFocusMode($allTracks, $config);
+
+            if (count($selectedTracks) >= 10) {
+                $this->line('   ✅ Found '.count($selectedTracks).' matching tracks');
+
+                if ($this->confirm("   Create \"{$config['name']}\" playlist?")) {
+                    $this->createFocusMoodPlaylist($api, $config, $selectedTracks);
+                    $createdPlaylists++;
+                }
+            } else {
+                $this->line('   ❌ Only found '.count($selectedTracks).' tracks, need at least 10');
+            }
+
+            $this->newLine();
+        }
+
+        $this->info('🎯 FOCUS MOOD GENERATION COMPLETE!');
+        $this->line("   ✅ Created {$createdPlaylists} focus mood playlists");
+        $this->line('   💡 Perfect for different work modes and energy levels');
+
+        return 0;
+    }
+
+    private function selectTracksForFocusMode(array $allTracks, array $config): array
+    {
+        $selectedTracks = [];
+        $usedTrackIds = [];
+        $artistCount = [];
+
+        foreach ($allTracks as $track) {
+            // Skip if already used
+            if (in_array($track['id'], $usedTrackIds)) {
+                continue;
+            }
+
+            // Check if track matches the focus mode
+            $score = 0;
+
+            // Keyword matching in playlist name
+            foreach ($config['keywords'] as $keyword) {
+                if (str_contains($track['playlist_lower'], $keyword)) {
+                    $score += 3;
+                }
+            }
+
+            // Genre matching
+            if (isset($config['genres']) && in_array($track['genre'], $config['genres'])) {
+                $score += 5;
+            }
+
+            // Artist diversity (max 3 tracks per artist)
+            if (($artistCount[$track['artist']] ?? 0) >= 3) {
+                continue;
+            }
+
+            // Only include tracks with some relevance
+            if ($score >= 3) {
+                $track['focus_score'] = $score;
+                $selectedTracks[] = $track;
+                $usedTrackIds[] = $track['id'];
+                $artistCount[$track['artist']] = ($artistCount[$track['artist']] ?? 0) + 1;
+            }
+
+            // Stop when we have enough tracks
+            if (count($selectedTracks) >= $config['track_count']) {
+                break;
+            }
+        }
+
+        // Sort by focus score (highest first)
+        usort($selectedTracks, fn ($a, $b) => $b['focus_score'] <=> $a['focus_score']);
+
+        return $selectedTracks;
+    }
+
+    private function createFocusMoodPlaylist(ApiInterface $api, array $config, array $selectedTracks): void
+    {
+        $playlist = null;
+
+        $this->task("Creating \"{$config['name']}\" playlist", function () use ($api, $config, $selectedTracks, &$playlist) {
+            // Extract URIs and shuffle for variety
+            $trackUris = array_column($selectedTracks, 'uri');
+            shuffle($trackUris);
+
+            if (empty($trackUris)) {
+                throw new \Exception('No tracks found to add to playlist');
+            }
+
+            // Create the playlist
+            $playlist = $api->createPlaylist(
+                $config['name'],
+                $config['description'].' Generated by Conduit Focus.',
+                false
+            );
+
+            // Add tracks to playlist
+            $chunks = array_chunk($trackUris, 100);
+            foreach ($chunks as $chunk) {
+                $api->addTracksToPlaylist($playlist['id'], $chunk);
+            }
+
+            return true;
+        });
+
+        $this->line("   ✅ \"{$config['name']}\" created with ".count($selectedTracks).' tracks');
+        $this->line('   🔗 https://open.spotify.com/playlist/'.$playlist['id']);
+    }
+
+    private function inferGenreFromPlaylist(string $playlistName, string $artistName): string
+    {
+        $playlistLower = strtolower($playlistName);
+
+        // Map playlist names to genres
+        $genreMap = [
+            'dance' => 'Electronic/Dance',
+            'electronic' => 'Electronic/Dance',
+            'edm' => 'Electronic/Dance',
+            'hip hop' => 'Hip-Hop/Rap',
+            'rap' => 'Hip-Hop/Rap',
+            'rock' => 'Rock',
+            'metal' => 'Metal',
+            'punk' => 'Punk',
+            'pop' => 'Pop',
+            'jazz' => 'Jazz',
+            'blues' => 'Blues',
+            'folk' => 'Folk',
+            'country' => 'Country',
+            'classical' => 'Classical',
+            'indie' => 'Indie',
+            'alternative' => 'Alternative',
+            'ambient' => 'Ambient',
+            'chill' => 'Chill',
+            'lofi' => 'Lo-Fi',
+            'funk' => 'Funk',
+            'soul' => 'Soul',
+            'r&b' => 'R&B',
+            'reggae' => 'Reggae',
+            'latin' => 'Latin',
+            'world' => 'World',
+            'soundtrack' => 'Soundtrack',
+            'christmas' => 'Holiday',
+            'holiday' => 'Holiday',
+            'workout' => 'Workout',
+            'focus' => 'Focus',
+            'study' => 'Study',
+            'coding' => 'Coding',
+            'hacker' => 'Tech',
+            'work' => 'Work',
+            '8 bit' => 'Video Game',
+            'game' => 'Video Game',
+            'bit' => 'Video Game',
+            'gta' => 'Video Game',
+            'emo' => 'Emo',
+            'hardcore' => 'Hardcore',
+            'cafe' => 'Cafe/Lounge',
+            'lounge' => 'Cafe/Lounge',
+            '90s' => 'Retro',
+            '80s' => 'Retro',
+            '70s' => 'Retro',
+            'vintage' => 'Retro',
+            'vibe' => 'Vibes',
+            'mood' => 'Mood',
+            'winter' => 'Seasonal',
+            'summer' => 'Seasonal',
+        ];
+
+        foreach ($genreMap as $keyword => $genre) {
+            if (str_contains($playlistLower, $keyword)) {
+                return $genre;
+            }
+        }
+
+        return 'Mixed';
     }
 }

@@ -15,6 +15,10 @@ class Analytics extends Command
                            {--comfort-adjacent : Find songs that vibe with your comfort songs}
                            {--high-density : Create playlist from highest comfort density playlists}
                            {--work-flow : Create coding/work energy playlist}
+                           {--vibe-coding : Create deep vibe coding playlist with no duplicates}
+                           {--night-owl : Create late night coding atmosphere playlist}
+                           {--adrenaline-rush : Create high-intensity deadline playlist}
+                           {--time-machine : Create decade-evolution musical journey playlist}
                            {--power-hour : Ultimate power hour analysis}';
 
     protected $description = '🚀 POWER HOUR playlist analytics that will blow your mind';
@@ -54,6 +58,22 @@ class Analytics extends Command
 
         if ($this->option('work-flow')) {
             return $this->createWorkFlowPlaylist($api);
+        }
+
+        if ($this->option('vibe-coding')) {
+            return $this->createVibeCodingPlaylist($api);
+        }
+
+        if ($this->option('night-owl')) {
+            return $this->createNightOwlPlaylist($api);
+        }
+
+        if ($this->option('adrenaline-rush')) {
+            return $this->createAdrenalineRushPlaylist($api);
+        }
+
+        if ($this->option('time-machine')) {
+            return $this->createTimeMachinePlaylist($api);
         }
 
         // Default: show everything
@@ -535,12 +555,18 @@ class Analytics extends Command
             $topArtists = array_slice($artistFrequency, 0, 10, true);
 
             foreach ($topArtists as $artist => $count) {
-                // Add up to 5 tracks per top artist
-                $artistTrackList = array_slice($artistTracks[$artist], 0, 5);
-                foreach ($artistTrackList as $track) {
+                // Shuffle tracks for each artist and take random 3-5
+                $artistTrackList = $artistTracks[$artist];
+                shuffle($artistTrackList);
+                $randomCount = rand(3, 5); // Random number of tracks per artist
+                $selectedTracks = array_slice($artistTrackList, 0, $randomCount);
+                foreach ($selectedTracks as $track) {
                     $trackUris[] = $track['uri'];
                 }
             }
+
+            // Shuffle the entire playlist for good measure
+            shuffle($trackUris);
 
             if (empty($trackUris)) {
                 throw new \Exception('No tracks found to add to playlist');
@@ -649,12 +675,18 @@ class Analytics extends Command
             $topGenres = array_slice($genreArtists, 0, 6, true);
 
             foreach ($topGenres as $genre => $count) {
-                // Add up to 8 tracks per genre
-                $genreTrackList = array_slice($genreTracksMap[$genre], 0, 8);
-                foreach ($genreTrackList as $track) {
+                // Shuffle tracks for each genre and take random 6-10
+                $genreTrackList = $genreTracksMap[$genre];
+                shuffle($genreTrackList);
+                $randomCount = rand(6, 10); // Random number of tracks per genre
+                $selectedTracks = array_slice($genreTrackList, 0, $randomCount);
+                foreach ($selectedTracks as $track) {
                     $trackUris[] = $track['uri'];
                 }
             }
+
+            // Shuffle genres together for a mixed experience
+            shuffle($trackUris);
 
             if (empty($trackUris)) {
                 throw new \Exception('No tracks found to add to playlist');
@@ -832,23 +864,27 @@ class Analytics extends Command
                     if ($playlistData['name'] === $playlistName) {
                         $tracks = $api->getPlaylistTracks($playlistData['id']);
 
-                        // Add up to 15 tracks from each high-density playlist
-                        $trackCount = 0;
+                        // Collect all tracks from this playlist
+                        $playlistTracks = [];
                         foreach ($tracks as $track) {
-                            if ($trackCount >= 15) {
-                                break;
-                            }
-
                             $trackUri = $track['track']['uri'] ?? null;
                             if ($trackUri) {
-                                $trackUris[] = $trackUri;
-                                $trackCount++;
+                                $playlistTracks[] = $trackUri;
                             }
                         }
+
+                        // Shuffle tracks from this playlist and take random 10-15
+                        shuffle($playlistTracks);
+                        $randomCount = rand(10, 15);
+                        $selectedTracks = array_slice($playlistTracks, 0, $randomCount);
+                        $trackUris = array_merge($trackUris, $selectedTracks);
                         break;
                     }
                 }
             }
+
+            // Final shuffle of all tracks for good measure
+            shuffle($trackUris);
 
             if (empty($trackUris)) {
                 throw new \Exception('No tracks found to add to playlist');
@@ -911,6 +947,689 @@ class Analytics extends Command
         $this->info('✅ "Work Flow Vibes" playlist created successfully!');
         $this->line('💻 Your coding energy is ready to deploy');
         $this->line('💡 Perfect for deep work sessions!');
+        $this->newLine();
+        $this->line('🔗 Open in Spotify: https://open.spotify.com/playlist/'.$playlist['id']);
+    }
+
+    private function createVibeCodingPlaylist(ApiInterface $api): int
+    {
+        $this->info('🎧 VIBE CODING DEEP DIVE');
+        $this->line('   Creating the ultimate coding playlist with deeper tracks and no duplicates...');
+        $this->newLine();
+
+        $playlists = $api->getUserPlaylists(50);
+        $allTracks = [];
+        $usedTrackIds = [];
+        $artistFrequency = [];
+        $genreTracksMap = [];
+        $comfortPlaylists = [];
+        $duplicates = [];
+
+        $this->task('Analyzing all music for deep vibe coding selection', function () use ($api, $playlists, &$allTracks, &$artistFrequency, &$genreTracksMap, &$comfortPlaylists, &$duplicates) {
+            $trackMap = [];
+
+            foreach ($playlists as $playlist) {
+                $tracks = $api->getPlaylistTracks($playlist['id']);
+                $playlistLower = strtolower($playlist['name']);
+
+                foreach ($tracks as $track) {
+                    $trackId = $track['track']['id'] ?? null;
+                    $trackUri = $track['track']['uri'] ?? null;
+                    $trackName = $track['track']['name'] ?? 'Unknown';
+                    $artistName = $track['track']['artists'][0]['name'] ?? 'Unknown';
+
+                    if (! $trackId || ! $trackUri) {
+                        continue;
+                    }
+
+                    // Build track map for duplicates
+                    if (! isset($trackMap[$trackId])) {
+                        $trackMap[$trackId] = [
+                            'name' => $trackName,
+                            'artist' => $artistName,
+                            'uri' => $trackUri,
+                            'playlists' => [],
+                        ];
+                    }
+                    $trackMap[$trackId]['playlists'][] = $playlist['name'];
+
+                    // Artist frequency
+                    $artistFrequency[$artistName] = ($artistFrequency[$artistName] ?? 0) + 1;
+
+                    // Genre mapping
+                    $inferredGenre = $this->inferGenreFromPlaylist($playlist['name'], $artistName);
+                    if (! isset($genreTracksMap[$inferredGenre])) {
+                        $genreTracksMap[$inferredGenre] = [];
+                    }
+                    $genreTracksMap[$inferredGenre][] = [
+                        'name' => $trackName,
+                        'artist' => $artistName,
+                        'uri' => $trackUri,
+                        'playlist' => $playlist['name'],
+                    ];
+
+                    // Check for coding/work vibes
+                    $workKeywords = ['work', 'flow', 'code', 'coding', 'hacker', 'focus', 'productivity', 'ambient', 'chill', 'lofi', 'electronic', 'game', 'vibe'];
+                    $isWorkVibe = false;
+                    foreach ($workKeywords as $keyword) {
+                        if (str_contains($playlistLower, $keyword)) {
+                            $isWorkVibe = true;
+                            break;
+                        }
+                    }
+
+                    $allTracks[] = [
+                        'id' => $trackId,
+                        'name' => $trackName,
+                        'artist' => $artistName,
+                        'uri' => $trackUri,
+                        'playlist' => $playlist['name'],
+                        'genre' => $inferredGenre,
+                        'work_vibe' => $isWorkVibe,
+                        'popularity_score' => 0, // Will be calculated
+                    ];
+                }
+            }
+
+            // Find duplicates (comfort songs)
+            foreach ($trackMap as $trackId => $trackData) {
+                if (count($trackData['playlists']) > 1) {
+                    $duplicates[] = $trackData;
+                    foreach ($trackData['playlists'] as $playlist) {
+                        $comfortPlaylists[$playlist] = ($comfortPlaylists[$playlist] ?? 0) + 1;
+                    }
+                }
+            }
+
+            return true;
+        });
+
+        // Score tracks based on multiple factors
+        foreach ($allTracks as &$track) {
+            $score = 0;
+
+            // High artist frequency = familiar but not overdone
+            $artistFreq = $artistFrequency[$track['artist']] ?? 0;
+            if ($artistFreq >= 3 && $artistFreq <= 8) { // Sweet spot
+                $score += 5;
+            }
+
+            // Work vibe bonus
+            if ($track['work_vibe']) {
+                $score += 10;
+            }
+
+            // Comfort adjacent bonus (in playlists with comfort songs but not duplicates themselves)
+            if (isset($comfortPlaylists[$track['playlist']]) && $comfortPlaylists[$track['playlist']] >= 2) {
+                $score += 3;
+            }
+
+            // Genre diversity bonus for coding genres
+            $codingGenres = ['Electronic/Dance', 'Ambient', 'Chill', 'Lo-Fi', 'Video Game', 'Tech'];
+            if (in_array($track['genre'], $codingGenres)) {
+                $score += 7;
+            }
+
+            $track['popularity_score'] = $score;
+        }
+
+        // Sort by score and select best tracks with no duplicates
+        usort($allTracks, fn ($a, $b) => $b['popularity_score'] <=> $a['popularity_score']);
+
+        $selectedTracks = [];
+        $usedTrackIds = [];
+        $artistCount = [];
+        $genreCount = [];
+
+        foreach ($allTracks as $track) {
+            // Skip if already used
+            if (in_array($track['id'], $usedTrackIds)) {
+                continue;
+            }
+
+            // Limit per artist for diversity (max 3 deep tracks per artist)
+            if (($artistCount[$track['artist']] ?? 0) >= 3) {
+                continue;
+            }
+
+            // Limit per genre for diversity
+            if (($genreCount[$track['genre']] ?? 0) >= 12) {
+                continue;
+            }
+
+            $selectedTracks[] = $track;
+            $usedTrackIds[] = $track['id'];
+            $artistCount[$track['artist']] = ($artistCount[$track['artist']] ?? 0) + 1;
+            $genreCount[$track['genre']] = ($genreCount[$track['genre']] ?? 0) + 1;
+
+            // Stop at 60 tracks for optimal playlist length
+            if (count($selectedTracks) >= 60) {
+                break;
+            }
+        }
+
+        $this->info('🎵 VIBE CODING SELECTION:');
+        $this->line('   🎧 Selected Tracks: '.count($selectedTracks));
+        $this->line('   🎤 Unique Artists: '.count($artistCount));
+        $this->line('   🎵 Genres Represented: '.count($genreCount));
+        $this->line('   💡 Zero duplicates with other generated playlists');
+
+        if (! empty($selectedTracks) && $this->confirm('🎧 Create "Vibe Coding Deep Dive" playlist?')) {
+            $this->generateVibeCodingPlaylist($api, $selectedTracks);
+        }
+
+        return 0;
+    }
+
+    private function generateVibeCodingPlaylist(ApiInterface $api, array $selectedTracks): void
+    {
+        $playlist = null;
+
+        $this->task('Creating "Vibe Coding Deep Dive" playlist', function () use ($api, $selectedTracks, &$playlist) {
+            // Extract URIs and shuffle for variety
+            $trackUris = array_column($selectedTracks, 'uri');
+            shuffle($trackUris);
+
+            if (empty($trackUris)) {
+                throw new \Exception('No tracks found to add to playlist');
+            }
+
+            // Create the playlist
+            $playlist = $api->createPlaylist(
+                '🎧 Vibe Coding Deep Dive',
+                'Ultimate coding playlist with deeper tracks from your best artists and genres. No duplicates with other generated playlists - pure fresh vibes for deep work sessions! Generated by Conduit Analytics.',
+                false
+            );
+
+            // Add tracks to playlist
+            $chunks = array_chunk($trackUris, 100);
+            foreach ($chunks as $chunk) {
+                $api->addTracksToPlaylist($playlist['id'], $chunk);
+            }
+
+            return true;
+        });
+
+        $this->newLine();
+        $this->info('✅ "Vibe Coding Deep Dive" playlist created successfully!');
+        $this->line('🎧 Your '.count($selectedTracks).' hand-picked coding tracks are ready');
+        $this->line('💡 Perfect for deep work with zero duplicates across all generated playlists');
+        $this->newLine();
+        $this->line('🔗 Open in Spotify: https://open.spotify.com/playlist/'.$playlist['id']);
+    }
+
+    private function createNightOwlPlaylist(ApiInterface $api): int
+    {
+        $this->info('🌙 NIGHT OWL CODE SESSIONS');
+        $this->line('   Creating atmospheric late-night coding playlist...');
+        $this->newLine();
+
+        $playlists = $api->getUserPlaylists(50);
+        $nightOwlTracks = [];
+
+        $this->task('Analyzing music for late-night coding atmosphere', function () use ($api, $playlists, &$nightOwlTracks) {
+            $nightOwlKeywords = ['night', 'dark', 'shadow', 'midnight', 'late', 'nocturne', 'moon', 'ambient', 'atmospheric', 'deep', 'underground', 'noir', 'twilight', 'after', 'hours'];
+            $nightOwlGenres = ['Ambient', 'Electronic/Dance', 'Chill', 'Lo-Fi', 'Dark', 'Atmospheric', 'Deep', 'Synthwave', 'Darkwave'];
+
+            foreach ($playlists as $playlist) {
+                $tracks = $api->getPlaylistTracks($playlist['id']);
+                $playlistLower = strtolower($playlist['name']);
+
+                foreach ($tracks as $track) {
+                    $trackId = $track['track']['id'] ?? null;
+                    $trackUri = $track['track']['uri'] ?? null;
+                    $trackName = $track['track']['name'] ?? 'Unknown';
+                    $artistName = $track['track']['artists'][0]['name'] ?? 'Unknown';
+
+                    if (! $trackId || ! $trackUri) {
+                        continue;
+                    }
+
+                    $score = 0;
+                    $trackLower = strtolower($trackName);
+                    $artistLower = strtolower($artistName);
+
+                    // Check for night-time keywords in playlist name
+                    foreach ($nightOwlKeywords as $keyword) {
+                        if (str_contains($playlistLower, $keyword)) {
+                            $score += 5;
+                            break;
+                        }
+                    }
+
+                    // Check for night-time keywords in track/artist names
+                    foreach ($nightOwlKeywords as $keyword) {
+                        if (str_contains($trackLower, $keyword) || str_contains($artistLower, $keyword)) {
+                            $score += 3;
+                            break;
+                        }
+                    }
+
+                    // Genre-based scoring
+                    $inferredGenre = $this->inferGenreFromPlaylist($playlist['name'], $artistName);
+                    if (in_array($inferredGenre, $nightOwlGenres)) {
+                        $score += 4;
+                    }
+
+                    // Favor electronic/ambient work playlists
+                    $workKeywords = ['code', 'work', 'focus', 'flow', 'programming'];
+                    foreach ($workKeywords as $keyword) {
+                        if (str_contains($playlistLower, $keyword)) {
+                            $score += 2;
+                            break;
+                        }
+                    }
+
+                    // Only include tracks with some night owl relevance
+                    if ($score >= 3) {
+                        $nightOwlTracks[] = [
+                            'id' => $trackId,
+                            'name' => $trackName,
+                            'artist' => $artistName,
+                            'uri' => $trackUri,
+                            'playlist' => $playlist['name'],
+                            'score' => $score,
+                            'genre' => $inferredGenre,
+                        ];
+                    }
+                }
+            }
+
+            return true;
+        });
+
+        // Sort by score and apply diversity rules
+        usort($nightOwlTracks, fn ($a, $b) => $b['score'] <=> $a['score']);
+
+        $selectedTracks = [];
+        $usedTrackIds = [];
+        $artistCount = [];
+
+        foreach ($nightOwlTracks as $track) {
+            if (in_array($track['id'], $usedTrackIds)) {
+                continue;
+            }
+
+            // Max 2 tracks per artist for atmospheric diversity
+            if (($artistCount[$track['artist']] ?? 0) >= 2) {
+                continue;
+            }
+
+            $selectedTracks[] = $track;
+            $usedTrackIds[] = $track['id'];
+            $artistCount[$track['artist']] = ($artistCount[$track['artist']] ?? 0) + 1;
+
+            if (count($selectedTracks) >= 45) {
+                break;
+            }
+        }
+
+        $this->info('🌙 NIGHT OWL ANALYSIS:');
+        $this->line('   🎵 Selected Tracks: '.count($selectedTracks));
+        $this->line('   💫 Perfect for 2am coding sessions');
+        $this->line('   🌃 Atmospheric and deep focus vibes');
+
+        if (! empty($selectedTracks) && $this->confirm('🌙 Create "Night Owl Code Sessions" playlist?')) {
+            $this->generateNightOwlPlaylist($api, $selectedTracks);
+        }
+
+        return 0;
+    }
+
+    private function createAdrenalineRushPlaylist(ApiInterface $api): int
+    {
+        $this->info('⚡ ADRENALINE RUSH DEADLINE MODE');
+        $this->line('   Creating high-intensity deadline crushing playlist...');
+        $this->newLine();
+
+        $playlists = $api->getUserPlaylists(50);
+        $adrenalineTracks = [];
+
+        $this->task('Analyzing music for maximum adrenaline and intensity', function () use ($api, $playlists, &$adrenalineTracks) {
+            $adrenalineKeywords = ['rush', 'energy', 'power', 'intense', 'fast', 'hard', 'pump', 'drive', 'boost', 'turbo', 'extreme', 'beast', 'fire', 'explosion', 'rage', 'fury'];
+            $adrenalineGenres = ['Electronic/Dance', 'Rock', 'Metal', 'Hardcore', 'Punk', 'Hip-Hop/Rap', 'Drum & Bass', 'Dubstep', 'Aggressive'];
+
+            foreach ($playlists as $playlist) {
+                $tracks = $api->getPlaylistTracks($playlist['id']);
+                $playlistLower = strtolower($playlist['name']);
+
+                foreach ($tracks as $track) {
+                    $trackId = $track['track']['id'] ?? null;
+                    $trackUri = $track['track']['uri'] ?? null;
+                    $trackName = $track['track']['name'] ?? 'Unknown';
+                    $artistName = $track['track']['artists'][0]['name'] ?? 'Unknown';
+
+                    if (! $trackId || ! $trackUri) {
+                        continue;
+                    }
+
+                    $score = 0;
+                    $trackLower = strtolower($trackName);
+                    $artistLower = strtolower($artistName);
+
+                    // Check for adrenaline keywords in playlist name
+                    foreach ($adrenalineKeywords as $keyword) {
+                        if (str_contains($playlistLower, $keyword)) {
+                            $score += 6;
+                            break;
+                        }
+                    }
+
+                    // Check for adrenaline keywords in track/artist names
+                    foreach ($adrenalineKeywords as $keyword) {
+                        if (str_contains($trackLower, $keyword) || str_contains($artistLower, $keyword)) {
+                            $score += 4;
+                            break;
+                        }
+                    }
+
+                    // Genre-based scoring for high-energy genres
+                    $inferredGenre = $this->inferGenreFromPlaylist($playlist['name'], $artistName);
+                    if (in_array($inferredGenre, $adrenalineGenres)) {
+                        $score += 5;
+                    }
+
+                    // Favor workout/gym playlists
+                    $workoutKeywords = ['workout', 'gym', 'training', 'beast', 'push', 'grind'];
+                    foreach ($workoutKeywords as $keyword) {
+                        if (str_contains($playlistLower, $keyword)) {
+                            $score += 3;
+                            break;
+                        }
+                    }
+
+                    // Gaming playlists often have high-energy tracks
+                    $gamingKeywords = ['game', 'gaming', 'battle', 'fight', 'war', 'combat'];
+                    foreach ($gamingKeywords as $keyword) {
+                        if (str_contains($playlistLower, $keyword)) {
+                            $score += 2;
+                            break;
+                        }
+                    }
+
+                    // Only include tracks with high adrenaline potential
+                    if ($score >= 4) {
+                        $adrenalineTracks[] = [
+                            'id' => $trackId,
+                            'name' => $trackName,
+                            'artist' => $artistName,
+                            'uri' => $trackUri,
+                            'playlist' => $playlist['name'],
+                            'score' => $score,
+                            'genre' => $inferredGenre,
+                        ];
+                    }
+                }
+            }
+
+            return true;
+        });
+
+        // Sort by score and apply diversity rules
+        usort($adrenalineTracks, fn ($a, $b) => $b['score'] <=> $a['score']);
+
+        $selectedTracks = [];
+        $usedTrackIds = [];
+        $artistCount = [];
+
+        foreach ($adrenalineTracks as $track) {
+            if (in_array($track['id'], $usedTrackIds)) {
+                continue;
+            }
+
+            // Max 3 tracks per artist for high-energy diversity
+            if (($artistCount[$track['artist']] ?? 0) >= 3) {
+                continue;
+            }
+
+            $selectedTracks[] = $track;
+            $usedTrackIds[] = $track['id'];
+            $artistCount[$track['artist']] = ($artistCount[$track['artist']] ?? 0) + 1;
+
+            if (count($selectedTracks) >= 40) {
+                break;
+            }
+        }
+
+        $this->info('⚡ ADRENALINE RUSH ANALYSIS:');
+        $this->line('   🎵 Selected Tracks: '.count($selectedTracks));
+        $this->line('   🔥 Maximum intensity for deadline crushing');
+        $this->line('   ⚡ Pure adrenaline-fueled focus');
+
+        if (! empty($selectedTracks) && $this->confirm('⚡ Create "Adrenaline Rush" playlist?')) {
+            $this->generateAdrenalineRushPlaylist($api, $selectedTracks);
+        }
+
+        return 0;
+    }
+
+    private function createTimeMachinePlaylist(ApiInterface $api): int
+    {
+        $this->info('🎭 MUSICAL TIME MACHINE');
+        $this->line('   Creating decade-evolution musical journey playlist...');
+        $this->newLine();
+
+        $playlists = $api->getUserPlaylists(50);
+        $timeMachineTracks = [];
+
+        $this->task('Analyzing music across decades for time travel journey', function () use ($api, $playlists, &$timeMachineTracks) {
+            $decadeKeywords = [
+                '60s' => ['60s', '1960', 'sixties', 'beatles', 'psychedelic', 'motown'],
+                '70s' => ['70s', '1970', 'seventies', 'disco', 'funk', 'rock', 'punk'],
+                '80s' => ['80s', '1980', 'eighties', 'synth', 'new wave', 'arcade', 'neon'],
+                '90s' => ['90s', '1990', 'nineties', 'grunge', 'alternative', 'britpop'],
+                '00s' => ['00s', '2000', 'early 2000', 'nu metal', 'emo', 'punk pop'],
+                '10s' => ['10s', '2010', 'indie', 'electronic', 'dubstep', 'hipster'],
+                '20s' => ['20s', '2020', 'modern', 'contemporary', 'current', 'new'],
+            ];
+
+            foreach ($playlists as $playlist) {
+                $tracks = $api->getPlaylistTracks($playlist['id']);
+                $playlistLower = strtolower($playlist['name']);
+
+                foreach ($tracks as $track) {
+                    $trackId = $track['track']['id'] ?? null;
+                    $trackUri = $track['track']['uri'] ?? null;
+                    $trackName = $track['track']['name'] ?? 'Unknown';
+                    $artistName = $track['track']['artists'][0]['name'] ?? 'Unknown';
+
+                    if (! $trackId || ! $trackUri) {
+                        continue;
+                    }
+
+                    $trackLower = strtolower($trackName);
+                    $artistLower = strtolower($artistName);
+                    $decade = 'Unknown';
+                    $score = 0;
+
+                    // Determine decade and score
+                    foreach ($decadeKeywords as $dec => $keywords) {
+                        foreach ($keywords as $keyword) {
+                            if (str_contains($playlistLower, $keyword) ||
+                                str_contains($trackLower, $keyword) ||
+                                str_contains($artistLower, $keyword)) {
+                                $decade = $dec;
+                                $score += 5;
+                                break 2;
+                            }
+                        }
+                    }
+
+                    // Check for vintage/retro indicators
+                    $vintageKeywords = ['vintage', 'retro', 'classic', 'throwback', 'old school', 'nostalgia'];
+                    foreach ($vintageKeywords as $keyword) {
+                        if (str_contains($playlistLower, $keyword)) {
+                            $score += 3;
+                            break;
+                        }
+                    }
+
+                    // Include tracks even without explicit decade markers if they're in retro playlists
+                    if ($decade === 'Unknown' && $score >= 3) {
+                        $decade = 'Retro';
+                    }
+
+                    if ($decade !== 'Unknown') {
+                        $timeMachineTracks[] = [
+                            'id' => $trackId,
+                            'name' => $trackName,
+                            'artist' => $artistName,
+                            'uri' => $trackUri,
+                            'playlist' => $playlist['name'],
+                            'decade' => $decade,
+                            'score' => $score,
+                        ];
+                    }
+                }
+            }
+
+            return true;
+        });
+
+        // Group by decade and select diverse tracks
+        $tracksByDecade = [];
+        foreach ($timeMachineTracks as $track) {
+            $tracksByDecade[$track['decade']][] = $track;
+        }
+
+        $selectedTracks = [];
+        $usedTrackIds = [];
+        $artistCount = [];
+
+        // Sort decades chronologically
+        $chronologicalOrder = ['60s', '70s', '80s', '90s', '00s', '10s', '20s', 'Retro'];
+
+        foreach ($chronologicalOrder as $decade) {
+            if (! isset($tracksByDecade[$decade])) {
+                continue;
+            }
+
+            // Sort tracks in this decade by score
+            usort($tracksByDecade[$decade], fn ($a, $b) => $b['score'] <=> $a['score']);
+
+            $decadeCount = 0;
+            foreach ($tracksByDecade[$decade] as $track) {
+                if (in_array($track['id'], $usedTrackIds)) {
+                    continue;
+                }
+
+                // Max 2 tracks per artist per decade
+                $artistKey = $track['artist'].'_'.$decade;
+                if (($artistCount[$artistKey] ?? 0) >= 2) {
+                    continue;
+                }
+
+                $selectedTracks[] = $track;
+                $usedTrackIds[] = $track['id'];
+                $artistCount[$artistKey] = ($artistCount[$artistKey] ?? 0) + 1;
+                $decadeCount++;
+
+                // Max 8 tracks per decade
+                if ($decadeCount >= 8) {
+                    break;
+                }
+            }
+        }
+
+        $this->info('🎭 TIME MACHINE ANALYSIS:');
+        $this->line('   🎵 Selected Tracks: '.count($selectedTracks));
+        $this->line('   📅 Decades Represented: '.count($tracksByDecade));
+        $this->line('   ⏰ Musical journey through your taste evolution');
+
+        if (! empty($selectedTracks) && $this->confirm('🎭 Create "Musical Time Machine" playlist?')) {
+            $this->generateTimeMachinePlaylist($api, $selectedTracks);
+        }
+
+        return 0;
+    }
+
+    private function generateNightOwlPlaylist(ApiInterface $api, array $selectedTracks): void
+    {
+        $playlist = null;
+
+        $this->task('Creating "Night Owl Code Sessions" playlist', function () use ($api, $selectedTracks, &$playlist) {
+            $trackUris = array_column($selectedTracks, 'uri');
+            // Don't shuffle - keep the atmospheric flow
+
+            $playlist = $api->createPlaylist(
+                '🌙 Night Owl Code Sessions',
+                'Atmospheric late-night coding playlist for 2am programming sessions. Deep, ambient, and perfectly dark vibes for when the world sleeps but the code flows. Generated by Conduit Analytics.',
+                false
+            );
+
+            $chunks = array_chunk($trackUris, 100);
+            foreach ($chunks as $chunk) {
+                $api->addTracksToPlaylist($playlist['id'], $chunk);
+            }
+
+            return true;
+        });
+
+        $this->newLine();
+        $this->info('✅ "Night Owl Code Sessions" playlist created successfully!');
+        $this->line('🌙 Your '.count($selectedTracks).' atmospheric tracks are ready for late-night coding');
+        $this->line('💫 Perfect for when the world sleeps but the code flows');
+        $this->newLine();
+        $this->line('🔗 Open in Spotify: https://open.spotify.com/playlist/'.$playlist['id']);
+    }
+
+    private function generateAdrenalineRushPlaylist(ApiInterface $api, array $selectedTracks): void
+    {
+        $playlist = null;
+
+        $this->task('Creating "Adrenaline Rush" playlist', function () use ($api, $selectedTracks, &$playlist) {
+            $trackUris = array_column($selectedTracks, 'uri');
+            // Shuffle for maximum energy variation
+            shuffle($trackUris);
+
+            $playlist = $api->createPlaylist(
+                '⚡ Adrenaline Rush',
+                'High-intensity deadline crushing playlist. Pure adrenaline-fueled tracks for when you need to push through tight deadlines and deliver under pressure. Generated by Conduit Analytics.',
+                false
+            );
+
+            $chunks = array_chunk($trackUris, 100);
+            foreach ($chunks as $chunk) {
+                $api->addTracksToPlaylist($playlist['id'], $chunk);
+            }
+
+            return true;
+        });
+
+        $this->newLine();
+        $this->info('✅ "Adrenaline Rush" playlist created successfully!');
+        $this->line('⚡ Your '.count($selectedTracks).' high-intensity tracks are ready for deadline crushing');
+        $this->line('🔥 Maximum adrenaline for those make-or-break moments');
+        $this->newLine();
+        $this->line('🔗 Open in Spotify: https://open.spotify.com/playlist/'.$playlist['id']);
+    }
+
+    private function generateTimeMachinePlaylist(ApiInterface $api, array $selectedTracks): void
+    {
+        $playlist = null;
+
+        $this->task('Creating "Musical Time Machine" playlist', function () use ($api, $selectedTracks, &$playlist) {
+            $trackUris = array_column($selectedTracks, 'uri');
+            // Keep chronological order - don't shuffle
+
+            $playlist = $api->createPlaylist(
+                '🎭 Musical Time Machine',
+                'A decade-spanning journey through your musical taste evolution. Experience how your music preferences have traveled through time, from vintage classics to modern hits. Generated by Conduit Analytics.',
+                false
+            );
+
+            $chunks = array_chunk($trackUris, 100);
+            foreach ($chunks as $chunk) {
+                $api->addTracksToPlaylist($playlist['id'], $chunk);
+            }
+
+            return true;
+        });
+
+        $this->newLine();
+        $this->info('✅ "Musical Time Machine" playlist created successfully!');
+        $this->line('🎭 Your '.count($selectedTracks).' time-spanning tracks are ready for the journey');
+        $this->line('⏰ Experience your musical taste evolution through the decades');
         $this->newLine();
         $this->line('🔗 Open in Spotify: https://open.spotify.com/playlist/'.$playlist['id']);
     }
