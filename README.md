@@ -66,15 +66,16 @@ conduit know "Implement OAuth refresh tokens" --todo --priority=high
 # List all TODOs
 conduit know --todos
 
-# Set up Spotify integration (manual setup recommended)
+# Set up Spotify integration
+# Option 1: Guided setup (recommended) - Beautiful prompts & tasks
+conduit spotify:configure
+
+# Option 2: Manual setup (add to .env file)
 # Create a Spotify app at https://developer.spotify.com/dashboard
-# Add these to your .env file:
 # SPOTIFY_CLIENT_ID=your_client_id
 # SPOTIFY_CLIENT_SECRET=your_client_secret
 # SPOTIFY_REDIRECT_URI=http://127.0.0.1:9876/callback
-# 
-# Note: spotify:setup command has known reliability issues with React server
-# Manual setup is more reliable until server improvements are implemented
+# SPOTIFY_CALLBACK_PORT=9876  # Optional: customize callback port
 
 # Generate intelligent playlists
 conduit spotify:generate-playlists
