@@ -46,12 +46,16 @@ class DatabaseSchemaManager
             $table->string('project_type')->nullable(); // Detected project type (laravel-zero, etc.)
             $table->string('file_path')->nullable(); // Current file context (future)
             $table->json('tags')->nullable(); // Searchable tags
+            $table->string('priority')->default('medium'); // Priority: low, medium, high
+            $table->string('status')->default('open'); // Status: open, in-progress, completed, blocked
             $table->timestamps();
 
             // Indexes for search performance
             $table->index(['repo', 'branch']);
             $table->index('created_at');
             $table->index('author');
+            $table->index('priority');
+            $table->index('status');
         });
 
         // Create conduit_storage tables
@@ -83,7 +87,8 @@ class DatabaseSchemaManager
     }
 
     /**
-     * Get database file path for global installations.
+     * Get database file path - shared between local and global installations.
+     * This ensures your personal knowledge base is consistent across all conduit instances.
      */
     public function getDatabasePath(): string
     {

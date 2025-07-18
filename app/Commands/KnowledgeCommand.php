@@ -416,20 +416,18 @@ class KnowledgeCommand extends Command
         try {
             $schemaManager = new DatabaseSchemaManager;
 
-            // For global installations, initialize the database schema
-            if ($this->isGlobalInstallation()) {
-                $schemaManager->initializeGlobalDatabase();
-                $this->info('🗄️ Initialized Conduit database storage...');
-                $this->line('🔧 Configured SQLite database: '.$schemaManager->getDatabasePath());
-            } else {
-                // For local installations, try to run migrations
+            // Always use shared database location for personal knowledge base
+            $schemaManager->initializeGlobalDatabase();
+            $this->info('🗄️ Initialized Conduit database storage...');
+            $this->line('🔧 Configured SQLite database: '.$schemaManager->getDatabasePath());
+
+            // For local installations, also try to run migrations if they exist
+            if (! $this->isGlobalInstallation()) {
                 $this->info('📦 Running database migrations...');
                 $exitCode = $this->call('migrate', ['--force' => true]);
 
                 if ($exitCode !== 0) {
-                    // Fallback to schema manager if migrations fail
-                    $schemaManager->ensureSchemaExists();
-                    $this->info('🔧 Created database schema programmatically');
+                    $this->info('🔧 Using shared database schema (migrations not available)');
                 }
             }
         } catch (\Exception $e) {
