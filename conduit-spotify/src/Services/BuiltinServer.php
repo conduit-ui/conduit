@@ -15,7 +15,7 @@ class BuiltinServer
     public function __construct(int $port = 9876)
     {
         $this->port = $port;
-        $this->callbackFile = '/Users/jordanpartridge/packages/conduit/storage/spotify-callback.php';
+        $this->callbackFile = $this->createCallbackScript();
     }
 
     /**
@@ -77,6 +77,11 @@ class BuiltinServer
             $this->serverProcess->stop();
         }
         $this->serverProcess = null;
+
+        // Clean up the temporary callback script
+        if (file_exists($this->callbackFile)) {
+            @unlink($this->callbackFile);
+        }
     }
 
     /**
@@ -152,5 +157,46 @@ class BuiltinServer
     public function isRunning(): bool
     {
         return $this->serverProcess && $this->serverProcess->isRunning();
+    }
+
+    /**
+     * Create a temporary callback script for the OAuth flow.
+     */
+    private function createCallbackScript(): string
+    {
+        $callbackScript = <<<'PHP'
+<?php
+$requestUri = $_SERVER['REQUEST_URI'] ?? '';
+
+if (strpos($requestUri, '/callback') === 0) {
+    $code = $_GET['code'] ?? null;
+    $error = $_GET['error'] ?? null;
+    $state = $_GET['state'] ?? null;
+    
+    if ($error) {
+        file_put_contents('/tmp/spotify_auth_error', $error);
+        echo "<h1>❌ Authorization Failed</h1><p>Error: {$error}</p>";
+        echo "<p>You can close this window and try again in your terminal.</p>";
+    } elseif ($code) {
+        file_put_contents('/tmp/spotify_auth_code', json_encode(['code' => $code, 'state' => $state]));
+        echo "<h1>🎉 Authorization Successful!</h1>";
+        echo "<p>You can close this window and return to your terminal.</p>";
+        echo "<script>setTimeout(() => { window.close(); }, 3000);</script>";
+    } else {
+        file_put_contents('/tmp/spotify_auth_error', 'no_code');
+        echo "<h1>❌ Authorization Failed</h1><p>No authorization code received.</p>";
+        echo "<p>You can close this window and try again in your terminal.</p>";
+    }
+} else {
+    echo "<h1>🎵 Spotify OAuth Server</h1>";
+    echo "<p>Waiting for authorization callback...</p>";
+    echo "<p>Complete the authorization in your other browser tab.</p>";
+}
+PHP;
+
+        $scriptPath = sys_get_temp_dir().'/spotify_oauth_callback_'.uniqid().'.php';
+        file_put_contents($scriptPath, $callbackScript);
+
+        return $scriptPath;
     }
 }
