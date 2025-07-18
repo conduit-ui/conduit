@@ -1,12 +1,12 @@
 <?php
 
-namespace JordanPartridge\ConduitSpotify\Commands;
+namespace Conduit\Spotify\Commands;
 
 use Illuminate\Console\Command;
-use JordanPartridge\ConduitSpotify\Contracts\SpotifyApiInterface;
-use JordanPartridge\ConduitSpotify\Contracts\SpotifyAuthInterface;
+use Conduit\Spotify\Contracts\ApiInterface;
+use Conduit\Spotify\Contracts\AuthInterface;
 
-class SpotifyPlaylistsCommand extends Command
+class Playlists extends Command
 {
     protected $signature = 'spotify:playlists 
                            {action? : Action (list, play, search)}
@@ -16,11 +16,11 @@ class SpotifyPlaylistsCommand extends Command
 
     protected $description = 'Manage and play Spotify playlists';
 
-    public function handle(SpotifyAuthInterface $auth, SpotifyApiInterface $api): int
+    public function handle(AuthInterface $auth, ApiInterface $api): int
     {
-        if (! $auth->isAuthenticated()) {
+        if (! $auth->ensureAuthenticated()) {
             $this->error('❌ Not authenticated with Spotify');
-            $this->info('💡 Run: php conduit spotify:auth');
+            $this->info('💡 Run: php conduit spotify:login');
 
             return 1;
         }
@@ -35,7 +35,7 @@ class SpotifyPlaylistsCommand extends Command
         };
     }
 
-    private function listPlaylists(SpotifyApiInterface $api): int
+    private function listPlaylists(ApiInterface $api): int
     {
         try {
             $limit = (int) $this->option('limit');
@@ -83,7 +83,7 @@ class SpotifyPlaylistsCommand extends Command
         }
     }
 
-    private function playPlaylist(SpotifyApiInterface $api): int
+    private function playPlaylist(ApiInterface $api): int
     {
         $query = $this->argument('query');
 
@@ -146,7 +146,7 @@ class SpotifyPlaylistsCommand extends Command
         }
     }
 
-    private function searchPlaylists(SpotifyApiInterface $api): int
+    private function searchPlaylists(ApiInterface $api): int
     {
         $query = $this->argument('query');
 

@@ -1,22 +1,22 @@
 <?php
 
-namespace JordanPartridge\ConduitSpotify\Commands;
+namespace Conduit\Spotify\Commands;
 
 use Illuminate\Console\Command;
-use JordanPartridge\ConduitSpotify\Contracts\SpotifyApiInterface;
-use JordanPartridge\ConduitSpotify\Contracts\SpotifyAuthInterface;
+use Conduit\Spotify\Contracts\ApiInterface;
+use Conduit\Spotify\Contracts\AuthInterface;
 
-class SpotifyPauseCommand extends Command
+class Pause extends Command
 {
     protected $signature = 'spotify:pause {--device= : Device ID to pause}';
 
     protected $description = 'Pause Spotify playback';
 
-    public function handle(SpotifyAuthInterface $auth, SpotifyApiInterface $api): int
+    public function handle(AuthInterface $auth, ApiInterface $api): int
     {
-        if (! $auth->isAuthenticated()) {
+        if (! $auth->ensureAuthenticated()) {
             $this->error('❌ Not authenticated with Spotify');
-            $this->info('💡 Run: php conduit spotify:auth');
+            $this->info('💡 Run: php conduit spotify:login');
 
             return 1;
         }

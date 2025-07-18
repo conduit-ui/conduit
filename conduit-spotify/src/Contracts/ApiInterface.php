@@ -1,8 +1,8 @@
 <?php
 
-namespace JordanPartridge\ConduitSpotify\Contracts;
+namespace Conduit\Spotify\Contracts;
 
-interface SpotifyApiInterface
+interface ApiInterface
 {
     /**
      * Get current user's playback state.
@@ -63,4 +63,9 @@ interface SpotifyApiInterface
      * Transfer playback to device.
      */
     public function transferPlayback(string $deviceId, bool $play = false): bool;
+
+    /**
+     * Add track to queue.
+     */
+    public function addToQueue(string $uri, ?string $deviceId = null): bool;
 }

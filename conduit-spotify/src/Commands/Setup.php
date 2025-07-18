@@ -1,11 +1,11 @@
 <?php
 
-namespace JordanPartridge\ConduitSpotify\Commands;
+namespace Conduit\Spotify\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 
-class SpotifySetupCommand extends Command
+class Setup extends Command
 {
     protected $signature = 'spotify:setup 
                            {--reset : Reset existing credentials}';
@@ -41,7 +41,7 @@ class SpotifySetupCommand extends Command
         // Check if already configured
         if ($this->hasStoredCredentials() && ! $this->option('reset')) {
             $this->info('✅ Spotify is already configured');
-            $this->line('   Run: php conduit spotify:auth (if not authenticated)');
+            $this->line('   Run: php conduit spotify:login (if not authenticated)');
             $this->line('   Run: php conduit spotify:setup --reset (to reconfigure)');
 
             return 0;
@@ -176,7 +176,7 @@ class SpotifySetupCommand extends Command
         $this->info('✅ Spotify integration configured successfully!');
         $this->newLine();
         $this->line('<options=bold>Next steps:</options>');
-        $this->line('1. Run: <comment>php conduit spotify:auth</comment> (authenticate with Spotify)');
+        $this->line('1. Run: <comment>php conduit spotify:login</comment> (authenticate with Spotify)');
         $this->line('2. Try: <comment>php conduit spotify:current</comment> (see what\'s playing)');
         $this->line('3. Or: <comment>php conduit spotify:focus coding</comment> (start coding music)');
         $this->newLine();

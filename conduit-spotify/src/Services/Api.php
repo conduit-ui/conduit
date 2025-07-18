@@ -1,19 +1,19 @@
 <?php
 
-namespace JordanPartridge\ConduitSpotify\Services;
+namespace Conduit\Spotify\Services;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
-use JordanPartridge\ConduitSpotify\Contracts\SpotifyApiInterface;
-use JordanPartridge\ConduitSpotify\Contracts\SpotifyAuthInterface;
+use Conduit\Spotify\Contracts\ApiInterface;
+use Conduit\Spotify\Contracts\AuthInterface;
 
-class SpotifyApiService implements SpotifyApiInterface
+class Api implements ApiInterface
 {
     private Client $httpClient;
 
-    private SpotifyAuthInterface $auth;
+    private AuthInterface $auth;
 
-    public function __construct(SpotifyAuthInterface $auth)
+    public function __construct(AuthInterface $auth)
     {
         $this->auth = $auth;
         $this->httpClient = new Client([
@@ -36,7 +36,13 @@ class SpotifyApiService implements SpotifyApiInterface
     {
         $data = [];
         if ($contextUri) {
-            $data['context_uri'] = $contextUri;
+            // Check if it's a track URI (individual track)
+            if (str_contains($contextUri, 'spotify:track:')) {
+                $data['uris'] = [$contextUri];
+            } else {
+                // For albums, playlists, artists
+                $data['context_uri'] = $contextUri;
+            }
         }
 
         $url = 'me/player/play';
@@ -147,6 +153,18 @@ class SpotifyApiService implements SpotifyApiInterface
         return $result !== false;
     }
 
+    public function addToQueue(string $uri, ?string $deviceId = null): bool
+    {
+        $url = "me/player/queue?uri=" . urlencode($uri);
+        if ($deviceId) {
+            $url .= "&device_id={$deviceId}";
+        }
+
+        $result = $this->makeRequest('POST', $url);
+
+        return $result !== false;
+    }
+
     /**
      * Make an authenticated request to Spotify API.
      */
@@ -199,6 +217,20 @@ class SpotifyApiService implements SpotifyApiInterface
                 // Handle no active device
                 if ($statusCode === 404 && str_contains($endpoint, 'player')) {
                     throw new \Exception('No active Spotify device found. Please open Spotify on a device and try again.');
+                }
+
+                // Handle already playing same track or playlist conflicts  
+                if ($statusCode === 403) {
+                    $responseBody = $e->getResponse()->getBody()->getContents();
+                    $errorData = json_decode($responseBody, true);
+                    $reason = $errorData['error']['reason'] ?? 'forbidden';
+                    
+                    if ($reason === 'PREMIUM_REQUIRED') {
+                        throw new \Exception('Premium Spotify subscription required for this action.');
+                    }
+                    
+                    // For other 403 errors, treat as already playing
+                    throw new \Exception('Already playing or action not allowed.');
                 }
             }
 

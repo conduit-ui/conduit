@@ -1,12 +1,12 @@
 <?php
 
-namespace JordanPartridge\ConduitSpotify\Commands;
+namespace Conduit\Spotify\Commands;
 
 use Illuminate\Console\Command;
-use JordanPartridge\ConduitSpotify\Contracts\SpotifyApiInterface;
-use JordanPartridge\ConduitSpotify\Contracts\SpotifyAuthInterface;
+use Conduit\Spotify\Contracts\ApiInterface;
+use Conduit\Spotify\Contracts\AuthInterface;
 
-class SpotifyCurrentCommand extends Command
+class Current extends Command
 {
     protected $signature = 'spotify:current 
                            {--json : Output as JSON}
@@ -14,11 +14,11 @@ class SpotifyCurrentCommand extends Command
 
     protected $description = 'Show currently playing track information';
 
-    public function handle(SpotifyAuthInterface $auth, SpotifyApiInterface $api): int
+    public function handle(AuthInterface $auth, ApiInterface $api): int
     {
-        if (! $auth->isAuthenticated()) {
+        if (! $auth->ensureAuthenticated()) {
             $this->error('❌ Not authenticated with Spotify');
-            $this->info('💡 Run: php conduit spotify:auth');
+            $this->info('💡 Run: php conduit spotify:login');
 
             return 1;
         }
@@ -55,7 +55,9 @@ class SpotifyCurrentCommand extends Command
 
             if ($this->option('compact')) {
                 $status = $isPlaying ? '▶️' : '⏸️';
-                $this->line("{$status} <info>{$track['name']}</info> by <comment>{$artist}</comment> [{$progress}/{$duration}]");
+                $trackUrl = $track['external_urls']['spotify'] ?? null;
+                $trackLink = $trackUrl ? " <href={$trackUrl}>🔗</>" : "";
+                $this->line("{$status} <info>{$track['name']}</info> by <comment>{$artist}</comment> [{$progress}/{$duration}]{$trackLink}");
 
                 return 0;
             }
@@ -65,9 +67,25 @@ class SpotifyCurrentCommand extends Command
             $this->line('🎵 <options=bold>Now Playing</>');
             $this->newLine();
 
+            // Get URLs for clickable links
+            $trackUrl = $track['external_urls']['spotify'] ?? null;
+            $albumUrl = $track['album']['external_urls']['spotify'] ?? null;
+            $artistUrl = $track['artists'][0]['external_urls']['spotify'] ?? null;
+
             $this->line("  <info>Track:</info>   {$track['name']}");
+            if ($trackUrl) {
+                $this->line("          <comment>{$trackUrl}</comment>");
+            }
+            
             $this->line("  <info>Artist:</info>  {$artist}");
+            if ($artistUrl) {
+                $this->line("          <comment>{$artistUrl}</comment>");
+            }
+            
             $this->line("  <info>Album:</info>   {$album}");
+            if ($albumUrl) {
+                $this->line("          <comment>{$albumUrl}</comment>");
+            }
 
             if ($device) {
                 $this->line("  <info>Device:</info>  {$device['name']} ({$device['type']})");

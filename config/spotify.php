@@ -46,7 +46,7 @@ return [
     */
 
     'presets' => [
-        'coding' => env('SPOTIFY_CODING_PLAYLIST', 'spotify:playlist:37i9dQZF1DX0XUsuxWHRQd'), // Deep Focus
+        'coding' => env('SPOTIFY_CODING_PLAYLIST', 'spotify:playlist:3ZcUYitIClqAJY0YHwcHo7'), // Hacker Music Playlist
         'break' => env('SPOTIFY_BREAK_PLAYLIST', 'spotify:playlist:37i9dQZF1DX3rxVfibe1L0'), // Chill Hits
         'deploy' => env('SPOTIFY_DEPLOY_PLAYLIST', 'spotify:playlist:37i9dQZF1DX0XUfTFmNBRM'), // Upbeat Indie
         'debug' => env('SPOTIFY_DEBUG_PLAYLIST', 'spotify:playlist:37i9dQZF1DX4sWSpwAYIy1'), // Peaceful Piano

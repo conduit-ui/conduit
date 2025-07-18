@@ -1,12 +1,12 @@
 <?php
 
-namespace JordanPartridge\ConduitSpotify\Commands;
+namespace Conduit\Spotify\Commands;
 
 use Illuminate\Console\Command;
-use JordanPartridge\ConduitSpotify\Contracts\SpotifyApiInterface;
-use JordanPartridge\ConduitSpotify\Contracts\SpotifyAuthInterface;
+use Conduit\Spotify\Contracts\ApiInterface;
+use Conduit\Spotify\Contracts\AuthInterface;
 
-class SpotifyVolumeCommand extends Command
+class Volume extends Command
 {
     protected $signature = 'spotify:volume 
                            {level? : Volume level (0-100)}
@@ -16,11 +16,11 @@ class SpotifyVolumeCommand extends Command
 
     protected $description = 'Control Spotify volume';
 
-    public function handle(SpotifyAuthInterface $auth, SpotifyApiInterface $api): int
+    public function handle(AuthInterface $auth, ApiInterface $api): int
     {
-        if (! $auth->isAuthenticated()) {
+        if (! $auth->ensureAuthenticated()) {
             $this->error('❌ Not authenticated with Spotify');
-            $this->info('💡 Run: php conduit spotify:auth');
+            $this->info('💡 Run: php conduit spotify:login');
 
             return 1;
         }

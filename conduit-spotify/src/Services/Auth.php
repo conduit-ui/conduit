@@ -1,13 +1,13 @@
 <?php
 
-namespace JordanPartridge\ConduitSpotify\Services;
+namespace Conduit\Spotify\Services;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Cache;
-use JordanPartridge\ConduitSpotify\Contracts\SpotifyAuthInterface;
+use Conduit\Spotify\Contracts\AuthInterface;
 
-class SpotifyAuthService implements SpotifyAuthInterface
+class Auth implements AuthInterface
 {
     private Client $httpClient;
 
@@ -30,7 +30,7 @@ class SpotifyAuthService implements SpotifyAuthInterface
         $fileCache = Cache::store('file');
         $this->clientId = $fileCache->get('spotify_client_id') ?: config('spotify.client_id');
         $this->clientSecret = $fileCache->get('spotify_client_secret') ?: config('spotify.client_secret');
-        $this->redirectUri = config('spotify.redirect_uri', 'http://localhost:8888/callback');
+        $this->redirectUri = config('spotify.redirect_uri', 'http://127.0.0.1:9876/callback');
         $this->defaultScopes = config('spotify.scopes', [
             'user-read-playback-state',
             'user-modify-playback-state',
@@ -328,6 +328,51 @@ PHP;
     {
         return ! empty($this->getAccessToken());
     }
+
+    /**
+     * Ensure user is authenticated with automatic token refresh.
+     * Returns true if authenticated, false if needs manual auth.
+     */
+    public function ensureAuthenticated(): bool
+    {
+        // This will auto-refresh if needed
+        $token = $this->getAccessToken();
+        
+        if (!empty($token)) {
+            return true;
+        }
+
+        // Try headless auth if credentials are stored
+        return $this->authenticateHeadlessIfPossible();
+    }
+
+    /**
+     * Authenticate using headless browser if credentials are stored.
+     */
+    public function authenticateHeadlessIfPossible(): bool
+    {
+        $fileCache = Cache::store('file');
+        $username = $fileCache->get('spotify_username');
+        $password = $fileCache->get('spotify_password');
+
+        if (!$username || !$password) {
+            return false;
+        }
+
+        try {
+            $headlessAuth = new \Conduit\Spotify\Services\SpotifyHeadlessAuth();
+            $headlessAuth->ensureChromeDriverRunning();
+            
+            $code = $headlessAuth->authenticateHeadless($username, $password);
+            $this->exchangeCodeForToken($code);
+            
+            return true;
+        } catch (\Exception $e) {
+            // Headless auth failed, fall back to manual
+            return false;
+        }
+    }
+
 
     public function revoke(): bool
     {

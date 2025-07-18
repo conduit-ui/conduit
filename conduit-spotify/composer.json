@@ -23,7 +23,7 @@
     },
     "autoload": {
         "psr-4": {
-            "JordanPartridge\\ConduitSpotify\\": "src/"
+            "Conduit\\Spotify\\": "src/"
         }
     },
     "autoload-dev": {
@@ -34,7 +34,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "JordanPartridge\\ConduitSpotify\\SpotifyServiceProvider"
+                "Conduit\\Spotify\\ServiceProvider"
             ]
         },
         "conduit": {

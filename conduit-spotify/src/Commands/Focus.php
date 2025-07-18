@@ -1,12 +1,12 @@
 <?php
 
-namespace JordanPartridge\ConduitSpotify\Commands;
+namespace Conduit\Spotify\Commands;
 
 use Illuminate\Console\Command;
-use JordanPartridge\ConduitSpotify\Contracts\SpotifyApiInterface;
-use JordanPartridge\ConduitSpotify\Contracts\SpotifyAuthInterface;
+use Conduit\Spotify\Contracts\ApiInterface;
+use Conduit\Spotify\Contracts\AuthInterface;
 
-class SpotifyFocusCommand extends Command
+class Focus extends Command
 {
     protected $signature = 'spotify:focus 
                            {mode? : Focus mode (coding, break, deploy, debug, testing)}
@@ -16,11 +16,11 @@ class SpotifyFocusCommand extends Command
 
     protected $description = 'Start focus music for coding workflows';
 
-    public function handle(SpotifyAuthInterface $auth, SpotifyApiInterface $api): int
+    public function handle(AuthInterface $auth, ApiInterface $api): int
     {
-        if (! $auth->isAuthenticated()) {
+        if (! $auth->ensureAuthenticated()) {
             $this->error('❌ Not authenticated with Spotify');
-            $this->info('💡 Run: php conduit spotify:auth');
+            $this->info('💡 Run: php conduit spotify:login');
 
             return 1;
         }

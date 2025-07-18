@@ -1,8 +1,8 @@
 <?php
 
-namespace JordanPartridge\ConduitSpotify\Contracts;
+namespace Conduit\Spotify\Contracts;
 
-interface SpotifyAuthInterface
+interface AuthInterface
 {
     /**
      * Get the authorization URL for OAuth flow.
@@ -28,6 +28,12 @@ interface SpotifyAuthInterface
      * Check if user is authenticated.
      */
     public function isAuthenticated(): bool;
+
+    /**
+     * Ensure user is authenticated with automatic token refresh.
+     */
+    public function ensureAuthenticated(): bool;
+
 
     /**
      * Revoke current authentication.
