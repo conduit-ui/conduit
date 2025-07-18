@@ -3,6 +3,7 @@
 namespace Conduit\Spotify;
 
 use Conduit\Spotify\Commands\Analytics;
+use Conduit\Spotify\Commands\Configure;
 use Conduit\Spotify\Commands\Current;
 use Conduit\Spotify\Commands\Focus;
 use Conduit\Spotify\Commands\Login;
@@ -38,6 +39,7 @@ class ServiceProvider extends BaseServiceProvider
         // Register commands
         $this->commands([
             Setup::class,
+            Configure::class, // Backwards compatibility alias
             Login::class,
             Logout::class,
             Queue::class,

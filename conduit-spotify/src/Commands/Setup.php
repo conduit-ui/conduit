@@ -16,10 +16,10 @@ use function Laravel\Prompts\warning;
 
 class Setup extends Command
 {
-    protected $signature = 'spotify:configure 
+    protected $signature = 'spotify:setup 
                            {--reset : Reset existing credentials}';
 
-    protected $description = 'Configure Spotify integration with beautiful guided setup';
+    protected $description = 'Set up Spotify integration with beautiful guided setup';
 
     public function handle(): int
     {
@@ -40,7 +40,7 @@ class Setup extends Command
 
         $this->clearStoredCredentials();
         info('✅ Spotify credentials cleared');
-        note('Run: php conduit spotify:configure');
+        note('Run: php conduit spotify:setup');
 
         return 0;
     }
@@ -51,7 +51,7 @@ class Setup extends Command
         if ($this->hasStoredCredentials() && ! $this->option('reset')) {
             info('✅ Spotify is already configured');
             note('Run: php conduit spotify:login (if not authenticated)');
-            note('Run: php conduit spotify:configure --reset (to reconfigure)');
+            note('Run: php conduit spotify:setup --reset (to reconfigure)');
 
             return 0;
         }
@@ -215,7 +215,7 @@ class Setup extends Command
 
         note('💡 Pro Tips:');
         note('• Use SPOTIFY_CALLBACK_PORT environment variable to customize OAuth port');
-        note('• Run php conduit spotify:configure --reset to reconfigure credentials');
+        note('• Run php conduit spotify:setup --reset to reconfigure credentials');
         note('• All commands support --help for detailed usage information');
     }
 

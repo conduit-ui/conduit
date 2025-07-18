@@ -68,7 +68,7 @@ conduit know --todos
 
 # Set up Spotify integration
 # Option 1: Guided setup (recommended) - Beautiful prompts & tasks
-conduit spotify:configure
+conduit spotify:setup
 
 # Option 2: Manual setup (add to .env file)
 # Create a Spotify app at https://developer.spotify.com/dashboard
