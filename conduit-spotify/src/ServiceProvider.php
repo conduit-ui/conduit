@@ -5,6 +5,7 @@ namespace Conduit\Spotify;
 use Conduit\Spotify\Commands\Analytics;
 use Conduit\Spotify\Commands\Configure;
 use Conduit\Spotify\Commands\Current;
+use Conduit\Spotify\Commands\Devices;
 use Conduit\Spotify\Commands\Focus;
 use Conduit\Spotify\Commands\Login;
 use Conduit\Spotify\Commands\Logout;
@@ -20,6 +21,7 @@ use Conduit\Spotify\Contracts\ApiInterface;
 use Conduit\Spotify\Contracts\AuthInterface;
 use Conduit\Spotify\Services\Api;
 use Conduit\Spotify\Services\Auth;
+use Conduit\Spotify\Services\DeviceManager;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider
@@ -35,6 +37,7 @@ class ServiceProvider extends BaseServiceProvider
         // Register services
         $this->app->singleton(AuthInterface::class, Auth::class);
         $this->app->singleton(ApiInterface::class, Api::class);
+        $this->app->singleton(DeviceManager::class);
 
         // Register commands
         $this->commands([
@@ -52,6 +55,7 @@ class ServiceProvider extends BaseServiceProvider
             Playlists::class,
             Focus::class,
             Analytics::class,
+            Devices::class,
         ]);
     }
 

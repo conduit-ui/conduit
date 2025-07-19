@@ -15,6 +15,8 @@ class DatabaseSchemaManager
     {
         if (! $this->isDatabaseInitialized()) {
             $this->createSchema();
+        } else {
+            $this->updateSchema();
         }
     }
 
@@ -84,6 +86,203 @@ class DatabaseSchemaManager
             $table->string('type')->default('string'); // string, json, boolean, etc.
             $table->timestamps();
         });
+    }
+
+    /**
+     * Update existing schema by creating v2 graph structure and migrating data.
+     */
+    public function updateSchema(): void
+    {
+        try {
+            // Check if we need to migrate to v2 graph schema
+            if (Schema::hasTable('knowledge_entries') && ! Schema::hasTable('knowledge_tags')) {
+                $this->migrateToV2Table();
+            }
+        } catch (\Exception $e) {
+            // Silently fail if we can't update schema
+            // The commands will handle missing columns gracefully
+        }
+    }
+
+    /**
+     * Migrate from v1 to v2 knowledge graph schema.
+     */
+    private function migrateToV2Table(): void
+    {
+        // Create v2 knowledge graph schema
+        $this->createV2GraphSchema();
+
+        // Migrate existing data
+        if (Schema::hasTable('knowledge_entries')) {
+            $this->migrateDataToV2Schema();
+        }
+
+        // Rename tables: backup old, promote new
+        Schema::rename('knowledge_entries', 'knowledge_entries_v1_backup');
+        Schema::rename('knowledge_entries_v2', 'knowledge_entries');
+        Schema::rename('knowledge_tags_v2', 'knowledge_tags');
+        Schema::rename('knowledge_entry_tags_v2', 'knowledge_entry_tags');
+        Schema::rename('knowledge_metadata_v2', 'knowledge_metadata');
+        Schema::rename('knowledge_relationships_v2', 'knowledge_relationships');
+    }
+
+    /**
+     * Create v2 knowledge graph schema.
+     */
+    private function createV2GraphSchema(): void
+    {
+        // Core knowledge entries (lean and focused)
+        Schema::create('knowledge_entries_v2', function (Blueprint $table) {
+            $table->id();
+            $table->text('content');
+            $table->string('repo')->nullable();
+            $table->string('branch')->nullable();
+            $table->string('commit_sha')->nullable();
+            $table->string('author')->nullable();
+            $table->string('project_type')->nullable();
+            $table->string('file_path')->nullable();
+            $table->timestamps();
+
+            // Indexes for performance
+            $table->index(['repo', 'branch']);
+            $table->index('created_at');
+            $table->index('author');
+            $table->index('project_type');
+        });
+
+        // Normalized tags (reusable, searchable)
+        Schema::create('knowledge_tags_v2', function (Blueprint $table) {
+            $table->id();
+            $table->string('name')->unique();
+            $table->string('color')->nullable();
+            $table->text('description')->nullable();
+            $table->integer('usage_count')->default(0);
+            $table->timestamps();
+
+            $table->index('name');
+            $table->index('usage_count');
+        });
+
+        // Many-to-many: entries <-> tags
+        Schema::create('knowledge_entry_tags_v2', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('entry_id');
+            $table->foreignId('tag_id');
+            $table->timestamps();
+
+            $table->unique(['entry_id', 'tag_id']);
+            $table->index('entry_id');
+            $table->index('tag_id');
+        });
+
+        // Flexible metadata (priority, status, custom fields)
+        Schema::create('knowledge_metadata_v2', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('entry_id');
+            $table->string('key'); // 'priority', 'status', 'difficulty', etc.
+            $table->text('value');
+            $table->string('type')->default('string'); // 'string', 'integer', 'boolean', 'json'
+            $table->timestamps();
+
+            $table->index(['entry_id', 'key']);
+            $table->index('key');
+        });
+
+        // Knowledge relationships (the graph!)
+        Schema::create('knowledge_relationships_v2', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('from_entry_id');
+            $table->foreignId('to_entry_id');
+            $table->string('relationship_type'); // 'depends_on', 'conflicts_with', 'extends', 'implements', 'fixes', 'relates_to'
+            $table->float('strength')->default(1.0); // 0.0 to 1.0, for ranking relationships
+            $table->boolean('auto_detected')->default(false); // Was this relationship auto-detected?
+            $table->timestamps();
+
+            $table->index(['from_entry_id', 'relationship_type']);
+            $table->index(['to_entry_id', 'relationship_type']);
+            $table->index('relationship_type');
+        });
+    }
+
+    /**
+     * Migrate existing data to v2 schema.
+     */
+    private function migrateDataToV2Schema(): void
+    {
+        $oldEntries = \DB::table('knowledge_entries')->get();
+
+        foreach ($oldEntries as $entry) {
+            // Insert core entry
+            $entryId = \DB::table('knowledge_entries_v2')->insertGetId([
+                'id' => $entry->id,
+                'content' => $entry->content,
+                'repo' => $entry->repo,
+                'branch' => $entry->branch,
+                'commit_sha' => $entry->commit_sha,
+                'author' => $entry->author,
+                'project_type' => $entry->project_type,
+                'file_path' => $entry->file_path ?? null,
+                'created_at' => $entry->created_at,
+                'updated_at' => $entry->updated_at,
+            ]);
+
+            // Migrate tags from JSON to normalized structure
+            if ($entry->tags) {
+                $tags = json_decode($entry->tags, true);
+                if (is_array($tags)) {
+                    foreach ($tags as $tagName) {
+                        $tagName = trim($tagName);
+                        if (empty($tagName)) {
+                            continue;
+                        }
+
+                        // Get or create tag
+                        $tagId = \DB::table('knowledge_tags_v2')->where('name', $tagName)->value('id');
+                        if (! $tagId) {
+                            $tagId = \DB::table('knowledge_tags_v2')->insertGetId([
+                                'name' => $tagName,
+                                'usage_count' => 1,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                        } else {
+                            \DB::table('knowledge_tags_v2')->where('id', $tagId)->increment('usage_count');
+                        }
+
+                        // Link entry to tag
+                        \DB::table('knowledge_entry_tags_v2')->insert([
+                            'entry_id' => $entryId,
+                            'tag_id' => $tagId,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+            }
+
+            // Migrate priority and status to metadata
+            if (isset($entry->priority) && $entry->priority !== 'medium') {
+                \DB::table('knowledge_metadata_v2')->insert([
+                    'entry_id' => $entryId,
+                    'key' => 'priority',
+                    'value' => $entry->priority,
+                    'type' => 'string',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            if (isset($entry->status) && $entry->status !== 'open') {
+                \DB::table('knowledge_metadata_v2')->insert([
+                    'entry_id' => $entryId,
+                    'key' => 'status',
+                    'value' => $entry->status,
+                    'type' => 'string',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
     }
 
     /**
