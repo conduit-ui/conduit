@@ -2,9 +2,9 @@
 
 > Your personal developer API & MCP integration engine - AI-ready GitHub CLI and beyond
 
-[![Latest Version](https://img.shields.io/packagist/v/jordanpartridge/conduit.svg?style=flat-square)](https://packagist.org/packages/jordanpartridge/conduit)
-[![Total Downloads](https://img.shields.io/packagist/dt/jordanpartridge/conduit.svg?style=flat-square)](https://packagist.org/packages/jordanpartridge/conduit)
-[![License](https://img.shields.io/packagist/l/jordanpartridge/conduit.svg?style=flat-square)](https://packagist.org/packages/jordanpartridge/conduit)
+[![Latest Version](https://img.shields.io/packagist/v/conduit-ui/conduit.svg?style=flat-square)](https://packagist.org/packages/conduit-ui/conduit)
+[![Total Downloads](https://img.shields.io/packagist/dt/conduit-ui/conduit.svg?style=flat-square)](https://packagist.org/packages/conduit-ui/conduit)
+[![License](https://img.shields.io/packagist/l/conduit-ui/conduit.svg?style=flat-square)](https://packagist.org/packages/conduit-ui/conduit)
 
 Conduit is a **modular, extensible CLI platform** built with Laravel Zero that transforms your development workflow. Starting with powerful GitHub integration, it features a revolutionary component system that makes adding new tools as simple as running `conduit install:service`.
 
@@ -37,7 +37,7 @@ Conduit is a **modular, extensible CLI platform** built with Laravel Zero that t
 
 ### Via Composer (Recommended)
 ```bash
-composer global require jordanpartridge/conduit
+composer global require conduit-ui/conduit
 ```
 
 ### Via GitHub Releases
