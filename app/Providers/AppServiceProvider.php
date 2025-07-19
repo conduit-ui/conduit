@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Commands\GitHub\AuthCommand;
+use App\Commands\IssuesCommand;
 use App\Commands\Know\Add;
 use App\Commands\Know\AutoCaptureCommand;
 use App\Commands\Know\Context;
@@ -12,6 +14,9 @@ use App\Commands\Know\Optimize;
 use App\Commands\Know\Search;
 use App\Commands\Know\SetupCommand;
 use App\Commands\Know\Show;
+use App\Commands\PrsCommand;
+use App\Commands\ReposCommand;
+use App\Commands\StatusCommand;
 use App\Contracts\ComponentManagerInterface;
 use App\Contracts\ComponentStorageInterface;
 use App\Contracts\PackageInstallerInterface;
@@ -46,6 +51,13 @@ class AppServiceProvider extends ServiceProvider
                 SetupCommand::class,
                 AutoCaptureCommand::class,
                 Migrate::class,
+                PrsCommand::class,
+                ReposCommand::class,
+                IssuesCommand::class,
+                StatusCommand::class,
+                AuthCommand::class,
+                \App\Commands\PrAnalyzeCommand::class,
+                \App\Commands\GitHubClientGapAnalysisCommand::class,
             ]);
         }
     }
