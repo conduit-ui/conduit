@@ -2,9 +2,7 @@
 
 return [
     'name' => 'Conduit',
-    'version' => function_exists('base_path') && is_dir(base_path('.git'))
-        ? trim(shell_exec('git describe --tags --abbrev=0 2>/dev/null || echo "1.9.0"'))
-        : '1.9.0',
+    'version' => '2.0.0',
     'env' => 'development',
     'providers' => [
         0 => 'App\\Providers\\AppServiceProvider',
