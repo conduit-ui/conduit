@@ -5,29 +5,25 @@ namespace Conduit\Spotify\Services;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
-use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Laravel\Dusk\Chrome\ChromeProcess;
 
 class SpotifyHeadlessAuth
 {
+    private SpotifyConfigService $configService;
+
     private string $clientId;
 
     private string $redirectUri;
 
     private array $scopes;
 
-    public function __construct()
+    public function __construct(?SpotifyConfigService $configService = null)
     {
-        $fileCache = Cache::store('file');
-        $this->clientId = $fileCache->get('spotify_client_id') ?: config('spotify.client_id');
-        $this->redirectUri = config('spotify.redirect_uri', 'http://127.0.0.1:9876/callback');
-        $this->scopes = config('spotify.scopes', [
-            'user-read-playback-state',
-            'user-modify-playback-state',
-            'user-read-currently-playing',
-            'playlist-read-private',
-        ]);
+        $this->configService = $configService ?? new SpotifyConfigService;
+        $this->clientId = $this->configService->getClientId();
+        $this->redirectUri = $this->configService->getRedirectUri();
+        $this->scopes = $this->configService->getDefaultScopes();
     }
 
     /**

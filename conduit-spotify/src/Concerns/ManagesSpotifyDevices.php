@@ -44,12 +44,12 @@ trait ManagesSpotifyDevices
 
             // Smart device selection priority
             $preferredDevice = $this->selectBestDevice($devices);
-            
+
             if ($preferredDevice) {
                 $this->line("🔄 Activating device: {$preferredDevice['name']} ({$preferredDevice['type']})");
 
                 $success = $this->attemptDeviceActivation($api, $preferredDevice);
-                
+
                 if ($success) {
                     $this->line('✅ Device activated successfully');
                 } else {
@@ -69,40 +69,23 @@ trait ManagesSpotifyDevices
      */
     protected function selectBestDevice(array $devices): ?array
     {
-        // Device priority: Computer > Smartphone > Speaker > Other
-        $priorities = [
-            'Computer' => 4,
-            'Smartphone' => 3,
-            'Speaker' => 2,
-            'TV' => 1,
-            'Unknown' => 0
+        $devicePriority = [
+            'computer' => 1,
+            'smartphone' => 2,
+            'tablet' => 3,
+            'speaker' => 4,
+            'tv' => 5,
+            'castingDevice' => 6,
+            'unknown' => 7,
         ];
 
-        $scoredDevices = [];
-        foreach ($devices as $device) {
-            $type = $device['type'] ?? 'Unknown';
-            $score = $priorities[$type] ?? 0;
-            
-            // Boost score for devices that support volume control
-            if ($device['supports_volume'] ?? false) {
-                $score += 2;
-            }
-            
-            // Boost score for recently active devices
-            if ($device['is_active'] ?? false) {
-                $score += 5;
-            }
-            
-            $scoredDevices[] = [
-                'device' => $device,
-                'score' => $score
-            ];
-        }
+        $sortedDevices = collect($devices)->sortBy(function ($device) use ($devicePriority) {
+            $type = strtolower($device['type'] ?? 'unknown');
 
-        // Sort by score (highest first)
-        usort($scoredDevices, fn($a, $b) => $b['score'] <=> $a['score']);
+            return $devicePriority[$type] ?? 10;
+        });
 
-        return !empty($scoredDevices) ? $scoredDevices[0]['device'] : null;
+        return $sortedDevices->first();
     }
 
     /**
@@ -110,31 +93,32 @@ trait ManagesSpotifyDevices
      */
     protected function attemptDeviceActivation(ApiInterface $api, array $device): bool
     {
-        $maxAttempts = 3;
-        $attempt = 0;
+        $maxRetries = 3;
+        $retryDelay = 1; // seconds
 
-        while ($attempt < $maxAttempts) {
-            $attempt++;
-            
+        for ($i = 0; $i < $maxRetries; $i++) {
             try {
-                if ($api->transferPlayback($device['id'], false)) {
-                    // Wait and verify activation
-                    sleep(2);
-                    
-                    $currentPlayback = $api->getCurrentPlayback();
-                    if ($currentPlayback && 
-                        isset($currentPlayback['device']) && 
-                        $currentPlayback['device']['id'] === $device['id']) {
-                        return true;
-                    }
+                $api->transferPlayback($device['id'], true);
+
+                // Wait a moment and verify activation
+                sleep($retryDelay);
+
+                $currentPlayback = $api->getCurrentPlayback();
+                if ($currentPlayback &&
+                    isset($currentPlayback['device']) &&
+                    $currentPlayback['device']['id'] === $device['id'] &&
+                    $currentPlayback['device']['is_active']) {
+                    return true;
                 }
+
             } catch (\Exception $e) {
-                $this->warn("⚠️  Activation attempt {$attempt} failed: {$e->getMessage()}");
+                if ($i === $maxRetries - 1) {
+                    $this->warn("⚠️  Failed to activate {$device['name']}: {$e->getMessage()}");
+                }
             }
 
-            if ($attempt < $maxAttempts) {
-                $this->line("⏳ Retrying in 2 seconds... (attempt {$attempt}/{$maxAttempts})");
-                sleep(2);
+            if ($i < $maxRetries - 1) {
+                sleep($retryDelay);
             }
         }
 
@@ -146,22 +130,21 @@ trait ManagesSpotifyDevices
      */
     protected function tryFallbackDevices(ApiInterface $api, array $devices, string $excludeId): void
     {
-        $fallbackDevices = array_filter($devices, fn($d) => $d['id'] !== $excludeId);
-        
+        $fallbackDevices = collect($devices)
+            ->filter(fn ($device) => $device['id'] !== $excludeId)
+            ->take(2); // Try up to 2 fallback devices
+
         foreach ($fallbackDevices as $device) {
-            $this->line("🔄 Trying fallback device: {$device['name']} ({$device['type']})");
-            
+            $this->line("🔄 Trying fallback device: {$device['name']}");
+
             if ($this->attemptDeviceActivation($api, $device)) {
                 $this->line('✅ Fallback device activated successfully');
+
                 return;
             }
         }
 
-        $this->warn('⚠️  Could not activate any devices');
-        $this->line('💡 Available devices:');
-        foreach ($devices as $device) {
-            $status = ($device['is_active'] ?? false) ? '(active)' : '(inactive)';
-            $this->line("  • {$device['name']} ({$device['type']}) {$status}");
-        }
+        $this->warn('⚠️  Could not activate any available devices');
+        $this->line('💡 Try manually selecting a device in Spotify and run the command again');
     }
 }

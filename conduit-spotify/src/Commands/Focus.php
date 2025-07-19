@@ -3,6 +3,7 @@
 namespace Conduit\Spotify\Commands;
 
 use Carbon\Carbon;
+use Conduit\Spotify\Concerns\ManagesSpotifyDevices;
 use Conduit\Spotify\Contracts\ApiInterface;
 use Conduit\Spotify\Contracts\AuthInterface;
 use Illuminate\Console\Command;
@@ -10,6 +11,8 @@ use Illuminate\Support\Facades\Cache;
 
 class Focus extends Command
 {
+    use ManagesSpotifyDevices;
+
     protected $signature = 'spotify:focus 
                            {mode? : Focus mode (coding, break, deploy, debug, testing)}
                            {--volume= : Set volume (0-100)}
@@ -137,12 +140,12 @@ class Focus extends Command
             if ($mode === $recommended) {
                 continue;
             }
-            
+
             $emoji = $this->getFocusEmoji($mode);
             $description = $this->getFocusDescription($mode);
-            
+
             // Add usage stats if available
-            $stats = Cache::store('file')->get('spotify_focus_stats', []);
+            $stats = $this->configService->getFocusStats();
             $statsText = '';
             if (isset($stats[$mode])) {
                 $modeStats = $stats[$mode];
@@ -151,7 +154,7 @@ class Focus extends Command
                     $statsText = " <fg=yellow>({$modeStats['total_starts']} uses{$streak})</fg=yellow>";
                 }
             }
-            
+
             $this->line("  {$emoji} <info>{$mode}</info> - {$description}{$statsText}");
         }
 
@@ -460,176 +463,16 @@ class Focus extends Command
     }
 
     /**
-     * Ensure there's an active Spotify device available for playback.
-     */
-    private function ensureActiveDevice(ApiInterface $api): void
-    {
-        try {
-            // First check if we have a currently active device
-            $currentPlayback = $api->getCurrentPlayback();
-            if ($currentPlayback && isset($currentPlayback['device']) && $currentPlayback['device']['is_active']) {
-                $device = $currentPlayback['device'];
-                $this->line("🎵 Using active device: {$device['name']} ({$device['type']})");
-
-                return;
-            }
-
-            // No active device, try to find and activate one
-            $devices = $api->getAvailableDevices();
-
-            if (empty($devices)) {
-                $this->warn('⚠️  No Spotify devices found');
-                $this->line('💡 Make sure Spotify is open on a device:');
-                $this->line('  • Open Spotify on your phone, computer, or web player');
-                $this->line('  • Wait a moment for devices to register');
-                $this->line('  • Then try this command again');
-
-                return;
-            }
-
-            // Check if any device is already active
-            $activeDevice = collect($devices)->firstWhere('is_active', true);
-            if ($activeDevice) {
-                $this->line("🎵 Using active device: {$activeDevice['name']} ({$activeDevice['type']})");
-
-                return;
-            }
-
-            // Smart device selection priority
-            $preferredDevice = $this->selectBestDevice($devices);
-            
-            if ($preferredDevice) {
-                $this->line("🔄 Activating device: {$preferredDevice['name']} ({$preferredDevice['type']})");
-
-                $success = $this->attemptDeviceActivation($api, $preferredDevice);
-                
-                if ($success) {
-                    $this->line('✅ Device activated successfully');
-                } else {
-                    // Try fallback devices
-                    $this->tryFallbackDevices($api, $devices, $preferredDevice['id']);
-                }
-            }
-
-        } catch (\Exception $e) {
-            // If device detection fails, continue anyway - the play command will handle it
-            $this->warn("⚠️  Device detection failed: {$e->getMessage()}");
-            $this->line('💡 Music will attempt to play on the last used device');
-        }
-    }
-
-    /**
-     * Select the best available device based on priority
-     */
-    private function selectBestDevice(array $devices): ?array
-    {
-        // Device priority: Computer > Smartphone > Speaker > Other
-        $priorities = [
-            'Computer' => 4,
-            'Smartphone' => 3,
-            'Speaker' => 2,
-            'TV' => 1,
-            'Unknown' => 0
-        ];
-
-        $scoredDevices = [];
-        foreach ($devices as $device) {
-            $type = $device['type'] ?? 'Unknown';
-            $score = $priorities[$type] ?? 0;
-            
-            // Boost score for devices that support volume control
-            if ($device['supports_volume'] ?? false) {
-                $score += 2;
-            }
-            
-            // Boost score for recently active devices
-            if ($device['is_active'] ?? false) {
-                $score += 5;
-            }
-            
-            $scoredDevices[] = [
-                'device' => $device,
-                'score' => $score
-            ];
-        }
-
-        // Sort by score (highest first)
-        usort($scoredDevices, fn($a, $b) => $b['score'] <=> $a['score']);
-
-        return !empty($scoredDevices) ? $scoredDevices[0]['device'] : null;
-    }
-
-    /**
-     * Attempt to activate a device with retry logic
-     */
-    private function attemptDeviceActivation(ApiInterface $api, array $device): bool
-    {
-        $maxAttempts = 3;
-        $attempt = 0;
-
-        while ($attempt < $maxAttempts) {
-            $attempt++;
-            
-            try {
-                if ($api->transferPlayback($device['id'], false)) {
-                    // Wait and verify activation
-                    sleep(2);
-                    
-                    $currentPlayback = $api->getCurrentPlayback();
-                    if ($currentPlayback && 
-                        isset($currentPlayback['device']) && 
-                        $currentPlayback['device']['id'] === $device['id']) {
-                        return true;
-                    }
-                }
-            } catch (\Exception $e) {
-                $this->warn("⚠️  Activation attempt {$attempt} failed: {$e->getMessage()}");
-            }
-
-            if ($attempt < $maxAttempts) {
-                $this->line("⏳ Retrying in 2 seconds... (attempt {$attempt}/{$maxAttempts})");
-                sleep(2);
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Try fallback devices if primary selection fails
-     */
-    private function tryFallbackDevices(ApiInterface $api, array $devices, string $excludeId): void
-    {
-        $fallbackDevices = array_filter($devices, fn($d) => $d['id'] !== $excludeId);
-        
-        foreach ($fallbackDevices as $device) {
-            $this->line("🔄 Trying fallback device: {$device['name']} ({$device['type']})");
-            
-            if ($this->attemptDeviceActivation($api, $device)) {
-                $this->line('✅ Fallback device activated successfully');
-                return;
-            }
-        }
-
-        $this->warn('⚠️  Could not activate any devices');
-        $this->line('💡 Available devices:');
-        foreach ($devices as $device) {
-            $status = ($device['is_active'] ?? false) ? '(active)' : '(inactive)';
-            $this->line("  • {$device['name']} ({$device['type']}) {$status}");
-        }
-    }
-
-    /**
      * Get focus presets with user customizations taking precedence
      */
     private function getFocusPresets(): array
     {
         // Get user's custom assignments first
         $userConfig = Cache::store('file')->get('spotify_focus_playlists', []);
-        
+
         // Fall back to default config
         $defaultConfig = config('spotify.presets', []);
-        
+
         // Merge user preferences over defaults
         return array_merge($defaultConfig, $userConfig);
     }
@@ -640,13 +483,13 @@ class Focus extends Command
     private function trackFocusUsage(string $mode, string $action): void
     {
         try {
-            $stats = Cache::store('file')->get('spotify_focus_stats', []);
-            
+            $stats = $this->configService->getFocusStats();
+
             $today = now()->format('Y-m-d');
             $currentHour = now()->format('H');
-            
+
             // Initialize structure if needed
-            if (!isset($stats[$mode])) {
+            if (! isset($stats[$mode])) {
                 $stats[$mode] = [
                     'total_starts' => 0,
                     'total_skips' => 0,
@@ -657,44 +500,44 @@ class Focus extends Command
                     'favorite_times' => [],
                 ];
             }
-            
+
             $modeStats = &$stats[$mode];
-            
+
             switch ($action) {
                 case 'start':
                     $modeStats['total_starts']++;
                     $modeStats['last_used'] = now()->toISOString();
-                    
+
                     // Track daily usage
-                    if (!isset($modeStats['daily_usage'][$today])) {
+                    if (! isset($modeStats['daily_usage'][$today])) {
                         $modeStats['daily_usage'][$today] = 0;
                     }
                     $modeStats['daily_usage'][$today]++;
-                    
+
                     // Track hourly patterns
-                    if (!isset($modeStats['hourly_patterns'][$currentHour])) {
+                    if (! isset($modeStats['hourly_patterns'][$currentHour])) {
                         $modeStats['hourly_patterns'][$currentHour] = 0;
                     }
                     $modeStats['hourly_patterns'][$currentHour]++;
-                    
+
                     // Calculate usage streak
                     $modeStats['streak'] = $this->calculateUsageStreak($modeStats['daily_usage']);
                     break;
-                    
+
                 case 'skip':
                     $modeStats['total_skips']++;
                     break;
             }
-            
+
             // Save updated stats
-            Cache::store('file')->put('spotify_focus_stats', $stats, now()->addYear());
-            
+            $this->configService->storeFocusStats($stats);
+
         } catch (\Exception $e) {
             // Don't let tracking failures affect the main functionality
             \Log::debug("Focus tracking failed: {$e->getMessage()}");
         }
     }
-    
+
     /**
      * Calculate the current usage streak for a mode
      */
@@ -702,36 +545,36 @@ class Focus extends Command
     {
         $streak = 0;
         $currentDate = now();
-        
+
         // Go backwards from today counting consecutive days with usage
         for ($i = 0; $i < 30; $i++) { // Check last 30 days max
             $checkDate = $currentDate->copy()->subDays($i)->format('Y-m-d');
-            
+
             if (isset($dailyUsage[$checkDate]) && $dailyUsage[$checkDate] > 0) {
                 $streak++;
             } else {
                 break; // Streak broken
             }
         }
-        
+
         return $streak;
     }
-    
+
     /**
      * Show learning insights and usage stats
      */
     private function showLearningStats(string $mode): void
     {
-        $stats = Cache::store('file')->get('spotify_focus_stats', []);
-        
-        if (!isset($stats[$mode])) {
+        $stats = $this->configService->getFocusStats();
+
+        if (! isset($stats[$mode])) {
             return;
         }
-        
+
         $modeStats = $stats[$mode];
         $insights = $this->generateLearningInsights($mode, $modeStats);
-        
-        if (!empty($insights)) {
+
+        if (! empty($insights)) {
             $this->newLine();
             $this->line('🧠 <fg=blue;options=bold>AI Insights</fg=blue;options=bold>');
             foreach ($insights as $insight) {
@@ -739,35 +582,35 @@ class Focus extends Command
             }
         }
     }
-    
+
     /**
      * Generate smart insights based on usage patterns
      */
     private function generateLearningInsights(string $mode, array $stats): array
     {
         $insights = [];
-        
+
         // Usage frequency insights
         if ($stats['total_starts'] >= 5) {
             $successRate = $stats['total_starts'] / ($stats['total_starts'] + $stats['total_skips']) * 100;
-            
+
             if ($successRate >= 85) {
-                $insights[] = "💚 You love {$mode} mode! " . round($successRate) . "% success rate";
+                $insights[] = "💚 You love {$mode} mode! ".round($successRate).'% success rate';
             } elseif ($successRate < 60) {
-                $insights[] = "🤔 Consider tweaking {$mode} playlist - only " . round($successRate) . "% satisfaction";
+                $insights[] = "🤔 Consider tweaking {$mode} playlist - only ".round($successRate).'% satisfaction';
             }
         }
-        
+
         // Streak insights
         if ($stats['streak'] >= 3) {
             $insights[] = "🔥 {$stats['streak']} day {$mode} streak! Keep it up!";
         }
-        
+
         // Time pattern insights
-        if (!empty($stats['hourly_patterns'])) {
+        if (! empty($stats['hourly_patterns'])) {
             $favoriteHour = array_keys($stats['hourly_patterns'], max($stats['hourly_patterns']))[0];
             $favoriteTime = sprintf('%02d:00', $favoriteHour);
-            
+
             if ($stats['hourly_patterns'][$favoriteHour] >= 3) {
                 $currentHour = now()->format('H');
                 if (abs($currentHour - $favoriteHour) <= 1) {
@@ -777,7 +620,7 @@ class Focus extends Command
                 }
             }
         }
-        
+
         // Usage milestone insights
         if ($stats['total_starts'] == 10) {
             $insights[] = "🎉 10th {$mode} session! You're building great habits";
@@ -786,22 +629,22 @@ class Focus extends Command
         } elseif ($stats['total_starts'] == 100) {
             $insights[] = "🚀 100 {$mode} sessions! Incredible dedication";
         }
-        
+
         return array_slice($insights, 0, 2); // Limit to 2 insights to avoid clutter
     }
-    
+
     /**
      * Get recommended focus mode based on learning patterns
      */
     private function getRecommendedFocusMode(): ?string
     {
-        $stats = Cache::store('file')->get('spotify_focus_stats', []);
+        $stats = $this->configService->getFocusStats();
         $currentHour = (int) now()->format('H');
         $recommendations = [];
-        
+
         foreach ($stats as $mode => $modeStats) {
             $score = 0;
-            
+
             // Recent usage boost
             if (isset($modeStats['last_used'])) {
                 $lastUsed = Carbon::parse($modeStats['last_used']);
@@ -810,58 +653,60 @@ class Focus extends Command
                     $score += 10 - $daysSince; // More recent = higher score
                 }
             }
-            
+
             // Time pattern matching
             if (isset($modeStats['hourly_patterns'][$currentHour])) {
                 $score += $modeStats['hourly_patterns'][$currentHour] * 5;
             }
-            
+
             // Success rate boost
             $total = $modeStats['total_starts'] + $modeStats['total_skips'];
             if ($total > 0) {
                 $successRate = $modeStats['total_starts'] / $total;
                 $score += $successRate * 10;
             }
-            
+
             if ($score > 0) {
                 $recommendations[$mode] = $score;
             }
         }
-        
+
         if (empty($recommendations)) {
             return null;
         }
-        
+
         arsort($recommendations);
+
         return array_key_first($recommendations);
     }
-    
+
     /**
      * Record that user skipped a focus mode for learning
      */
     private function recordSkip(string $mode): int
     {
         $presets = $this->getFocusPresets();
-        
-        if (!isset($presets[$mode])) {
+
+        if (! isset($presets[$mode])) {
             $this->error("❌ Unknown focus mode: {$mode}");
             $this->line('💡 Available modes: '.implode(', ', array_keys($presets)));
+
             return 1;
         }
-        
+
         $this->trackFocusUsage($mode, 'skip');
-        
+
         $emoji = $this->getFocusEmoji($mode);
         $this->info("📝 Recorded skip for {$emoji} {$mode} mode");
         $this->line('💡 This helps improve recommendations over time');
-        
+
         // Show alternative suggestion if available
         $recommended = $this->getRecommendedFocusMode();
         if ($recommended && $recommended !== $mode) {
             $recEmoji = $this->getFocusEmoji($recommended);
             $this->line("🌟 Try {$recEmoji} {$recommended} mode instead?");
         }
-        
+
         return 0;
     }
 }
