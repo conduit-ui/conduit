@@ -2,9 +2,11 @@
 
 namespace Conduit\Spotify\Commands;
 
+use Carbon\Carbon;
 use Conduit\Spotify\Contracts\ApiInterface;
 use Conduit\Spotify\Contracts\AuthInterface;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 
 class Focus extends Command
 {
@@ -140,7 +142,7 @@ class Focus extends Command
             $description = $this->getFocusDescription($mode);
             
             // Add usage stats if available
-            $stats = \Illuminate\Support\Facades\Cache::store('file')->get('spotify_focus_stats', []);
+            $stats = Cache::store('file')->get('spotify_focus_stats', []);
             $statsText = '';
             if (isset($stats[$mode])) {
                 $modeStats = $stats[$mode];
@@ -623,7 +625,7 @@ class Focus extends Command
     private function getFocusPresets(): array
     {
         // Get user's custom assignments first
-        $userConfig = \Illuminate\Support\Facades\Cache::store('file')->get('spotify_focus_playlists', []);
+        $userConfig = Cache::store('file')->get('spotify_focus_playlists', []);
         
         // Fall back to default config
         $defaultConfig = config('spotify.presets', []);
@@ -638,7 +640,7 @@ class Focus extends Command
     private function trackFocusUsage(string $mode, string $action): void
     {
         try {
-            $stats = \Illuminate\Support\Facades\Cache::store('file')->get('spotify_focus_stats', []);
+            $stats = Cache::store('file')->get('spotify_focus_stats', []);
             
             $today = now()->format('Y-m-d');
             $currentHour = now()->format('H');
@@ -685,7 +687,7 @@ class Focus extends Command
             }
             
             // Save updated stats
-            \Illuminate\Support\Facades\Cache::store('file')->put('spotify_focus_stats', $stats, now()->addYear());
+            Cache::store('file')->put('spotify_focus_stats', $stats, now()->addYear());
             
         } catch (\Exception $e) {
             // Don't let tracking failures affect the main functionality
@@ -720,7 +722,7 @@ class Focus extends Command
      */
     private function showLearningStats(string $mode): void
     {
-        $stats = \Illuminate\Support\Facades\Cache::store('file')->get('spotify_focus_stats', []);
+        $stats = Cache::store('file')->get('spotify_focus_stats', []);
         
         if (!isset($stats[$mode])) {
             return;
@@ -793,7 +795,7 @@ class Focus extends Command
      */
     private function getRecommendedFocusMode(): ?string
     {
-        $stats = \Illuminate\Support\Facades\Cache::store('file')->get('spotify_focus_stats', []);
+        $stats = Cache::store('file')->get('spotify_focus_stats', []);
         $currentHour = (int) now()->format('H');
         $recommendations = [];
         
@@ -802,7 +804,7 @@ class Focus extends Command
             
             // Recent usage boost
             if (isset($modeStats['last_used'])) {
-                $lastUsed = \Carbon\Carbon::parse($modeStats['last_used']);
+                $lastUsed = Carbon::parse($modeStats['last_used']);
                 $daysSince = now()->diffInDays($lastUsed);
                 if ($daysSince <= 7) {
                     $score += 10 - $daysSince; // More recent = higher score
