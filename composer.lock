@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a2bda753e6d08c405c65b03c2f171115",
+    "content-hash": "755e0ae4db952c1358663bafa0bda4e3",
     "packages": [
         {
             "name": "amphp/amp",
@@ -1101,6 +1101,140 @@
                 }
             ],
             "time": "2024-07-16T11:13:48+00:00"
+        },
+        {
+            "name": "conduit/github-intelligence",
+            "version": "dev-master",
+            "dist": {
+                "type": "path",
+                "url": "./conduit-components/github-intelligence",
+                "reference": "9d5d75d4c28379af4d7ec69dd81d4feb76335353"
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.0",
+                "illuminate/console": "^11.0",
+                "illuminate/support": "^11.0",
+                "jordanpartridge/github-zero": "^1.0",
+                "laravel-zero/framework": "^11.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "pestphp/pest": "^3.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Conduit\\GitHub\\GitHubServiceProvider"
+                    ]
+                },
+                "conduit": {
+                    "component": {
+                        "name": "github-intelligence",
+                        "description": "Revolutionary GitHub integration with AI-powered workflows",
+                        "version": "2.0.0",
+                        "priority": 100,
+                        "commands": {
+                            "repos": {
+                                "class": "Conduit\\GitHub\\Commands\\Repos",
+                                "description": "Browse GitHub repositories with intelligent filtering",
+                                "aliases": [
+                                    "repositories",
+                                    "github:repos"
+                                ]
+                            },
+                            "clone": {
+                                "class": "Conduit\\GitHub\\Commands\\Clone",
+                                "description": "Smart clone with context awareness",
+                                "aliases": [
+                                    "get",
+                                    "github:clone"
+                                ]
+                            },
+                            "pr": {
+                                "class": "Conduit\\GitHub\\Commands\\PullRequest",
+                                "description": "Create and manage pull requests intelligently",
+                                "aliases": [
+                                    "pull-request",
+                                    "github:pr"
+                                ]
+                            },
+                            "issues": {
+                                "class": "Conduit\\GitHub\\Commands\\Issues",
+                                "description": "Browse and manage GitHub issues",
+                                "aliases": [
+                                    "github:issues"
+                                ]
+                            },
+                            "ship": {
+                                "class": "Conduit\\GitHub\\Commands\\Ship",
+                                "description": "Create and ship pull request with smart defaults",
+                                "unique": true
+                            },
+                            "sync": {
+                                "class": "Conduit\\GitHub\\Commands\\Sync",
+                                "description": "Sync with upstream intelligently",
+                                "unique": true
+                            },
+                            "review": {
+                                "class": "Conduit\\GitHub\\Commands\\Review",
+                                "description": "Review PRs with AI assistance",
+                                "unique": true
+                            }
+                        },
+                        "features": {
+                            "context_awareness": true,
+                            "ai_powered": true,
+                            "workflow_automation": true,
+                            "knowledge_integration": true,
+                            "team_intelligence": true
+                        },
+                        "integrations": [
+                            "conduit-knowledge",
+                            "conduit-spotify",
+                            "conduit-ai-assistant"
+                        ],
+                        "conflict_resolution": {
+                            "strategy": "prefix_on_conflict",
+                            "prefix": "github:",
+                            "priority": 100
+                        }
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Conduit\\GitHub\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Conduit\\GitHub\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jordan Partridge",
+                    "email": "jordan@jordanpartridge.us"
+                }
+            ],
+            "description": "Revolutionary GitHub integration for Conduit - Context-aware, AI-powered development workflows",
+            "keywords": [
+                "ai",
+                "conduit",
+                "conduit-component",
+                "developer-tools",
+                "git",
+                "github",
+                "workflow"
+            ],
+            "transport-options": {
+                "relative": true
+            }
         },
         {
             "name": "daverandom/libdns",
@@ -10810,7 +10944,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "conduit/github-intelligence": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

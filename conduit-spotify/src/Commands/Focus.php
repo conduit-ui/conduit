@@ -40,7 +40,7 @@ class Focus extends Command
             $volume = $this->option('volume');
             $shuffle = $this->option('shuffle');
 
-            $presets = config('spotify.presets', []);
+            $presets = $this->getFocusPresets();
 
             if (! isset($presets[$mode])) {
                 $this->error("❌ Unknown focus mode: {$mode}");
@@ -107,7 +107,7 @@ class Focus extends Command
 
     private function listFocusModes(): int
     {
-        $presets = config('spotify.presets', []);
+        $presets = $this->getFocusPresets();
 
         $this->info('🎵 Available Focus Modes:');
         $this->newLine();
@@ -121,6 +121,7 @@ class Focus extends Command
         $this->newLine();
         $this->line('💡 Usage: php conduit spotify:focus [mode]');
         $this->line('   Example: php conduit spotify:focus coding --volume=60 --shuffle');
+        $this->line('🔧 Configure: php conduit spotify:configure --focus-playlists');
 
         return 0;
     }
@@ -471,5 +472,20 @@ class Focus extends Command
             // If device detection fails, continue anyway - the play command will handle it
             $this->warn("⚠️  Device detection failed: {$e->getMessage()}");
         }
+    }
+
+    /**
+     * Get focus presets with user customizations taking precedence
+     */
+    private function getFocusPresets(): array
+    {
+        // Get user's custom assignments first
+        $userConfig = \Illuminate\Support\Facades\Cache::store('file')->get('spotify_focus_playlists', []);
+        
+        // Fall back to default config
+        $defaultConfig = config('spotify.presets', []);
+        
+        // Merge user preferences over defaults
+        return array_merge($defaultConfig, $userConfig);
     }
 }
