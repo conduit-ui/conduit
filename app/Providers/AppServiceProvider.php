@@ -2,16 +2,16 @@
 
 namespace App\Providers;
 
-use App\Commands\Know\AddCommand;
+use App\Commands\Know\Add;
 use App\Commands\Know\AutoCaptureCommand;
-use App\Commands\Know\ContextCommand;
-use App\Commands\Know\ForgetCommand;
-use App\Commands\Know\ListCommand;
-use App\Commands\Know\MigrateCommand;
-use App\Commands\Know\OptimizeCommand;
-use App\Commands\Know\SearchCommand;
+use App\Commands\Know\Context;
+use App\Commands\Know\Forget;
+use App\Commands\Know\ListCommand as KnowList;
+use App\Commands\Know\Migrate;
+use App\Commands\Know\Optimize;
+use App\Commands\Know\Search;
 use App\Commands\Know\SetupCommand;
-use App\Commands\Know\ShowCommand;
+use App\Commands\Know\Show;
 use App\Contracts\ComponentManagerInterface;
 use App\Contracts\ComponentStorageInterface;
 use App\Contracts\PackageInstallerInterface;
@@ -36,16 +36,16 @@ class AppServiceProvider extends ServiceProvider
         // Register knowledge commands
         if ($this->app->runningInConsole()) {
             $this->commands([
-                AddCommand::class,
-                SearchCommand::class,
-                ListCommand::class,
-                ShowCommand::class,
-                ForgetCommand::class,
-                ContextCommand::class,
-                OptimizeCommand::class,
+                Add::class,
+                Search::class,
+                KnowList::class,
+                Show::class,
+                Forget::class,
+                Context::class,
+                Optimize::class,
                 SetupCommand::class,
                 AutoCaptureCommand::class,
-                MigrateCommand::class,
+                Migrate::class,
             ]);
         }
     }
