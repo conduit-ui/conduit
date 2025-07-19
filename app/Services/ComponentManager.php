@@ -197,16 +197,16 @@ class ComponentManager implements ComponentManagerInterface
     private function discoverComponentsWithAuth(string $topic): array
     {
         try {
-            $searchRequest = $this->githubConnector->send(
-                new \JordanPartridge\GithubClient\Requests\SearchRepositoriesRequest([
-                    'q' => "topic:{$topic}",
-                    'sort' => 'updated',
-                    'order' => 'desc',
-                    'per_page' => 50,
-                ])
+            $searchResponse = $this->githubConnector->send(
+                new \JordanPartridge\GithubClient\Requests\Repos\Search(
+                    searchQuery: "topic:{$topic}",
+                    sort: 'updated',
+                    order: \JordanPartridge\GithubClient\Enums\Direction::DESC,
+                    per_page: 50
+                )
             );
 
-            $data = $searchRequest->json();
+            $data = $searchResponse->json();
 
             if (! isset($data['items'])) {
                 return $this->getLocalRegistry();
@@ -218,13 +218,13 @@ class ComponentManager implements ComponentManagerInterface
                 })
                 ->map(function ($repo) {
                     return [
-                        'name' => $repo['name'],
-                        'full_name' => $repo['full_name'],
+                        'name' => $repo['name'] ?? 'Unknown',
+                        'full_name' => $repo['full_name'] ?? 'Unknown',
                         'description' => $repo['description'] ?? 'No description available',
-                        'html_url' => $repo['html_url'],
-                        'clone_url' => $repo['clone_url'],
-                        'updated_at' => $repo['updated_at'],
-                        'stargazers_count' => $repo['stargazers_count'] ?? 0,
+                        'html_url' => $repo['html_url'] ?? '',
+                        'clone_url' => $repo['clone_url'] ?? '',
+                        'updated_at' => $repo['updated_at'] ?? '',
+                        'stars' => $repo['stargazers_count'] ?? 0,
                         'topics' => $repo['topics'] ?? [],
                         'source' => 'github_authenticated',
                     ];
