@@ -106,7 +106,8 @@ class Configure extends Command
 
             if ($choice !== 'skip') {
                 $this->saveFocusPlaylist($mode, $choice);
-                $playlistName = $this->findPlaylistByUri($playlists, $choice)['name'];
+                $playlist = $this->findPlaylistByUri($playlists, $choice);
+                $playlistName = $playlist ? $playlist['name'] : 'Selected playlist';
                 $this->info("✅ {$mode} mode set to: {$playlistName}");
             }
         }
