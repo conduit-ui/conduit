@@ -2145,16 +2145,16 @@
         },
         {
             "name": "jordanpartridge/github-client",
-            "version": "v2.4.0",
+            "version": "v2.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jordanpartridge/github-client.git",
-                "reference": "82e1b88d31236b119588c1f4d0d4d26fce0d7b84"
+                "reference": "a4746d7792fbb88cb530d461ac253ff3220a28a9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jordanpartridge/github-client/zipball/82e1b88d31236b119588c1f4d0d4d26fce0d7b84",
-                "reference": "82e1b88d31236b119588c1f4d0d4d26fce0d7b84",
+                "url": "https://api.github.com/repos/jordanpartridge/github-client/zipball/a4746d7792fbb88cb530d461ac253ff3220a28a9",
+                "reference": "a4746d7792fbb88cb530d461ac253ff3220a28a9",
                 "shasum": ""
             },
             "require": {
@@ -2204,16 +2204,26 @@
                     "role": "Developer"
                 }
             ],
-            "description": "This is my package github-client",
+            "description": "A powerful, Laravel-first GitHub API client with auto-pagination, strong typing, and comprehensive GitHub integration for repositories, pull requests, issues, and more.",
             "homepage": "https://github.com/jordanpartridge/github-client",
             "keywords": [
-                "JordanPartridge",
+                "API-Client",
+                "GitHub-API",
+                "conduit-ui",
+                "git",
+                "github",
                 "github-client",
-                "laravel"
+                "issues",
+                "laravel",
+                "php",
+                "pull-requests",
+                "repositories",
+                "saloon",
+                "version-control"
             ],
             "support": {
                 "issues": "https://github.com/jordanpartridge/github-client/issues",
-                "source": "https://github.com/jordanpartridge/github-client/tree/v2.4.0"
+                "source": "https://github.com/jordanpartridge/github-client/tree/v2.5.0"
             },
             "funding": [
                 {
@@ -2221,7 +2231,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-07-19T05:36:51+00:00"
+            "time": "2025-07-19T20:02:04+00:00"
         },
         {
             "name": "jordanpartridge/github-zero",
