@@ -14,7 +14,6 @@
     "require": {
         "php": "^8.2.0",
         "chillerlan/php-qrcode": "^5.0",
-        "conduit/github-intelligence": "@dev",
         "guzzlehttp/guzzle": "^7.8",
         "illuminate/database": "^11.45",
         "jordanpartridge/github-zero": "^1.0",
