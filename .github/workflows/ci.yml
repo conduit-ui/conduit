@@ -50,6 +50,16 @@ jobs:
         echo "DB_CONNECTION=sqlite" >> .env
         echo "DB_DATABASE=database/database.sqlite" >> .env
       
+    - name: Debug environment
+      run: |
+        echo "Current directory:"
+        pwd
+        echo "Vendor bin contents:"
+        ls -la vendor/bin/ || echo "vendor/bin not found"
+        echo "Checking for pest:"
+        which pest || echo "pest not in PATH"
+        vendor/bin/pest --version || echo "pest binary failed"
+        
     - name: Run tests
       run: vendor/bin/pest --coverage --min=60
       
