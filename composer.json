@@ -34,10 +34,6 @@
         {
             "type": "vcs",
             "url": "https://github.com/jordanpartridge/spotify-client"
-        },
-        {
-            "type": "path",
-            "url": "./conduit-components/github-intelligence"
         }
     ],
     "autoload": {
