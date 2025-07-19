@@ -2,8 +2,8 @@
 
 namespace Conduit\Spotify\Commands;
 
+use Conduit\Spotify\Services\SpotifyConfigService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Cache;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\error;
@@ -16,6 +16,14 @@ use function Laravel\Prompts\warning;
 
 class Setup extends Command
 {
+    private SpotifyConfigService $configService;
+
+    public function __construct(?SpotifyConfigService $configService = null)
+    {
+        parent::__construct();
+        $this->configService = $configService ?? new SpotifyConfigService;
+    }
+
     protected $signature = 'spotify:setup 
                            {--reset : Reset existing credentials}';
 
@@ -186,16 +194,15 @@ class Setup extends Command
 
     private function storeCredentials(array $credentials): void
     {
-        // Use file cache store to ensure persistence across command runs
-        $fileCache = Cache::store('file');
-
-        // Store credentials with long TTL (30 days)
-        $fileCache->put('spotify_client_id', $credentials['client_id'], now()->addDays(30));
-        $fileCache->put('spotify_client_secret', $credentials['client_secret'], now()->addDays(30));
+        // Store credentials securely
+        $this->configService->storeCredentials(
+            $credentials['client_id'],
+            $credentials['client_secret']
+        );
 
         // Verify storage worked
-        $storedId = $fileCache->get('spotify_client_id');
-        $storedSecret = $fileCache->get('spotify_client_secret');
+        $storedId = $this->configService->getClientId();
+        $storedSecret = $this->configService->getClientSecret();
 
         if (! $storedId || ! $storedSecret) {
             $this->error('❌ Failed to store credentials');
@@ -221,21 +228,12 @@ class Setup extends Command
 
     private function hasStoredCredentials(): bool
     {
-        $fileCache = Cache::store('file');
-
-        return $fileCache->has('spotify_client_id') && $fileCache->has('spotify_client_secret');
+        return ! empty($this->configService->getClientId()) && ! empty($this->configService->getClientSecret());
     }
 
     private function clearStoredCredentials(): void
     {
-        $fileCache = Cache::store('file');
-        $fileCache->forget('spotify_client_id');
-        $fileCache->forget('spotify_client_secret');
-
-        // Also clear any stored tokens
-        $fileCache->forget('spotify_access_token');
-        $fileCache->forget('spotify_refresh_token');
-        $fileCache->forget('spotify_token_expires_at');
+        $this->configService->clearAll();
     }
 
     private function displayAppConfiguration(int $port): void

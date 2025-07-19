@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Commands\GitHub\AuthCommand;
+use App\Commands\IssuesCommand;
 use App\Commands\Know\Add;
 use App\Commands\Know\AutoCaptureCommand;
 use App\Commands\Know\Context;
@@ -14,9 +16,7 @@ use App\Commands\Know\SetupCommand;
 use App\Commands\Know\Show;
 use App\Commands\PrsCommand;
 use App\Commands\ReposCommand;
-use App\Commands\IssuesCommand;
 use App\Commands\StatusCommand;
-use App\Commands\GitHub\AuthCommand;
 use App\Contracts\ComponentManagerInterface;
 use App\Contracts\ComponentStorageInterface;
 use App\Contracts\PackageInstallerInterface;

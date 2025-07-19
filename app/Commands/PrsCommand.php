@@ -5,11 +5,12 @@ namespace App\Commands;
 use App\Services\GithubAuthService;
 use JordanPartridge\GithubClient\Facades\Github;
 use LaravelZero\Framework\Commands\Command;
+
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\error;
+use function Laravel\Prompts\info;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\table;
-use function Laravel\Prompts\info;
-use function Laravel\Prompts\error;
-use function Laravel\Prompts\confirm;
 
 class PrsCommand extends Command
 {
@@ -28,14 +29,16 @@ class PrsCommand extends Command
         if (! $githubAuth->isAuthenticated()) {
             error('❌ Not authenticated with GitHub');
             $this->info('💡 Run: gh auth login');
+
             return 1;
         }
 
         try {
             $prs = $this->fetchPullRequests();
-            
+
             if (empty($prs)) {
                 info('📭 No pull requests found matching your criteria');
+
                 return 0;
             }
 
@@ -43,6 +46,7 @@ class PrsCommand extends Command
 
         } catch (\Exception $e) {
             error("❌ Failed to fetch PRs: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -66,16 +70,16 @@ class PrsCommand extends Command
 
         // Fetch PRs for specific repository
         [$owner, $repoName] = explode('/', $repo);
-        
+
         $prs = Github::pullRequests()->all($owner, $repoName, [
             'state' => $state,
             'per_page' => $limit,
             'sort' => 'updated',
-            'direction' => 'desc'
+            'direction' => 'desc',
         ]);
 
         // Convert DTOs to arrays
-        $prArrays = array_map(fn($pr) => $pr->toArray(), $prs);
+        $prArrays = array_map(fn ($pr) => $pr->toArray(), $prs);
 
         return $this->filterPrsByContext($prArrays, $context);
     }
@@ -97,6 +101,7 @@ class PrsCommand extends Command
     private function isGitRepository(): bool
     {
         $gitDir = shell_exec('git rev-parse --git-dir 2>/dev/null');
+
         return ! empty(trim($gitDir ?? ''));
     }
 
@@ -121,7 +126,7 @@ class PrsCommand extends Command
     {
         // For now, we'll focus on current repo or user's repositories
         // In Phase 2, we can implement cross-repo PR fetching using search API
-        
+
         // Get user's repositories and fetch PRs from each
         $repos = Github::repos()->allWithPagination(per_page: 50);
         $allPrs = [];
@@ -132,7 +137,7 @@ class PrsCommand extends Command
                     'state' => $state,
                     'per_page' => 10,
                     'sort' => 'updated',
-                    'direction' => 'desc'
+                    'direction' => 'desc',
                 ]);
 
                 foreach ($prs as $pr) {
@@ -175,7 +180,7 @@ class PrsCommand extends Command
             switch ($context) {
                 case 'mine':
                     return $pr['user']['login'] === $currentUser;
-                
+
                 case 'review-requested':
                     // Check if current user is in requested_reviewers
                     $reviewers = $pr['requested_reviewers'] ?? [];
@@ -184,13 +189,14 @@ class PrsCommand extends Command
                             return true;
                         }
                     }
+
                     return false;
-                
+
                 case 'watching':
                     // This would require additional API calls to check subscription status
                     // For now, we'll include all PRs
                     return true;
-                
+
                 default:
                     return true;
             }
@@ -210,6 +216,7 @@ class PrsCommand extends Command
                     $currentUser = explode('@', $email)[0];
                 }
             }
+
             return $currentUser;
         } catch (\Exception $e) {
             return null;
@@ -223,6 +230,7 @@ class PrsCommand extends Command
         switch ($format) {
             case 'json':
                 $this->line(json_encode($prs, JSON_PRETTY_PRINT));
+
                 return 0;
 
             case 'table':
@@ -236,28 +244,31 @@ class PrsCommand extends Command
 
     private function displayTable(array $prs): int
     {
-        $headers = ['#', 'Title', 'Author', 'Repository', 'State', 'Updated'];
+        $headers = ['#', 'Title', 'Author', 'Comments', 'State', 'Updated'];
         $rows = [];
 
         foreach ($prs as $pr) {
+            $generalComments = $pr['comments'] ?? 0;
+            $reviewComments = $pr['review_comments'] ?? 0;
             $rows[] = [
                 $pr['number'] ?? 'N/A',
-                mb_strimwidth($pr['title'] ?? 'No title', 0, 50, '...'),
+                mb_strimwidth($pr['title'] ?? 'No title', 0, 40, '...'),
                 $pr['user']['login'] ?? 'Unknown',
-                $pr['repository'] ?? 'Current',
+                "💬{$generalComments} 📝{$reviewComments}",
                 $pr['state'] ?? 'unknown',
                 $this->formatDate($pr['updated_at'] ?? date('c')),
             ];
         }
 
         table($headers, $rows);
+
         return 0;
     }
 
     private function displayInteractive(array $prs): int
     {
-        info("🔀 Found " . count($prs) . " pull requests");
-        
+        info('🔀 Found '.count($prs).' pull requests');
+
         while (true) {
             // Build options for the select menu
             $options = [];
@@ -266,7 +277,7 @@ class PrsCommand extends Command
                 $repo = isset($pr['repository']) ? " ({$pr['repository']})" : '';
                 $options[$index] = "{$status} #{$pr['number']} {$pr['title']}{$repo}";
             }
-            
+
             $options['quit'] = '🚪 Exit';
 
             $selected = select(
@@ -308,24 +319,40 @@ class PrsCommand extends Command
         $this->line("📝 <fg=cyan>{$pr['title']}</>");
         $this->line("👤 Author: {$pr['user']['login']}");
         $this->line("🌿 {$pr['head']['ref']} → {$pr['base']['ref']}");
-        $this->line("📅 Updated: " . $this->formatDate($pr['updated_at']));
+        $this->line('📅 Updated: '.$this->formatDate($pr['updated_at']));
         $this->line("🔗 {$pr['html_url']}");
+
+        // Show comment counts
+        $comments = $pr['comments'] ?? 0;
+        $reviewComments = $pr['review_comments'] ?? 0;
+        $this->line("💬 Comments: {$comments} | 📝 Review Comments: {$reviewComments}");
 
         if (! empty($pr['body'])) {
             $this->newLine();
-            $this->line("📋 Description:");
+            $this->line('📋 Description:');
             $this->line(mb_strimwidth($pr['body'], 0, 200, '...'));
         }
 
         $this->newLine();
-        
+
         // Quick actions
         $actions = [
             'view' => '👀 View in browser',
             'checkout' => '📥 Checkout locally',
             'approve' => '✅ Approve',
-            'back' => '🔙 Back to list'
+            'back' => '🔙 Back to list',
         ];
+
+        // Add review comments option if there are any
+        if ($reviewComments > 0) {
+            $actions = [
+                'comments' => "📝 View {$reviewComments} review comments",
+                'view' => '👀 View in browser',
+                'checkout' => '📥 Checkout locally',
+                'approve' => '✅ Approve',
+                'back' => '🔙 Back to list',
+            ];
+        }
 
         $action = select(
             label: 'What would you like to do?',
@@ -334,6 +361,9 @@ class PrsCommand extends Command
         );
 
         switch ($action) {
+            case 'comments':
+                $this->showReviewComments($pr);
+                break;
             case 'view':
                 $this->openInBrowser($pr['html_url']);
                 break;
@@ -343,6 +373,54 @@ class PrsCommand extends Command
             case 'approve':
                 $this->approvePr($pr);
                 break;
+        }
+    }
+
+    private function showReviewComments(array $pr): void
+    {
+        try {
+            $repo = $pr['repository'] ?? $this->detectCurrentRepo();
+            if (! $repo) {
+                error('Could not determine repository');
+
+                return;
+            }
+
+            [$owner, $repoName] = explode('/', $repo);
+
+            info("📝 Fetching review comments for PR #{$pr['number']}...");
+
+            // Fetch review comments using GitHub API
+            $reviewComments = Github::pullRequests()->comments(
+                owner: $owner,
+                repo: $repoName,
+                number: $pr['number']
+            );
+
+            if (empty($reviewComments)) {
+                info('📭 No review comments found');
+
+                return;
+            }
+
+            $this->newLine();
+            info('📝 Review Comments ('.count($reviewComments).'):');
+            $this->newLine();
+
+            foreach ($reviewComments as $index => $comment) {
+                $this->line('🔹 Comment #'.($index + 1));
+                $line = $comment['line'] ?? $comment['original_line'] ?? 'unknown';
+                $this->line("👤 {$comment['user']['login']} commented on {$comment['path']}:{$line}");
+                $this->line('📅 '.$this->formatDate($comment['created_at']));
+                $this->line('💬 '.mb_strimwidth($comment['body'], 0, 200, '...'));
+                $this->newLine();
+            }
+
+            info("💡 To see full comments: {$pr['html_url']}/files");
+
+        } catch (\Exception $e) {
+            error("❌ Failed to fetch review comments: {$e->getMessage()}");
+            info("🌐 You can view them in browser: {$pr['html_url']}/files");
         }
     }
 
@@ -361,30 +439,32 @@ class PrsCommand extends Command
                     shell_exec("xdg-open '{$url}' > /dev/null 2>&1");
                     break;
             }
-            info("🌐 Opened in browser");
+            info('🌐 Opened in browser');
         } catch (\Exception $e) {
-            error("Failed to open browser");
+            error('Failed to open browser');
         }
     }
 
     private function checkoutPr(array $pr): void
     {
         if (! $this->isGitRepository()) {
-            error("Not in a git repository");
+            error('Not in a git repository');
+
             return;
         }
 
         $branchName = "pr-{$pr['number']}-{$pr['head']['ref']}";
-        
+
         $commands = [
             "git fetch origin pull/{$pr['number']}/head:{$branchName}",
-            "git checkout {$branchName}"
+            "git checkout {$branchName}",
         ];
 
         foreach ($commands as $command) {
             $output = shell_exec("{$command} 2>&1");
             if (strpos($output, 'error') !== false || strpos($output, 'fatal') !== false) {
                 error("Failed to checkout PR: {$output}");
+
                 return;
             }
         }
@@ -401,12 +481,13 @@ class PrsCommand extends Command
         try {
             $repo = $pr['repository'] ?? $this->detectCurrentRepo();
             if (! $repo) {
-                error("Could not determine repository");
+                error('Could not determine repository');
+
                 return;
             }
 
             [$owner, $repoName] = explode('/', $repo);
-            
+
             Github::pullRequests()->createReview(
                 owner: $owner,
                 repo: $repoName,
@@ -428,11 +509,11 @@ class PrsCommand extends Command
         $diff = $now - $timestamp;
 
         if ($diff < 3600) {
-            return floor($diff / 60) . 'm ago';
+            return floor($diff / 60).'m ago';
         } elseif ($diff < 86400) {
-            return floor($diff / 3600) . 'h ago';
+            return floor($diff / 3600).'h ago';
         } elseif ($diff < 2592000) {
-            return floor($diff / 86400) . 'd ago';
+            return floor($diff / 86400).'d ago';
         } else {
             return date('M j', $timestamp);
         }

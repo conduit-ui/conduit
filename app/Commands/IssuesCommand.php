@@ -5,12 +5,13 @@ namespace App\Commands;
 use App\Services\GithubAuthService;
 use JordanPartridge\GithubClient\Facades\Github;
 use LaravelZero\Framework\Commands\Command;
-use function Laravel\Prompts\select;
-use function Laravel\Prompts\search;
-use function Laravel\Prompts\table;
-use function Laravel\Prompts\info;
-use function Laravel\Prompts\error;
+
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\error;
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\search;
+use function Laravel\Prompts\select;
+use function Laravel\Prompts\table;
 
 class IssuesCommand extends Command
 {
@@ -30,15 +31,17 @@ class IssuesCommand extends Command
         if (! $githubAuth->isAuthenticated()) {
             error('❌ Not authenticated with GitHub');
             $this->info('💡 Run: gh auth login');
+
             return 1;
         }
 
         try {
             // Issues API now available in github-client v2.5.0!
             $issues = $this->fetchIssues();
-            
+
             if (empty($issues)) {
                 info('📭 No issues found matching your criteria');
+
                 return 0;
             }
 
@@ -46,6 +49,7 @@ class IssuesCommand extends Command
 
         } catch (\Exception $e) {
             error("❌ Failed to fetch issues: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -61,16 +65,17 @@ class IssuesCommand extends Command
         // Only auto-detect if no repo specified
         if (! $repo) {
             $repo = $this->detectCurrentRepo();
-            
+
             if (! $repo) {
                 info('📂 No repository specified and none detected from current directory');
                 $this->info('💡 Use --repo=owner/repo or run from within a git repository');
+
                 return [];
             }
         }
 
         [$owner, $repoName] = explode('/', $repo);
-        
+
         info("📡 Fetching issues from {$repo}...");
 
         // Build parameters for GitHub API
@@ -78,7 +83,7 @@ class IssuesCommand extends Command
             'state' => $state,
             'per_page' => $limit,
             'sort' => 'updated',
-            'direction' => 'desc'
+            'direction' => 'desc',
         ];
 
         if ($labels) {
@@ -88,10 +93,10 @@ class IssuesCommand extends Command
         // For GitHub API, issues and PRs are the same endpoint, but we want issues only
         // We'll filter out PRs after fetching
         $allIssues = $this->fetchFromGitHub($owner, $repoName, $parameters);
-        
+
         // Filter out pull requests (GitHub API returns both)
         $issues = array_filter($allIssues, function ($issue) {
-            return !isset($issue['pull_request']);
+            return ! isset($issue['pull_request']);
         });
 
         return $this->filterIssuesByContext(array_values($issues), $context);
@@ -102,22 +107,22 @@ class IssuesCommand extends Command
         // Note: GitHub's Issues API returns both issues and PRs
         // We'll use the search API for better filtering or implement via direct HTTP calls
         // For now, we'll use a simple approach and filter afterward
-        
+
         try {
             // Use the new Issues API in github-client v2.5.0
-            $state = match($parameters['state'] ?? 'open') {
+            $state = match ($parameters['state'] ?? 'open') {
                 'open' => \JordanPartridge\GithubClient\Enums\Issues\State::OPEN,
                 'closed' => \JordanPartridge\GithubClient\Enums\Issues\State::CLOSED,
                 default => null,
             };
 
-            $sort = match($parameters['sort'] ?? 'updated') {
+            $sort = match ($parameters['sort'] ?? 'updated') {
                 'created' => \JordanPartridge\GithubClient\Enums\Issues\Sort::CREATED,
                 'updated' => \JordanPartridge\GithubClient\Enums\Issues\Sort::UPDATED,
                 default => null,
             };
 
-            $direction = match($parameters['direction'] ?? 'desc') {
+            $direction = match ($parameters['direction'] ?? 'desc') {
                 'asc' => \JordanPartridge\GithubClient\Enums\Direction::ASC,
                 'desc' => \JordanPartridge\GithubClient\Enums\Direction::DESC,
                 default => null,
@@ -134,9 +139,9 @@ class IssuesCommand extends Command
             );
 
             // Convert DTOs to arrays for our display methods
-            return array_map(fn($issue) => $issue->toArray(), $issues);
+            return array_map(fn ($issue) => $issue->toArray(), $issues);
         } catch (\Exception $e) {
-            throw new \Exception("Failed to fetch issues from {$owner}/{$repo}: " . $e->getMessage());
+            throw new \Exception("Failed to fetch issues from {$owner}/{$repo}: ".$e->getMessage());
         }
     }
 
@@ -157,6 +162,7 @@ class IssuesCommand extends Command
     private function isGitRepository(): bool
     {
         $gitDir = shell_exec('git rev-parse --git-dir 2>/dev/null');
+
         return ! empty(trim($gitDir ?? ''));
     }
 
@@ -193,15 +199,15 @@ class IssuesCommand extends Command
             switch ($context) {
                 case 'assigned':
                     return $issue['assignee'] && $issue['assignee']['login'] === $currentUser;
-                
+
                 case 'created':
                     return $issue['user']['login'] === $currentUser;
-                
+
                 case 'mentioned':
                     // This would require checking issue body/comments for @mentions
                     // For now, we'll include all issues
                     return true;
-                
+
                 default:
                     return true;
             }
@@ -220,6 +226,7 @@ class IssuesCommand extends Command
                     $currentUser = explode('@', $email)[0];
                 }
             }
+
             return $currentUser;
         } catch (\Exception $e) {
             return null;
@@ -233,6 +240,7 @@ class IssuesCommand extends Command
         switch ($format) {
             case 'json':
                 $this->line(json_encode($issues, JSON_PRETTY_PRINT));
+
                 return 0;
 
             case 'table':
@@ -250,8 +258,8 @@ class IssuesCommand extends Command
         $rows = [];
 
         foreach ($issues as $issue) {
-            $labels = array_map(fn($label) => $label['name'], $issue['labels']);
-            
+            $labels = array_map(fn ($label) => $label['name'], $issue['labels']);
+
             $rows[] = [
                 $issue['number'],
                 mb_strimwidth($issue['title'], 0, 50, '...'),
@@ -263,13 +271,14 @@ class IssuesCommand extends Command
         }
 
         table($headers, $rows);
+
         return 0;
     }
 
     private function displayInteractive(array $issues): int
     {
-        info("🐛 Found " . count($issues) . " issues");
-        
+        info('🐛 Found '.count($issues).' issues');
+
         while (true) {
             // Build options for the select menu
             $options = [];
@@ -278,10 +287,10 @@ class IssuesCommand extends Command
                 $labels = $this->getTopLabels($issue['labels'], 2);
                 $labelsText = $labels ? " [{$labels}]" : '';
                 $repo = isset($issue['repository']) ? " ({$issue['repository']})" : '';
-                
+
                 $options[$index] = "{$status} #{$issue['number']} {$issue['title']}{$labelsText}{$repo}";
             }
-            
+
             $options['quit'] = '🚪 Exit';
 
             $selected = select(
@@ -309,16 +318,16 @@ class IssuesCommand extends Command
         }
 
         // Check for priority/severity labels
-        $labels = array_map(fn($label) => strtolower($label['name']), $issue['labels']);
-        
+        $labels = array_map(fn ($label) => strtolower($label['name']), $issue['labels']);
+
         if (in_array('bug', $labels)) {
             return '🐛';
         }
-        
+
         if (in_array('enhancement', $labels) || in_array('feature', $labels)) {
             return '✨';
         }
-        
+
         if (in_array('epic', $labels)) {
             return '🚀';
         }
@@ -328,8 +337,9 @@ class IssuesCommand extends Command
 
     private function getTopLabels(array $labels, int $limit): string
     {
-        $labelNames = array_map(fn($label) => $label['name'], $labels);
+        $labelNames = array_map(fn ($label) => $label['name'], $labels);
         $topLabels = array_slice($labelNames, 0, $limit);
+
         return implode(', ', $topLabels);
     }
 
@@ -339,36 +349,36 @@ class IssuesCommand extends Command
         info("🐛 Issue #{$issue['number']}");
         $this->line("📝 <fg=cyan>{$issue['title']}</>");
         $this->line("👤 Author: {$issue['user']['login']}");
-        $this->line("📊 State: " . ucfirst($issue['state']));
-        
+        $this->line('📊 State: '.ucfirst($issue['state']));
+
         if ($issue['assignee']) {
             $this->line("👨‍💻 Assignee: {$issue['assignee']['login']}");
         }
-        
-        if (!empty($issue['labels'])) {
-            $labels = array_map(fn($label) => $label['name'], $issue['labels']);
-            $this->line("🏷️  Labels: " . implode(', ', $labels));
+
+        if (! empty($issue['labels'])) {
+            $labels = array_map(fn ($label) => $label['name'], $issue['labels']);
+            $this->line('🏷️  Labels: '.implode(', ', $labels));
         }
-        
+
         $this->line("💬 Comments: {$issue['comments']}");
-        $this->line("📅 Updated: " . $this->formatDate($issue['updated_at']));
+        $this->line('📅 Updated: '.$this->formatDate($issue['updated_at']));
         $this->line("🔗 {$issue['html_url']}");
 
         if (! empty($issue['body'])) {
             $this->newLine();
-            $this->line("📋 Description:");
+            $this->line('📋 Description:');
             $this->line(mb_strimwidth($issue['body'], 0, 200, '...'));
         }
 
         $this->newLine();
-        
+
         // Quick actions
         $actions = [
             'view' => '👀 View in browser',
             'comment' => '💬 Add comment',
             'assign' => '👨‍💻 Assign to me',
             'close' => '✅ Close issue',
-            'back' => '🔙 Back to list'
+            'back' => '🔙 Back to list',
         ];
 
         // Modify actions based on issue state
@@ -417,16 +427,16 @@ class IssuesCommand extends Command
                     shell_exec("xdg-open '{$url}' > /dev/null 2>&1");
                     break;
             }
-            info("🌐 Opened in browser");
+            info('🌐 Opened in browser');
         } catch (\Exception $e) {
-            error("Failed to open browser");
+            error('Failed to open browser');
         }
     }
 
     private function addComment(array $issue): void
     {
         info("💬 Adding comment to issue #{$issue['number']} (opens in browser)");
-        $this->openInBrowser($issue['html_url'] . '#new_comment_field');
+        $this->openInBrowser($issue['html_url'].'#new_comment_field');
     }
 
     private function assignIssue(array $issue): void
@@ -435,8 +445,8 @@ class IssuesCommand extends Command
             return;
         }
 
-        info("👨‍💻 Assignment would be implemented with GitHub Issues API");
-        info("🌐 Opening in browser for manual assignment");
+        info('👨‍💻 Assignment would be implemented with GitHub Issues API');
+        info('🌐 Opening in browser for manual assignment');
         $this->openInBrowser($issue['html_url']);
     }
 
@@ -446,8 +456,8 @@ class IssuesCommand extends Command
             return;
         }
 
-        info("✅ Close functionality would be implemented with GitHub Issues API");
-        info("🌐 Opening in browser for manual closure");
+        info('✅ Close functionality would be implemented with GitHub Issues API');
+        info('🌐 Opening in browser for manual closure');
         $this->openInBrowser($issue['html_url']);
     }
 
@@ -457,8 +467,8 @@ class IssuesCommand extends Command
             return;
         }
 
-        info("🔄 Reopen functionality would be implemented with GitHub Issues API");
-        info("🌐 Opening in browser for manual reopening");
+        info('🔄 Reopen functionality would be implemented with GitHub Issues API');
+        info('🌐 Opening in browser for manual reopening');
         $this->openInBrowser($issue['html_url']);
     }
 
@@ -469,11 +479,11 @@ class IssuesCommand extends Command
         $diff = $now - $timestamp;
 
         if ($diff < 3600) {
-            return floor($diff / 60) . 'm ago';
+            return floor($diff / 60).'m ago';
         } elseif ($diff < 86400) {
-            return floor($diff / 3600) . 'h ago';
+            return floor($diff / 3600).'h ago';
         } elseif ($diff < 2592000) {
-            return floor($diff / 86400) . 'd ago';
+            return floor($diff / 86400).'d ago';
         } else {
             return date('M j', $timestamp);
         }

@@ -11,6 +11,8 @@ class Auth implements AuthInterface
 {
     private Client $httpClient;
 
+    private SpotifyConfigService $configService;
+
     private ?string $clientId;
 
     private ?string $clientSecret;
@@ -19,24 +21,18 @@ class Auth implements AuthInterface
 
     private array $defaultScopes;
 
-    public function __construct()
+    public function __construct(?SpotifyConfigService $configService = null)
     {
         $this->httpClient = new Client([
             'base_uri' => 'https://accounts.spotify.com/',
             'timeout' => 30,
         ]);
 
-        // Try stored credentials first, fallback to config
-        $fileCache = Cache::store('file');
-        $this->clientId = $fileCache->get('spotify_client_id') ?: config('spotify.client_id');
-        $this->clientSecret = $fileCache->get('spotify_client_secret') ?: config('spotify.client_secret');
-        $this->redirectUri = config('spotify.redirect_uri', 'http://127.0.0.1:9876/callback');
-        $this->defaultScopes = config('spotify.scopes', [
-            'user-read-playback-state',
-            'user-modify-playback-state',
-            'user-read-currently-playing',
-            'playlist-read-private',
-        ]);
+        $this->configService = $configService ?? new SpotifyConfigService;
+        $this->clientId = $this->configService->getClientId();
+        $this->clientSecret = $this->configService->getClientSecret();
+        $this->redirectUri = $this->configService->getRedirectUri();
+        $this->defaultScopes = $this->configService->getDefaultScopes();
     }
 
     public function getAuthorizationUrl(array $scopes = []): string
@@ -296,22 +292,21 @@ PHP;
 
     public function getAccessToken(): ?string
     {
-        $fileCache = Cache::store('file');
-        $token = $fileCache->get('spotify_access_token');
+        $token = $this->configService->getToken('access_token');
 
         if (! $token) {
             return null;
         }
 
         // Check if token is expired and refresh if needed
-        $expiresAt = $fileCache->get('spotify_token_expires_at');
+        $expiresAt = $this->configService->getToken('token_expires_at');
         if ($expiresAt && now()->isAfter($expiresAt)) {
-            $refreshToken = $fileCache->get('spotify_refresh_token');
+            $refreshToken = $this->configService->getToken('refresh_token');
             if ($refreshToken) {
                 try {
                     $this->refreshToken($refreshToken);
 
-                    return $fileCache->get('spotify_access_token');
+                    return $this->configService->getToken('access_token');
                 } catch (\Exception $e) {
                     // Refresh failed, clear tokens
                     $this->clearTokens();
@@ -351,9 +346,8 @@ PHP;
      */
     public function authenticateHeadlessIfPossible(): bool
     {
-        $fileCache = Cache::store('file');
-        $username = $fileCache->get('spotify_username');
-        $password = $fileCache->get('spotify_password');
+        $username = $this->configService->getToken('username');
+        $password = $this->configService->getToken('password');
 
         if (! $username || ! $password) {
             return false;
@@ -385,17 +379,20 @@ PHP;
      */
     private function storeTokens(array $tokenData, ?string $existingRefreshToken = null): void
     {
-        $fileCache = Cache::store('file');
         $accessToken = $tokenData['access_token'];
         $expiresIn = $tokenData['expires_in'] ?? 3600;
         $refreshToken = $tokenData['refresh_token'] ?? $existingRefreshToken;
 
-        $fileCache->put('spotify_access_token', $accessToken, now()->addSeconds($expiresIn - 60));
-        $fileCache->put('spotify_token_expires_at', now()->addSeconds($expiresIn), now()->addHours(24));
+        $tokens = [
+            'access_token' => $accessToken,
+            'token_expires_at' => now()->addSeconds($expiresIn)->toISOString(),
+        ];
 
         if ($refreshToken) {
-            $fileCache->put('spotify_refresh_token', $refreshToken, now()->addDays(30));
+            $tokens['refresh_token'] = $refreshToken;
         }
+
+        $this->configService->storeTokens($tokens);
     }
 
     /**
@@ -403,9 +400,6 @@ PHP;
      */
     private function clearTokens(): void
     {
-        $fileCache = Cache::store('file');
-        $fileCache->forget('spotify_access_token');
-        $fileCache->forget('spotify_refresh_token');
-        $fileCache->forget('spotify_token_expires_at');
+        $this->configService->clearTokens();
     }
 }

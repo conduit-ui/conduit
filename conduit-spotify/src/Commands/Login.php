@@ -125,9 +125,8 @@ class Login extends Command
         $this->newLine();
 
         // Check stored credentials
-        $fileCache = Cache::store('file');
-        $storedClientId = $fileCache->get('spotify_client_id');
-        $storedClientSecret = $fileCache->get('spotify_client_secret');
+        $storedClientId = $this->configService->getClientId();
+        $storedClientSecret = $this->configService->getClientSecret();
 
         // Check config credentials
         $configClientId = config('spotify.client_id');

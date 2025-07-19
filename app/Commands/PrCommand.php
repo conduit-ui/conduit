@@ -18,6 +18,7 @@ class PrCommand extends Command
         if (! $githubAuth->isAuthenticated()) {
             $this->error('❌ Not authenticated with GitHub');
             $this->info('💡 Run: gh auth login');
+
             return 1;
         }
 
@@ -31,6 +32,7 @@ class PrCommand extends Command
         $title = $this->argument('title') ?: $this->askForTitle($gitContext);
         if (! $title) {
             $this->error('❌ PR title is required');
+
             return 1;
         }
 
@@ -50,13 +52,14 @@ class PrCommand extends Command
                 body: $this->generatePrBody($gitContext)
             );
 
-            $this->info("✅ Pull request created successfully!");
+            $this->info('✅ Pull request created successfully!');
             $this->info("🔗 {$pr['html_url']}");
-            
+
             return 0;
 
         } catch (\Exception $e) {
             $this->error("❌ Failed to create PR: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -66,6 +69,7 @@ class PrCommand extends Command
         // Check if we're in a git repository
         if (! $this->isGitRepository()) {
             $this->error('❌ Not in a git repository');
+
             return null;
         }
 
@@ -73,12 +77,14 @@ class PrCommand extends Command
         $branch = trim(shell_exec('git branch --show-current'));
         if (empty($branch)) {
             $this->error('❌ Could not determine current branch');
+
             return null;
         }
 
         if ($branch === 'main' || $branch === 'master') {
             $this->error('❌ Cannot create PR from main/master branch');
             $this->info('💡 Create a feature branch first: git checkout -b feature/your-feature');
+
             return null;
         }
 
@@ -86,6 +92,7 @@ class PrCommand extends Command
         $remoteUrl = trim(shell_exec('git config --get remote.origin.url'));
         if (empty($remoteUrl)) {
             $this->error('❌ No remote origin found');
+
             return null;
         }
 
@@ -93,6 +100,7 @@ class PrCommand extends Command
         $repoInfo = $this->parseGitHubRepo($remoteUrl);
         if (! $repoInfo) {
             $this->error('❌ Could not parse GitHub repository from remote URL');
+
             return null;
         }
 
@@ -112,6 +120,7 @@ class PrCommand extends Command
     private function isGitRepository(): bool
     {
         $gitDir = shell_exec('git rev-parse --git-dir 2>/dev/null');
+
         return ! empty(trim($gitDir));
     }
 
@@ -140,6 +149,7 @@ class PrCommand extends Command
     {
         try {
             $repoData = Github::repos()->get(\JordanPartridge\GithubClient\ValueObjects\Repo::from("{$owner}/{$repo}"));
+
             return $repoData->default_branch ?? 'main';
         } catch (\Exception $e) {
             // Fallback to 'main' if we can't fetch repo info
@@ -151,11 +161,11 @@ class PrCommand extends Command
     {
         // Try to generate title from recent commits
         $suggestedTitle = $this->generateTitleFromCommits($gitContext['branch']);
-        
+
         if ($suggestedTitle) {
-            $title = $this->ask("PR title", $suggestedTitle);
+            $title = $this->ask('PR title', $suggestedTitle);
         } else {
-            $title = $this->ask("PR title");
+            $title = $this->ask('PR title');
         }
 
         return $title;
@@ -165,7 +175,7 @@ class PrCommand extends Command
     {
         // Get commits on this branch that aren't on main/master
         $commits = shell_exec("git log --oneline main..{$branch} 2>/dev/null || git log --oneline master..{$branch} 2>/dev/null");
-        
+
         if (empty($commits)) {
             return null;
         }
@@ -189,10 +199,10 @@ class PrCommand extends Command
     private function generatePrBody(array $gitContext): string
     {
         $body = "## Summary\n\n";
-        
+
         // Get commit messages for context
         $commits = shell_exec("git log --oneline main..{$gitContext['branch']} 2>/dev/null || git log --oneline master..{$gitContext['branch']} 2>/dev/null");
-        
+
         if (! empty($commits)) {
             $commitLines = array_filter(explode("\n", trim($commits)));
             if (count($commitLines) > 1) {

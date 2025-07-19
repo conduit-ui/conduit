@@ -5,8 +5,9 @@ namespace App\Commands;
 use App\Services\GithubAuthService;
 use JordanPartridge\GithubClient\Facades\Github;
 use LaravelZero\Framework\Commands\Command;
-use function Laravel\Prompts\info;
+
 use function Laravel\Prompts\error;
+use function Laravel\Prompts\info;
 
 class StatusCommand extends Command
 {
@@ -25,29 +26,32 @@ class StatusCommand extends Command
         if (! $githubAuth->isAuthenticated()) {
             error('❌ Not authenticated with GitHub');
             $this->info('💡 Run: gh auth login');
+
             return 1;
         }
 
         try {
             $repo = $this->option('repo');
-            
+
             // Only auto-detect if no repo specified
             if (! $repo) {
                 $repo = $this->detectCurrentRepo();
             }
-            
+
             if (! $repo) {
                 error('No repository specified and none detected from current directory');
                 $this->info('💡 Use --repo=owner/repo or run from within a git repository');
+
                 return 1;
             }
 
             $status = $this->aggregateStatus($repo);
-            
+
             return $this->displayStatus($status);
 
         } catch (\Exception $e) {
             error("❌ Failed to fetch status: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -69,6 +73,7 @@ class StatusCommand extends Command
     private function isGitRepository(): bool
     {
         $gitDir = shell_exec('git rev-parse --git-dir 2>/dev/null');
+
         return ! empty(trim($gitDir ?? ''));
     }
 
@@ -92,7 +97,7 @@ class StatusCommand extends Command
     private function aggregateStatus(string $repo): array
     {
         [$owner, $repoName] = explode('/', $repo);
-        
+
         info("📊 Aggregating comprehensive status for {$repo}...");
 
         $status = [
@@ -102,7 +107,7 @@ class StatusCommand extends Command
                 'days' => (int) $this->option('days'),
                 'include_prs' => $this->option('include-prs'),
                 'include_repo_stats' => $this->option('include-repo-stats'),
-            ]
+            ],
         ];
 
         // Repository information
@@ -134,7 +139,7 @@ class StatusCommand extends Command
     {
         try {
             $repoData = Github::repos()->get(\JordanPartridge\GithubClient\ValueObjects\Repo::fromFullName("{$owner}/{$repo}"));
-            
+
             return [
                 'name' => $repoData->name,
                 'full_name' => $repoData->full_name,
@@ -161,14 +166,14 @@ class StatusCommand extends Command
         // TODO: Issues API support needed in github-client (Issue #31)
         // For now, we'll simulate based on repo info since we don't have full Issues API yet
         // In reality, this would fetch actual issues from the specified repository
-        
+
         try {
             $repoData = Github::repos()->get(\JordanPartridge\GithubClient\ValueObjects\Repo::fromFullName("{$owner}/{$repo}"));
-            
+
             // Note: open_issues_count includes both issues AND pull requests
             // We need proper Issues API to separate them
             $openIssuesCount = $repoData->open_issues_count;
-            
+
             // Generate simulated analysis based on real repo data
             $openIssues = [];
             for ($i = 1; $i <= min($openIssuesCount, 5); $i++) {
@@ -195,24 +200,24 @@ class StatusCommand extends Command
         return [
             'total_open' => count($openIssues),
             'by_priority' => [
-                'high' => count(array_filter($openIssues, fn($i) => $i['priority'] === 'high')),
-                'medium' => count(array_filter($openIssues, fn($i) => $i['priority'] === 'medium')),
-                'low' => count(array_filter($openIssues, fn($i) => $i['priority'] === 'low')),
+                'high' => count(array_filter($openIssues, fn ($i) => $i['priority'] === 'high')),
+                'medium' => count(array_filter($openIssues, fn ($i) => $i['priority'] === 'medium')),
+                'low' => count(array_filter($openIssues, fn ($i) => $i['priority'] === 'low')),
             ],
             'by_complexity' => [
-                'high' => count(array_filter($openIssues, fn($i) => $i['complexity'] === 'high')),
-                'medium' => count(array_filter($openIssues, fn($i) => $i['complexity'] === 'medium')),
-                'low' => count(array_filter($openIssues, fn($i) => $i['complexity'] === 'low')),
+                'high' => count(array_filter($openIssues, fn ($i) => $i['complexity'] === 'high')),
+                'medium' => count(array_filter($openIssues, fn ($i) => $i['complexity'] === 'medium')),
+                'low' => count(array_filter($openIssues, fn ($i) => $i['complexity'] === 'low')),
             ],
             'by_type' => [
-                'epic' => count(array_filter($openIssues, fn($i) => in_array('epic', $i['labels']))),
-                'enhancement' => count(array_filter($openIssues, fn($i) => in_array('enhancement', $i['labels']))),
-                'bug' => count(array_filter($openIssues, fn($i) => in_array('bug', $i['labels']))),
-                'other' => count(array_filter($openIssues, fn($i) => empty(array_intersect(['epic', 'enhancement', 'bug'], $i['labels'])))),
+                'epic' => count(array_filter($openIssues, fn ($i) => in_array('epic', $i['labels']))),
+                'enhancement' => count(array_filter($openIssues, fn ($i) => in_array('enhancement', $i['labels']))),
+                'bug' => count(array_filter($openIssues, fn ($i) => in_array('bug', $i['labels']))),
+                'other' => count(array_filter($openIssues, fn ($i) => empty(array_intersect(['epic', 'enhancement', 'bug'], $i['labels'])))),
             ],
-            'stale_issues' => count(array_filter($openIssues, fn($i) => strtotime($i['updated_at']) < strtotime('-30 days'))),
-            'unassigned_count' => count(array_filter($openIssues, fn($i) => empty($i['assignee']))),
-            'recent_activity' => count(array_filter($openIssues, fn($i) => strtotime($i['updated_at']) > strtotime('-7 days'))),
+            'stale_issues' => count(array_filter($openIssues, fn ($i) => strtotime($i['updated_at']) < strtotime('-30 days'))),
+            'unassigned_count' => count(array_filter($openIssues, fn ($i) => empty($i['assignee']))),
+            'recent_activity' => count(array_filter($openIssues, fn ($i) => strtotime($i['updated_at']) > strtotime('-7 days'))),
             'issues' => $openIssues,
         ];
     }
@@ -241,7 +246,7 @@ class StatusCommand extends Command
 
         // Branch status
         $context['branch_status'] = trim(shell_exec('git status --porcelain 2>/dev/null') ?: '');
-        $context['has_uncommitted_changes'] = !empty($context['branch_status']);
+        $context['has_uncommitted_changes'] = ! empty($context['branch_status']);
 
         // Recent commits
         $recentCommits = shell_exec('git log --oneline -10 2>/dev/null');
@@ -281,13 +286,18 @@ class StatusCommand extends Command
     private function calculateIssueHealthScore(array $issues): float
     {
         $totalIssues = $issues['total_open'];
-        if ($totalIssues === 0) return 100.0;
+        if ($totalIssues === 0) {
+            return 100.0;
+        }
 
         $score = 100;
 
         // Penalize for high number of issues
-        if ($totalIssues > 50) $score -= 20;
-        elseif ($totalIssues > 20) $score -= 10;
+        if ($totalIssues > 50) {
+            $score -= 20;
+        } elseif ($totalIssues > 20) {
+            $score -= 10;
+        }
 
         // Penalize for stale issues
         $staleRatio = $issues['stale_issues'] / $totalIssues;
@@ -314,19 +324,19 @@ class StatusCommand extends Command
         }
 
         if ($issues['unassigned_count'] > $issues['total_open'] * 0.7) {
-            $recommendations[] = "High number of unassigned issues - consider triaging and assigning";
+            $recommendations[] = 'High number of unassigned issues - consider triaging and assigning';
         }
 
         if ($issues['by_priority']['high'] > 5) {
-            $recommendations[] = "Multiple high-priority issues open - consider focusing development effort";
+            $recommendations[] = 'Multiple high-priority issues open - consider focusing development effort';
         }
 
         if (isset($status['git_context']) && $status['git_context']['has_uncommitted_changes']) {
-            $recommendations[] = "Uncommitted changes detected - consider committing or stashing work";
+            $recommendations[] = 'Uncommitted changes detected - consider committing or stashing work';
         }
 
         if (empty($recommendations)) {
-            $recommendations[] = "Project appears healthy - good issue management and activity";
+            $recommendations[] = 'Project appears healthy - good issue management and activity';
         }
 
         return $recommendations;
@@ -339,6 +349,7 @@ class StatusCommand extends Command
         switch ($format) {
             case 'json':
                 $this->line(json_encode($status, JSON_PRETTY_PRINT));
+
                 return 0;
 
             case 'summary':
@@ -361,10 +372,10 @@ class StatusCommand extends Command
         $this->line("🏥 Health Score: {$health['issue_health_score']}%");
         $this->line("⚠️  High Priority: {$issues['by_priority']['high']}");
         $this->line("📈 Recent Activity: {$issues['recent_activity']} issues");
-        
-        if (!empty($health['recommendations'])) {
+
+        if (! empty($health['recommendations'])) {
             $this->newLine();
-            $this->line("💡 <fg=yellow>Recommendations:</>");
+            $this->line('💡 <fg=yellow>Recommendations:</>');
             foreach ($health['recommendations'] as $rec) {
                 $this->line("   • {$rec}");
             }
@@ -380,16 +391,16 @@ class StatusCommand extends Command
         $health = $status['health_metrics'];
 
         info("📊 Comprehensive Status for {$repo}");
-        
+
         $this->newLine();
-        $this->line("🐛 <fg=cyan>Issues Overview</>");
+        $this->line('🐛 <fg=cyan>Issues Overview</>');
         $this->line("   Total Open: {$issues['total_open']}");
         $this->line("   High Priority: {$issues['by_priority']['high']}");
         $this->line("   Medium Priority: {$issues['by_priority']['medium']}");
         $this->line("   Low Priority: {$issues['by_priority']['low']}");
-        
+
         $this->newLine();
-        $this->line("📈 <fg=cyan>Activity & Health</>");
+        $this->line('📈 <fg=cyan>Activity & Health</>');
         $this->line("   Health Score: {$health['issue_health_score']}%");
         $this->line("   Recent Activity: {$issues['recent_activity']} issues");
         $this->line("   Stale Issues: {$issues['stale_issues']}");
@@ -398,9 +409,9 @@ class StatusCommand extends Command
         if (isset($status['git_context'])) {
             $git = $status['git_context'];
             $this->newLine();
-            $this->line("🌿 <fg=cyan>Git Context</>");
+            $this->line('🌿 <fg=cyan>Git Context</>');
             $this->line("   Current Branch: {$git['current_branch']}");
-            $this->line("   Uncommitted Changes: " . ($git['has_uncommitted_changes'] ? 'Yes' : 'No'));
+            $this->line('   Uncommitted Changes: '.($git['has_uncommitted_changes'] ? 'Yes' : 'No'));
             if ($git['commits_behind_upstream'] !== null) {
                 $this->line("   Behind Upstream: {$git['commits_behind_upstream']} commits");
             }
@@ -410,7 +421,7 @@ class StatusCommand extends Command
         }
 
         $this->newLine();
-        $this->line("💡 <fg=yellow>Recommendations</>");
+        $this->line('💡 <fg=yellow>Recommendations</>');
         foreach ($health['recommendations'] as $rec) {
             $this->line("   • {$rec}");
         }
