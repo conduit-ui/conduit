@@ -16,7 +16,9 @@ use App\Commands\Know\SetupCommand;
 use App\Commands\Know\Show;
 use App\Commands\PrsCommand;
 use App\Commands\ReposCommand;
+use App\Commands\IssuesCommand;
 use App\Commands\StatusCommand;
+use App\Commands\GitHub\AuthCommand;
 use App\Contracts\ComponentManagerInterface;
 use App\Contracts\ComponentStorageInterface;
 use App\Contracts\PackageInstallerInterface;
@@ -59,6 +61,10 @@ class AppServiceProvider extends ServiceProvider
                 \App\Commands\PrAnalyzeCommand::class,
                 \App\Commands\GitHubClientGapAnalysisCommand::class,
                 \App\Commands\CodeRabbitStatusCommand::class,
+                \App\Commands\IssuesSpeakCommand::class,
+                \App\Commands\PrsSpeakCommand::class,
+                \App\Commands\CodeRabbitSpeakCommand::class,
+                \App\Commands\VoiceCommand::class,
             ]);
         }
     }
