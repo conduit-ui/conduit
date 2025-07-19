@@ -58,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
                 AuthCommand::class,
                 \App\Commands\PrAnalyzeCommand::class,
                 \App\Commands\GitHubClientGapAnalysisCommand::class,
+                \App\Commands\CodeRabbitStatusCommand::class,
             ]);
         }
     }
