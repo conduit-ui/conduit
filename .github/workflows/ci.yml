@@ -37,15 +37,21 @@ jobs:
           ${{ runner.os }}-php-${{ matrix.php-version }}-composer-
           
     - name: Install dependencies
-      run: composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader
+      run: composer install --prefer-dist --no-progress --no-interaction
       
     - name: Create SQLite database  
       run: |
         mkdir -p database
         touch database/database.sqlite
+        
+    - name: Copy environment file
+      run: |
+        cp .env.example .env || echo "APP_ENV=testing" > .env
+        echo "DB_CONNECTION=sqlite" >> .env
+        echo "DB_DATABASE=database/database.sqlite" >> .env
       
     - name: Run tests
-      run: ./vendor/bin/pest --coverage --min=60
+      run: vendor/bin/pest --coverage --min=60
       
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
