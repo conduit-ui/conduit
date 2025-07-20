@@ -430,13 +430,13 @@ class PrsCommand extends Command
         try {
             switch ($os) {
                 case 'Darwin':
-                    shell_exec("open '{$url}' > /dev/null 2>&1");
+                    shell_exec('open ' . escapeshellarg($url) . ' > /dev/null 2>&1');
                     break;
                 case 'Windows':
-                    shell_exec("start '{$url}' > /dev/null 2>&1");
+                    shell_exec('start ' . escapeshellarg($url) . ' > /dev/null 2>&1');
                     break;
                 case 'Linux':
-                    shell_exec("xdg-open '{$url}' > /dev/null 2>&1");
+                    shell_exec('xdg-open ' . escapeshellarg($url) . ' > /dev/null 2>&1');
                     break;
             }
             info('🌐 Opened in browser');
@@ -453,11 +453,12 @@ class PrsCommand extends Command
             return;
         }
 
-        $branchName = "pr-{$pr['number']}-{$pr['head']['ref']}";
+        $branchName = "pr-{$pr['number']}-" . preg_replace('/[^a-zA-Z0-9_-]/', '_', $pr['head']['ref']);
 
+        $escapedBranchName = escapeshellarg($branchName);
         $commands = [
-            "git fetch origin pull/{$pr['number']}/head:{$branchName}",
-            "git checkout {$branchName}",
+            "git fetch origin pull/{$pr['number']}/head:" . $escapedBranchName,
+            "git checkout " . $escapedBranchName,
         ];
 
         foreach ($commands as $command) {
