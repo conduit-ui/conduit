@@ -105,33 +105,46 @@ class IssueViewService
     {
         $command->newLine();
         
-        // Author and dates
+        // Basic info
         $command->line("👤 Author: <info>{$issue['user']['login']}</info>");
         $command->line("📊 State: <info>" . ucfirst($issue['state']) . "</info>");
+        $command->newLine();
+        
+        // Timing info
         $command->line("📅 Created: <info>{$this->formatDate($issue['created_at'])}</info>");
         $command->line("📅 Updated: <info>{$this->formatDate($issue['updated_at'])}</info>");
         
-        // Assignees
+        // Assignment and organization info
+        $hasAssignmentInfo = false;
         if (!empty($issue['assignees'])) {
+            if (!$hasAssignmentInfo) {
+                $command->newLine();
+                $hasAssignmentInfo = true;
+            }
             $assignees = array_map(fn($assignee) => $assignee['login'], $issue['assignees']);
             $command->line("👨‍💻 Assignees: <info>" . implode(', ', $assignees) . "</info>");
         }
         
-        // Labels
         if (!empty($issue['labels'])) {
+            if (!$hasAssignmentInfo) {
+                $command->newLine();
+                $hasAssignmentInfo = true;
+            }
             $labels = array_map(fn($label) => $label['name'], $issue['labels']);
             $command->line("🏷️  Labels: <info>" . implode(', ', $labels) . "</info>");
         }
         
-        // Milestone
         if (!empty($issue['milestone'])) {
+            if (!$hasAssignmentInfo) {
+                $command->newLine();
+                $hasAssignmentInfo = true;
+            }
             $command->line("🎯 Milestone: <info>{$issue['milestone']['title']}</info>");
         }
         
-        // Comments count
+        // Activity and links
+        $command->newLine();
         $command->line("💬 Comments: <info>{$issue['comments']}</info>");
-        
-        // Links
         $command->line("🔗 URL: <href={$issue['html_url']}>{$issue['html_url']}</>");
     }
 
