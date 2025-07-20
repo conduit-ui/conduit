@@ -385,7 +385,7 @@ PHP;
         $refreshToken = $this->configService->getToken('refresh_token');
         if ($refreshToken) {
             try {
-                $this->refreshAccessToken();
+                $this->refreshToken($refreshToken);
                 return ! empty($this->getAccessToken());
             } catch (\Exception $e) {
                 \Log::debug('Refresh token failed: ' . $e->getMessage());

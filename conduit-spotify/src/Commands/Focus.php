@@ -27,10 +27,10 @@ class Focus extends Command
 
     protected $description = 'Start focus music for coding workflows';
 
-    public function handle(AuthInterface $auth, ApiInterface $api): int
+    public function handle(AuthInterface $auth, ApiInterface $api, SpotifyConfigService $configService): int
     {
-        // Initialize config service
-        $this->configService = new SpotifyConfigService();
+        // Use dependency injection instead of manual instantiation
+        $this->configService = $configService;
 
         // Use enhanced authentication with automatic retries and manual login fallback
         if (! $this->ensureAuthenticatedWithRetry($auth)) {
