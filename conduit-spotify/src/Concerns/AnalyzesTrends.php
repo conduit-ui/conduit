@@ -28,24 +28,29 @@ trait AnalyzesTrends
 
     public function getTrendingArtists(ApiInterface $api): array
     {
-        $playlists = $api->getUserPlaylists(50);
+        $playlists = $this->getMemoizedPlaylists($api);
+        $allTracks = $this->getMemoizedAllTracks($api);
         $artistFrequency = [];
         $recentArtists = [];
 
+        // Create lookup for recent playlists
+        $recentPlaylistIds = [];
         foreach ($playlists as $playlist) {
-            // Check playlist creation/modification dates for recency
             $isRecent = strtotime($playlist['collaborative'] ?? 'now') > strtotime('-3 months');
+            if ($isRecent) {
+                $recentPlaylistIds[] = $playlist['id'];
+            }
+        }
+
+        foreach ($allTracks as $trackData) {
+            $track = $trackData['track'];
+            if (!isset($track['artists'][0])) continue;
             
-            $tracks = $api->getPlaylistTracks($playlist['id']);
-            foreach ($tracks as $track) {
-                if (!isset($track['track']['artists'][0])) continue;
-                
-                $artist = $track['track']['artists'][0]['name'];
-                $artistFrequency[$artist] = ($artistFrequency[$artist] ?? 0) + 1;
-                
-                if ($isRecent) {
-                    $recentArtists[$artist] = ($recentArtists[$artist] ?? 0) + 1;
-                }
+            $artist = $track['artists'][0]['name'];
+            $artistFrequency[$artist] = ($artistFrequency[$artist] ?? 0) + 1;
+            
+            if (in_array($trackData['playlist_id'], $recentPlaylistIds)) {
+                $recentArtists[$artist] = ($recentArtists[$artist] ?? 0) + 1;
             }
         }
 
@@ -61,7 +66,7 @@ trait AnalyzesTrends
 
     public function getPlaylistMomentum(ApiInterface $api): array
     {
-        $playlists = $api->getUserPlaylists(50);
+        $playlists = $this->getMemoizedPlaylists($api);
         $playlistActivity = [];
 
         foreach ($playlists as $playlist) {

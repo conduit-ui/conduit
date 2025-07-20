@@ -8,25 +8,23 @@ trait AnalyzesArtists
 {
     public function analyzeArtists(ApiInterface $api): array
     {
-        $playlists = $api->getUserPlaylists(50);
+        $allTracks = $this->getMemoizedAllTracks($api);
         $artistFrequency = [];
         $artistTracks = [];
 
-        foreach ($playlists as $playlist) {
-            $tracks = $api->getPlaylistTracks($playlist['id']);
-            foreach ($tracks as $track) {
-                if (!isset($track['track']['artists'][0])) continue;
-                
-                $artist = $track['track']['artists'][0]['name'];
-                $trackName = $track['track']['name'];
-                
-                $artistFrequency[$artist] = ($artistFrequency[$artist] ?? 0) + 1;
-                $artistTracks[$artist][] = [
-                    'name' => $trackName,
-                    'playlist' => $playlist['name'],
-                    'uri' => $track['track']['uri'] ?? null,
-                ];
-            }
+        foreach ($allTracks as $trackData) {
+            $track = $trackData['track'];
+            if (!isset($track['artists'][0])) continue;
+            
+            $artist = $track['artists'][0]['name'];
+            $trackName = $track['name'];
+            
+            $artistFrequency[$artist] = ($artistFrequency[$artist] ?? 0) + 1;
+            $artistTracks[$artist][] = [
+                'name' => $trackName,
+                'playlist' => $trackData['playlist_name'],
+                'uri' => $track['uri'] ?? null,
+            ];
         }
 
         arsort($artistFrequency);

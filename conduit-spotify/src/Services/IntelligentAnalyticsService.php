@@ -16,8 +16,16 @@ class IntelligentAnalyticsService implements IntelligentAnalyticsInterface
     use AnalyzesTrends;
     use ProvidesLibraryOverview;
 
+    /** @var array Cache for API responses */
+    private array $memoizedData = [];
+
+    /** @var ApiInterface Current API instance for cache validation */
+    private ?ApiInterface $currentApi = null;
+
     public function runIntelligentAnalysis(ApiInterface $api): array
     {
+        $this->initializeCache($api);
+        
         return [
             'library_overview' => $this->getLibraryOverview($api),
             'music_taste' => $this->getGenreProfile($api),
@@ -25,6 +33,89 @@ class IntelligentAnalyticsService implements IntelligentAnalyticsInterface
             'collection_health' => $this->getCollectionHealth($api),
             'taste_vector' => $this->getTasteVector($api),
         ];
+    }
+
+    /**
+     * Initialize cache for the current API session
+     */
+    private function initializeCache(ApiInterface $api): void
+    {
+        if ($this->currentApi !== $api) {
+            $this->memoizedData = [];
+            $this->currentApi = $api;
+        }
+    }
+
+    /**
+     * Get memoized playlists data
+     */
+    protected function getMemoizedPlaylists(ApiInterface $api): array
+    {
+        $this->initializeCache($api);
+        
+        if (!isset($this->memoizedData['playlists'])) {
+            $this->memoizedData['playlists'] = $api->getUserPlaylists(50);
+        }
+        
+        return $this->memoizedData['playlists'];
+    }
+
+    /**
+     * Get memoized playlist tracks for a specific playlist
+     */
+    protected function getMemoizedPlaylistTracks(ApiInterface $api, string $playlistId): array
+    {
+        $this->initializeCache($api);
+        
+        $cacheKey = "playlist_tracks_{$playlistId}";
+        if (!isset($this->memoizedData[$cacheKey])) {
+            $this->memoizedData[$cacheKey] = $api->getPlaylistTracks($playlistId);
+        }
+        
+        return $this->memoizedData[$cacheKey];
+    }
+
+    /**
+     * Get all tracks from all playlists (expensive operation, heavily memoized)
+     */
+    protected function getMemoizedAllTracks(ApiInterface $api): array
+    {
+        $this->initializeCache($api);
+        
+        if (!isset($this->memoizedData['all_tracks'])) {
+            $allTracks = [];
+            $playlists = $this->getMemoizedPlaylists($api);
+            
+            foreach ($playlists as $playlist) {
+                $tracks = $this->getMemoizedPlaylistTracks($api, $playlist['id']);
+                foreach ($tracks as $track) {
+                    $allTracks[] = [
+                        'track' => $track['track'],
+                        'playlist_name' => $playlist['name'],
+                        'playlist_id' => $playlist['id'],
+                    ];
+                }
+            }
+            
+            $this->memoizedData['all_tracks'] = $allTracks;
+        }
+        
+        return $this->memoizedData['all_tracks'];
+    }
+
+    /**
+     * Get memoized artist data
+     */
+    protected function getMemoizedArtist(ApiInterface $api, string $artistId): array
+    {
+        $this->initializeCache($api);
+        
+        $cacheKey = "artist_{$artistId}";
+        if (!isset($this->memoizedData[$cacheKey])) {
+            $this->memoizedData[$cacheKey] = $api->getArtist($artistId);
+        }
+        
+        return $this->memoizedData[$cacheKey];
     }
 
     public function getPersonalizedInsights(ApiInterface $api): array

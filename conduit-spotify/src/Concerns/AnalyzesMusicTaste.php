@@ -8,23 +8,21 @@ trait AnalyzesMusicTaste
 {
     public function getGenreProfile(ApiInterface $api): array
     {
-        $playlists = $api->getUserPlaylists(50);
+        $allTracks = $this->getMemoizedAllTracks($api);
         $genreData = [];
         $totalTracks = 0;
 
-        foreach ($playlists as $playlist) {
-            $tracks = $api->getPlaylistTracks($playlist['id']);
-            foreach ($tracks as $track) {
-                if (!isset($track['track']['artists'][0])) continue;
-                
-                $artistId = $track['track']['artists'][0]['id'];
-                $artist = $api->getArtist($artistId);
-                $genres = $artist['genres'] ?? [];
-                
-                foreach ($genres as $genre) {
-                    $genreData[$genre] = ($genreData[$genre] ?? 0) + 1;
-                    $totalTracks++;
-                }
+        foreach ($allTracks as $trackData) {
+            $track = $trackData['track'];
+            if (!isset($track['artists'][0])) continue;
+            
+            $artistId = $track['artists'][0]['id'];
+            $artist = $this->getMemoizedArtist($api, $artistId);
+            $genres = $artist['genres'] ?? [];
+            
+            foreach ($genres as $genre) {
+                $genreData[$genre] = ($genreData[$genre] ?? 0) + 1;
+                $totalTracks++;
             }
         }
 

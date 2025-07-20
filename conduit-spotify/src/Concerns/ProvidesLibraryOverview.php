@@ -8,7 +8,7 @@ trait ProvidesLibraryOverview
 {
     public function getLibraryOverview(ApiInterface $api): array
     {
-        $playlists = $api->getUserPlaylists(50);
+        $playlists = $this->getMemoizedPlaylists($api);
         $totalTracks = 0;
         $totalDuration = 0;
         $uniqueArtists = [];
@@ -32,7 +32,7 @@ trait ProvidesLibraryOverview
 
     public function getPlaylistBreakdown(ApiInterface $api): array
     {
-        $playlists = $api->getUserPlaylists(50);
+        $playlists = $this->getMemoizedPlaylists($api);
         $breakdown = [];
         
         foreach ($playlists as $playlist) {
@@ -58,7 +58,7 @@ trait ProvidesLibraryOverview
 
     public function getCollectionHealth(ApiInterface $api): array
     {
-        $playlists = $api->getUserPlaylists(50);
+        $playlists = $this->getMemoizedPlaylists($api);
         $totalTracks = 0;
         $emptyPlaylists = 0;
         $largePlaylists = 0;
