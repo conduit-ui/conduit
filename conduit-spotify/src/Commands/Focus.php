@@ -3,15 +3,19 @@
 namespace Conduit\Spotify\Commands;
 
 use Carbon\Carbon;
+use Conduit\Spotify\Concerns\HandlesAuthentication;
 use Conduit\Spotify\Concerns\ManagesSpotifyDevices;
 use Conduit\Spotify\Contracts\ApiInterface;
 use Conduit\Spotify\Contracts\AuthInterface;
+use Conduit\Spotify\Services\SpotifyConfigService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 
 class Focus extends Command
 {
-    use ManagesSpotifyDevices;
+    use HandlesAuthentication, ManagesSpotifyDevices;
+
+    private SpotifyConfigService $configService;
 
     protected $signature = 'spotify:focus 
                            {mode? : Focus mode (coding, break, deploy, debug, testing)}
@@ -25,11 +29,11 @@ class Focus extends Command
 
     public function handle(AuthInterface $auth, ApiInterface $api): int
     {
-        // Use ensureAuthenticated which handles auto-login and token refresh
-        if (! $auth->ensureAuthenticated()) {
-            $this->error('❌ Unable to authenticate with Spotify');
-            $this->info('💡 Run: php conduit spotify:login');
+        // Initialize config service
+        $this->configService = new SpotifyConfigService();
 
+        // Use enhanced authentication with automatic retries and manual login fallback
+        if (! $this->ensureAuthenticatedWithRetry($auth)) {
             return 1;
         }
 
