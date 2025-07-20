@@ -68,4 +68,24 @@ interface ApiInterface
      * Add track to queue.
      */
     public function addToQueue(string $uri, ?string $deviceId = null): bool;
+
+    /**
+     * Get tracks from a playlist.
+     */
+    public function getPlaylistTracks(string $playlistId, int $limit = 50, int $offset = 0): array;
+
+    /**
+     * Create a new playlist.
+     */
+    public function createPlaylist(string $name, string $description = '', bool $public = false): array;
+
+    /**
+     * Add tracks to a playlist.
+     */
+    public function addTracksToPlaylist(string $playlistId, array $trackUris): bool;
+
+    /**
+     * Get artist information including genres.
+     */
+    public function getArtist(string $artistId): array;
 }
