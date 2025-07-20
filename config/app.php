@@ -2,7 +2,7 @@
 
 return [
     'name' => 'Conduit',
-    'version' => '2.0.0',
+    'version' => '2.3.0',
     'env' => 'development',
     'providers' => [
         0 => 'App\\Providers\\AppServiceProvider',
