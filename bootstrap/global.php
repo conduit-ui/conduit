@@ -58,9 +58,8 @@ if (is_dir($sourceConfigDir)) {
         $filename = basename($sourceConfig);
         $targetConfig = $targetConfigDir.'/'.$filename;
 
-        if (! file_exists($targetConfig)) {
-            copy($sourceConfig, $targetConfig);
-        }
+        // Always copy to ensure we have the latest config (especially app.php with version)
+        copy($sourceConfig, $targetConfig);
     }
 }
 

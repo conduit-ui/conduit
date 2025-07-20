@@ -1,0 +1,46 @@
+name: Build and Release PHAR
+
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [published]
+
+jobs:
+  build-phar:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: phar, zip
+          ini-values: phar.readonly=0
+
+      - name: Install dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: Install Box
+        run: composer global require humbug/box
+
+      - name: Build PHAR
+        run: |
+          php -d phar.readonly=off ~/.composer/vendor/bin/box compile
+          chmod +x conduit.phar
+
+      - name: Test PHAR
+        run: |
+          ./conduit.phar --version
+          ./conduit.phar --help
+
+      - name: Upload PHAR to Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: conduit.phar
+          token: ${{ secrets.GITHUB_TOKEN }}
