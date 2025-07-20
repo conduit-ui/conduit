@@ -59,6 +59,10 @@ class AppServiceProvider extends ServiceProvider
                 \App\Commands\PrAnalyzeCommand::class,
                 \App\Commands\GitHubClientGapAnalysisCommand::class,
                 \App\Commands\CodeRabbitStatusCommand::class,
+                \App\Commands\IssuesSpeakCommand::class,
+                \App\Commands\PrsSpeakCommand::class,
+                \App\Commands\CodeRabbitSpeakCommand::class,
+                \App\Commands\VoiceCommand::class,
             ]);
         }
     }

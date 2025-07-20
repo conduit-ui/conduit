@@ -10,6 +10,7 @@ use Illuminate\Console\Command;
 class Playlists extends Command
 {
     use ManagesSpotifyDevices;
+
     protected $signature = 'spotify:playlists 
                            {action? : Action (list, play, search)}
                            {query? : Playlist name or search query}
@@ -103,7 +104,7 @@ class Playlists extends Command
 
             if (! $matchedPlaylist) {
                 $this->error("❌ No playlist found matching: {$query}");
-                
+
                 // Show suggestions for close matches
                 $suggestions = $this->getSimilarPlaylists($playlists, $query);
                 if (! empty($suggestions)) {
@@ -112,15 +113,15 @@ class Playlists extends Command
                         $this->line("   • {$suggestion['name']}");
                     }
                 }
-                
+
                 return 1;
             }
 
             $playlistUri = $matchedPlaylist['uri'];
-            
+
             // Ensure we have an active device before playing
             $this->ensureActiveDevice($api);
-            
+
             $success = $api->play($playlistUri);
 
             if ($success) {
@@ -240,7 +241,7 @@ class Playlists extends Command
         foreach ($playlists as $playlist) {
             $playlistName = strtolower($playlist['name']);
             $score = $this->calculateMatchScore($playlistName, $query);
-            
+
             if ($score > $bestScore && $score > 0) {
                 $bestScore = $score;
                 $bestMatch = $playlist;
@@ -287,19 +288,21 @@ class Playlists extends Command
                 // Exact word match
                 if ($queryWord === $playlistWord) {
                     $score += 40;
+
                     continue 2;
                 }
-                
+
                 // Word starts with query word
                 if (str_starts_with($playlistWord, $queryWord)) {
                     $score += 30;
+
                     continue 2;
                 }
-                
+
                 // Fuzzy character matching (at least 70% similarity)
                 $similarity = $this->calculateStringSimilarity($queryWord, $playlistWord);
                 if ($similarity >= 0.7) {
-                    $score += (int)($similarity * 25);
+                    $score += (int) ($similarity * 25);
                 }
             }
         }
@@ -316,8 +319,9 @@ class Playlists extends Command
         if ($maxLen === 0) {
             return 1.0;
         }
-        
+
         $distance = levenshtein($str1, $str2);
+
         return 1 - ($distance / $maxLen);
     }
 
@@ -332,21 +336,20 @@ class Playlists extends Command
         foreach ($playlists as $playlist) {
             $playlistName = strtolower($playlist['name']);
             $score = $this->calculateMatchScore($playlistName, $query);
-            
+
             // Include playlists with moderate similarity for suggestions
             if ($score > 15 && $score <= 30) {
                 $suggestions[] = [
                     'name' => $playlist['name'],
                     'score' => $score,
-                    'uri' => $playlist['uri']
+                    'uri' => $playlist['uri'],
                 ];
             }
         }
 
         // Sort by score (highest first)
-        usort($suggestions, fn($a, $b) => $b['score'] <=> $a['score']);
+        usort($suggestions, fn ($a, $b) => $b['score'] <=> $a['score']);
 
         return $suggestions;
     }
-
 }

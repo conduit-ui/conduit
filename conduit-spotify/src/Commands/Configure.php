@@ -4,15 +4,21 @@ namespace Conduit\Spotify\Commands;
 
 use Conduit\Spotify\Contracts\ApiInterface;
 use Conduit\Spotify\Contracts\AuthInterface;
+use Conduit\Spotify\Services\SpotifyConfigService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Cache;
 
-use function Laravel\Prompts\confirm;
-use function Laravel\Prompts\info;
 use function Laravel\Prompts\select;
 
 class Configure extends Command
 {
+    private SpotifyConfigService $configService;
+
+    public function __construct(?SpotifyConfigService $configService = null)
+    {
+        parent::__construct();
+        $this->configService = $configService ?? new SpotifyConfigService;
+    }
+
     protected $signature = 'spotify:configure 
                            {--focus-playlists : Configure focus mode playlists}
                            {--reset : Reset existing credentials}';
@@ -24,12 +30,14 @@ class Configure extends Command
         // Handle legacy reset option
         if ($this->option('reset')) {
             $this->warn('⚠️  Use spotify:setup --reset for credential reset.');
+
             return $this->call('spotify:setup', ['--reset' => true]);
         }
 
         if (! $auth->ensureAuthenticated()) {
             $this->error('❌ Unable to authenticate with Spotify');
             $this->info('💡 Run: php conduit spotify:login');
+
             return 1;
         }
 
@@ -63,6 +71,7 @@ class Configure extends Command
 
         if (empty($playlists)) {
             $this->error('❌ No playlists found');
+
             return 1;
         }
 
@@ -81,14 +90,14 @@ class Configure extends Command
         foreach ($focusModes as $mode => $description) {
             $this->newLine();
             $this->line("<fg=cyan;options=bold>{$description}</fg=cyan;options=bold>");
-            
+
             // Show current assignment
             if (isset($currentConfig[$mode])) {
                 $currentPlaylist = $this->findPlaylistByUri($playlists, $currentConfig[$mode]);
                 if ($currentPlaylist) {
                     $this->line("   Current: {$currentPlaylist['name']}");
                 } else {
-                    $this->line("   Current: Generic Spotify playlist");
+                    $this->line('   Current: Generic Spotify playlist');
                 }
             }
 
@@ -121,21 +130,15 @@ class Configure extends Command
 
     private function getCurrentFocusConfig(): array
     {
-        // First check user's custom assignments
-        $userConfig = Cache::store('file')->get('spotify_focus_playlists', []);
-        
-        // Fall back to default config
-        $defaultConfig = config('spotify.presets', []);
-        
-        return array_merge($defaultConfig, $userConfig);
+        return $this->configService->getFocusPlaylists();
     }
 
     private function saveFocusPlaylist(string $mode, string $playlistUri): void
     {
-        $currentConfig = Cache::store('file')->get('spotify_focus_playlists', []);
+        $currentConfig = $this->configService->getFocusPlaylists();
         $currentConfig[$mode] = $playlistUri;
-        
-        Cache::store('file')->put('spotify_focus_playlists', $currentConfig, now()->addYear());
+
+        $this->configService->storeFocusPlaylists($currentConfig);
     }
 
     private function findPlaylistByUri(array $playlists, string $uri): ?array
@@ -145,6 +148,7 @@ class Configure extends Command
                 return $playlist;
             }
         }
+
         return null;
     }
 }
