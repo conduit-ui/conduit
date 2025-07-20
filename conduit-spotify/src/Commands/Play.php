@@ -2,12 +2,14 @@
 
 namespace Conduit\Spotify\Commands;
 
+use Conduit\Spotify\Concerns\ShowsSpotifyStatus;
 use Conduit\Spotify\Contracts\ApiInterface;
 use Conduit\Spotify\Contracts\AuthInterface;
 use Illuminate\Console\Command;
 
 class Play extends Command
 {
+    use ShowsSpotifyStatus;
     protected $signature = 'spotify:play 
                            {uri? : Spotify URI, preset name, or search query}
                            {--device= : Device ID to play on}
@@ -172,14 +174,9 @@ class Play extends Command
                     $this->info('▶️  Resuming playback');
                 }
 
-                // Show current track after a moment
+                // Show status bar after playback starts
                 sleep(1);
-                $current = $api->getCurrentTrack();
-                if ($current && isset($current['item'])) {
-                    $track = $current['item'];
-                    $artist = collect($track['artists'])->pluck('name')->join(', ');
-                    $this->line("🎵 <info>{$track['name']}</info> by <comment>{$artist}</comment>");
-                }
+                $this->showSpotifyStatusBar();
 
                 return 0;
             } else {

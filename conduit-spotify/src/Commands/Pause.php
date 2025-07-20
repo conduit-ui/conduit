@@ -2,12 +2,14 @@
 
 namespace Conduit\Spotify\Commands;
 
+use Conduit\Spotify\Concerns\ShowsSpotifyStatus;
 use Conduit\Spotify\Contracts\ApiInterface;
 use Conduit\Spotify\Contracts\AuthInterface;
 use Illuminate\Console\Command;
 
 class Pause extends Command
 {
+    use ShowsSpotifyStatus;
     protected $signature = 'spotify:pause {--device= : Device ID to pause}';
 
     protected $description = 'Pause Spotify playback';
@@ -28,6 +30,7 @@ class Pause extends Command
 
             if ($success) {
                 $this->info('⏸️  Playback paused');
+                $this->showSpotifyStatusBar();
 
                 return 0;
             } else {
