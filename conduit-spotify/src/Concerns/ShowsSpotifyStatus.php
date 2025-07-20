@@ -25,7 +25,7 @@ trait ShowsSpotifyStatus
                 $deviceName = $playback['device']['name'] ?? 'Unknown Device';
                 
                 $this->line('');
-                $this->line("┌─ 🎵 <fg=magenta;options=bold>Spotify Status</fg=magenta;options=bold> ─────────────");
+                $this->line("┌─ 🎵 <fg=magenta;options=bold>Spotify Status</fg=magenta;options=bold> ──────────────");
                 $this->line("│ {$status} <fg=cyan>{$track['name']}</fg=cyan>");
                 $this->line("│ 🎤 <fg=yellow>{$artist}</fg=yellow>");
                 
@@ -37,7 +37,7 @@ trait ShowsSpotifyStatus
                 
                 // Show device
                 $this->line("│ 📱 <fg=gray>{$deviceName}</fg=gray>");
-                $this->line("└────────────────────────────────");
+                $this->line("└─────────────────────────────────");
                 $this->line('');
             }
         } catch (\Exception $e) {
