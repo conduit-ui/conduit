@@ -14,9 +14,11 @@ trait AnalyzesMusicTaste
 
         foreach ($allTracks as $trackData) {
             $track = $trackData['track'];
-            if (!isset($track['artists'][0])) continue;
+            if (!isset($track['artists'][0]['id'])) continue;
             
             $artistId = $track['artists'][0]['id'];
+            if (!$artistId) continue;
+            
             $artist = $this->getMemoizedArtist($api, $artistId);
             $genres = $artist['genres'] ?? [];
             

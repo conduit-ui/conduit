@@ -194,6 +194,11 @@ class Api implements ApiInterface
         return $result !== false;
     }
 
+    public function getArtist(string $artistId): array
+    {
+        return $this->makeRequest('GET', "artists/{$artistId}") ?? [];
+    }
+
     /**
      * Make an authenticated request to Spotify API.
      */
