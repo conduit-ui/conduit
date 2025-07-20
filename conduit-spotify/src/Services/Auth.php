@@ -325,7 +325,7 @@ PHP;
     }
 
     /**
-     * Ensure user is authenticated with automatic token refresh.
+     * Ensure user is authenticated with automatic token refresh and retry logic.
      * Returns true if authenticated, false if needs manual auth.
      */
     public function ensureAuthenticated(): bool
@@ -337,8 +337,62 @@ PHP;
             return true;
         }
 
-        // Try headless auth if credentials are stored
-        return $this->authenticateHeadlessIfPossible();
+        // Try automatic retry with login attempts
+        return $this->authenticateWithRetry();
+    }
+
+    /**
+     * Try authentication with automatic retries (3 attempts).
+     * This uses simple token refresh only - command-level retries handle full login.
+     */
+    private function authenticateWithRetry(int $maxAttempts = 3): bool
+    {
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            // Try headless auth if credentials are stored
+            if ($this->authenticateHeadlessIfPossible()) {
+                return true;
+            }
+
+            // Try refresh token if available
+            if ($this->attemptAutomaticLogin()) {
+                $token = $this->getAccessToken();
+                if (! empty($token)) {
+                    return true;
+                }
+            }
+
+            // Small delay between attempts
+            if ($attempt < $maxAttempts) {
+                sleep(1);
+            }
+        }
+
+        return false;
+    }
+
+
+    /**
+     * Attempt automatic login using available methods.
+     */
+    private function attemptAutomaticLogin(): bool
+    {
+        // Try headless authentication first
+        if ($this->authenticateHeadlessIfPossible()) {
+            return true;
+        }
+
+        // If we have stored refresh token, try to use it
+        $refreshToken = $this->configService->getToken('refresh_token');
+        if ($refreshToken) {
+            try {
+                $this->refreshToken($refreshToken);
+                return ! empty($this->getAccessToken());
+            } catch (\Exception $e) {
+                \Log::debug('Refresh token failed: ' . $e->getMessage());
+            }
+        }
+
+        return false;
     }
 
     /**

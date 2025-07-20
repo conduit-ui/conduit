@@ -6,39 +6,52 @@ use Conduit\Spotify\Contracts\AuthInterface;
 
 trait HandlesAuthentication
 {
-    protected function ensureAuthenticatedWithRetry(AuthInterface $auth): bool
+    protected function ensureAuthenticatedWithRetry(AuthInterface $auth, int $maxAttempts = 3): bool
     {
+        // First try the enhanced ensureAuthenticated method (with automatic retries)
         if ($auth->ensureAuthenticated()) {
             return true;
         }
 
-        $this->error('❌ Not authenticated with Spotify');
+        // If automatic retry failed, just fucking do the login for them!
+        $this->info('🔐 Not authenticated. Let me handle that for you...');
 
-        // Ask if they want to login now
-        if ($this->confirm('Would you like to login now?', true)) {
-            $this->info('🔐 Starting Spotify login...');
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            $this->info("🔄 Auto-login attempt {$attempt}/{$maxAttempts}...");
 
-            // Run the login command
+            // Just run the damn login command automatically
             $loginResult = $this->call('spotify:login');
 
             if ($loginResult === 0) {
-                $this->newLine();
-                $this->info('✅ Login successful! Continuing...');
-                $this->newLine();
+                $this->info('✅ Auto-login successful!');
 
-                // Retry auth check
+                // Verify it worked
                 if ($auth->ensureAuthenticated()) {
+                    $this->info('🎵 Ready to rock! Continuing...');
                     return true;
                 }
 
-                $this->error('❌ Authentication verification failed. Please try again.');
+                $this->warn('⚠️ Login succeeded but auth verification failed.');
             } else {
-                $this->error('❌ Login failed. Please try again.');
+                $this->warn("⚠️ Auto-login attempt {$attempt} failed.");
             }
-        } else {
-            $this->info('💡 Run: conduit spotify:login');
+
+            // Small delay between attempts
+            if ($attempt < $maxAttempts) {
+                sleep(2);
+            }
         }
 
+        $this->error('❌ All auto-login attempts failed. You might need to manually run: conduit spotify:login');
+        
         return false;
+    }
+
+    /**
+     * Enhanced authentication check with automatic silent retries.
+     */
+    protected function ensureAuthenticatedSilent(AuthInterface $auth): bool
+    {
+        return $auth->ensureAuthenticated();
     }
 }
