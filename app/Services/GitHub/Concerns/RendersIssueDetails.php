@@ -71,10 +71,10 @@ trait RendersIssueDetails
             $line = preg_replace('/`([^`]+)`/', '<fg=yellow>$1</fg=yellow>', $line);
             
             // Handle bold text
-            $line = preg_replace('/\*\*([^*]+)\*\*/', '<options=bold>$1</options>', $line);
+            $line = preg_replace('/\*\*([^*]+)\*\*/', '<comment>$1</comment>', $line);
             
             // Handle italic text (simplified)
-            $line = preg_replace('/\*([^*]+)\*/', '<options=underscore>$1</options>', $line);
+            $line = preg_replace('/\*([^*]+)\*/', '<fg=gray>$1</fg=gray>', $line);
             
             // Handle links
             $line = preg_replace('/\[([^\]]+)\]\(([^)]+)\)/', '<href=$2>$1</href>', $line);

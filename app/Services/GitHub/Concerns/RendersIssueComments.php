@@ -120,15 +120,15 @@ trait RendersIssueComments
             $participants[$author] = ($participants[$author] ?? 0) + 1;
         }
         
-        $command->line("👥 <options=bold>Participants:</options> " . count($participants));
-        $command->line("💬 <options=bold>Total Comments:</options> {$totalComments}");
+        $command->line("👥 <comment>Participants:</comment> " . count($participants));
+        $command->line("💬 <comment>Total Comments:</comment> {$totalComments}");
         
         // Top contributors
         arsort($participants);
         $topParticipants = array_slice($participants, 0, 3, true);
         
         $command->newLine();
-        $command->line("<options=bold>Most Active:</options>");
+        $command->line("<comment>Most Active:</comment>");
         foreach ($topParticipants as $author => $count) {
             $percentage = round(($count / $totalComments) * 100);
             $command->line("  • <info>{$author}</info>: {$count} comments ({$percentage}%)");
@@ -141,7 +141,7 @@ trait RendersIssueComments
             $timespan = strtotime($lastComment['created_at']) - strtotime($firstComment['created_at']);
             
             $command->newLine();
-            $command->line("⏱️  <options=bold>Discussion Timeline:</options> " . $this->formatTimespan($timespan));
+            $command->line("⏱️  <comment>Discussion Timeline:</comment> " . $this->formatTimespan($timespan));
         }
     }
     

@@ -147,7 +147,7 @@ class IssueViewService
         }
 
         $command->newLine();
-        $command->line('<options=bold>Description:</options>');
+        $command->line('<comment>Description:</comment>');
         $command->newLine();
         
         $this->renderMarkdownText($command, $issue['body']);
@@ -158,7 +158,7 @@ class IssueViewService
      */
     public function displayComments(Command $command, array $comments): void
     {
-        $command->line("<options=bold>💬 Comments (" . count($comments) . "):</options>");
+        $command->line("<comment>💬 Comments (" . count($comments) . "):</comment>");
         $command->newLine();
         
         foreach ($comments as $index => $comment) {
