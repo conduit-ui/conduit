@@ -99,12 +99,8 @@ class IssueEditService
         
         $cacheKey = 'labels';
         if (!isset($this->memoizedData[$cacheKey])) {
-            try {
-                // TODO: Implement label fetching when github-client supports it
-                $this->memoizedData[$cacheKey] = [];
-            } catch (\Exception $e) {
-                $this->memoizedData[$cacheKey] = [];
-            }
+            // TODO: Implement label fetching when github-client supports it
+            $this->memoizedData[$cacheKey] = [];
         }
         
         return $this->memoizedData[$cacheKey];
@@ -119,12 +115,8 @@ class IssueEditService
         
         $cacheKey = 'collaborators';
         if (!isset($this->memoizedData[$cacheKey])) {
-            try {
-                // TODO: Implement collaborators fetching when github-client supports it
-                $this->memoizedData[$cacheKey] = [];
-            } catch (\Exception $e) {
-                $this->memoizedData[$cacheKey] = [];
-            }
+            // TODO: Implement collaborators fetching when github-client supports it
+            $this->memoizedData[$cacheKey] = [];
         }
         
         return $this->memoizedData[$cacheKey];
@@ -139,12 +131,8 @@ class IssueEditService
         
         $cacheKey = 'milestones';
         if (!isset($this->memoizedData[$cacheKey])) {
-            try {
-                // TODO: Implement milestones fetching when github-client supports it
-                $this->memoizedData[$cacheKey] = [];
-            } catch (\Exception $e) {
-                $this->memoizedData[$cacheKey] = [];
-            }
+            // TODO: Implement milestones fetching when github-client supports it
+            $this->memoizedData[$cacheKey] = [];
         }
         
         return $this->memoizedData[$cacheKey];

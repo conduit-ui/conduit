@@ -2,12 +2,14 @@
 
 namespace App\Commands\GitHub;
 
+use App\Commands\GitHub\Concerns\DetectsRepository;
 use App\Services\GitHub\IssueEditService;
 use App\Services\GithubAuthService;
 use LaravelZero\Framework\Commands\Command;
 
 class IssueEditCommand extends Command
 {
+    use DetectsRepository;
     protected $signature = 'issues:edit 
                            {issue : Issue number to edit}
                            {--repo= : Repository (owner/repo)}

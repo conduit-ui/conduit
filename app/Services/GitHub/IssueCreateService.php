@@ -48,8 +48,8 @@ class IssueCreateService
             // Prepare issue data for GitHub API
             $body = $issueData['body'] ?? '';
             
-            // Add Conduit attribution
-            if (!empty($body)) {
+            // Add Conduit attribution if enabled
+            if (!empty($body) && $this->shouldAddAttribution()) {
                 $body .= "\n\n---\n🤖 Created with [Conduit](https://github.com/conduit-ui/conduit) - Supercharge your developer workflows";
             }
 
@@ -74,13 +74,9 @@ class IssueCreateService
         
         $cacheKey = 'labels';
         if (!isset($this->memoizedData[$cacheKey])) {
-            try {
-                // TODO: Implement label fetching when github-client supports it
-                // For now, return empty array until labels API is available
-                $this->memoizedData[$cacheKey] = [];
-            } catch (\Exception $e) {
-                $this->memoizedData[$cacheKey] = [];
-            }
+            // TODO: Implement label fetching when github-client supports it
+            // For now, return empty array until labels API is available
+            $this->memoizedData[$cacheKey] = [];
         }
         
         return $this->memoizedData[$cacheKey];
@@ -95,12 +91,8 @@ class IssueCreateService
         
         $cacheKey = 'collaborators';
         if (!isset($this->memoizedData[$cacheKey])) {
-            try {
-                // TODO: Implement collaborators fetching when github-client supports it
-                $this->memoizedData[$cacheKey] = [];
-            } catch (\Exception $e) {
-                $this->memoizedData[$cacheKey] = [];
-            }
+            // TODO: Implement collaborators fetching when github-client supports it
+            $this->memoizedData[$cacheKey] = [];
         }
         
         return $this->memoizedData[$cacheKey];
@@ -115,15 +107,19 @@ class IssueCreateService
         
         $cacheKey = 'milestones';
         if (!isset($this->memoizedData[$cacheKey])) {
-            try {
-                // TODO: Implement milestones fetching when github-client supports it
-                $this->memoizedData[$cacheKey] = [];
-            } catch (\Exception $e) {
-                $this->memoizedData[$cacheKey] = [];
-            }
+            // TODO: Implement milestones fetching when github-client supports it
+            $this->memoizedData[$cacheKey] = [];
         }
         
         return $this->memoizedData[$cacheKey];
+    }
+
+    /**
+     * Check if Conduit attribution should be added
+     */
+    private function shouldAddAttribution(): bool
+    {
+        return config('conduit.github.add_attribution', true);
     }
 
     /**

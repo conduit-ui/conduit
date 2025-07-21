@@ -2,12 +2,14 @@
 
 namespace App\Commands\GitHub;
 
+use App\Commands\GitHub\Concerns\DetectsRepository;
 use App\Services\GitHub\IssueViewService;
 use App\Services\GithubAuthService;
 use LaravelZero\Framework\Commands\Command;
 
 class IssueViewCommand extends Command
 {
+    use DetectsRepository;
     protected $signature = 'issues:view 
                            {issue : Issue number to view}
                            {--repo= : Repository (owner/repo)}
@@ -124,41 +126,4 @@ class IssueViewCommand extends Command
         return 0;
     }
 
-    private function detectCurrentRepo(): ?string
-    {
-        if (! $this->isGitRepository()) {
-            return null;
-        }
-
-        $remoteUrl = trim(shell_exec('git config --get remote.origin.url 2>/dev/null') ?: '');
-        if (empty($remoteUrl)) {
-            return null;
-        }
-
-        return $this->parseGitHubRepo($remoteUrl);
-    }
-
-    private function isGitRepository(): bool
-    {
-        $gitDir = shell_exec('git rev-parse --git-dir 2>/dev/null');
-
-        return ! empty(trim($gitDir ?? ''));
-    }
-
-    private function parseGitHubRepo(string $remoteUrl): ?string
-    {
-        $patterns = [
-            '/git@github\.com:([^\/]+)\/(.+)\.git$/',
-            '/https:\/\/github\.com\/([^\/]+)\/(.+)\.git$/',
-            '/https:\/\/github\.com\/([^\/]+)\/(.+)$/',
-        ];
-
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $remoteUrl, $matches)) {
-                return "{$matches[1]}/{$matches[2]}";
-            }
-        }
-
-        return null;
-    }
 }
