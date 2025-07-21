@@ -68,7 +68,27 @@ class PrStatusCommand extends Command
         
         $this->newLine();
         
-        // Main status with colored icons
+        // Handle closed/merged PRs first
+        if ($pr['state'] === 'closed') {
+            // Check recommendations for merged status
+            $recommendations = $analysis['recommendations'] ?? [];
+            $mergedRec = collect($recommendations)->firstWhere('action', 'already_merged');
+            $closedRec = collect($recommendations)->firstWhere('action', 'closed_unmerged');
+            
+            if ($mergedRec) {
+                $this->line("✅ <fg=green>PR Successfully Merged</> - " . str_replace('✅ ', '', $mergedRec['message']));
+            } elseif ($closedRec) {
+                $this->line("🚫 <fg=red>PR Closed Without Merge</> - Discarded or rejected");
+            } else {
+                $this->line("🔒 <fg=yellow>PR Closed</> - Final state unknown");
+            }
+            
+            $this->newLine();
+            $this->line("ℹ️  <fg=blue>Note: Merge status is not calculated for closed PRs</>");
+            return;
+        }
+        
+        // Main status for open PRs with colored icons
         if ($merge['ready_to_merge']) {
             $this->line("✅ <fg=green>Ready to Merge</> - No conflicts detected");
         } elseif ($merge['has_conflicts']) {

@@ -102,6 +102,25 @@ class PrAnalysisService
     {
         $recommendations = [];
         
+        // Handle closed/merged PRs first
+        if ($pr->state === 'closed') {
+            if ($pr->merged) {
+                $recommendations[] = [
+                    'type' => 'success',
+                    'action' => 'already_merged',
+                    'message' => '✅ PR successfully merged' . ($pr->merged_at ? ' on ' . date('M j, Y', strtotime($pr->merged_at)) : ''),
+                ];
+            } else {
+                $recommendations[] = [
+                    'type' => 'info',
+                    'action' => 'closed_unmerged',
+                    'message' => '🚫 PR was closed without merging',
+                ];
+            }
+            return $recommendations;
+        }
+        
+        // Recommendations for open PRs
         if ($pr->hasMergeConflicts()) {
             $recommendations[] = [
                 'type' => 'critical',
