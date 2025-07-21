@@ -39,16 +39,16 @@ class VoiceCommand extends Command
         $type = $this->argument('type');
         $target = $this->argument('target');
         $claudePrompt = $this->option('claude');
-        
-        if (!$this->validateType($type)) {
+
+        if (! $this->validateType($type)) {
             return 1;
         }
 
         try {
             $content = $this->fetchContent($type, $target);
             $config = SpeechConfiguration::fromOptions($this->options());
-            
-            $narration = $claudePrompt 
+
+            $narration = $claudePrompt
                 ? $this->generateClaudeNarration($content, $claudePrompt)
                 : $this->generateTraditionalNarration($content, $config);
 
@@ -56,12 +56,13 @@ class VoiceCommand extends Command
                 $this->displayPreview($narration);
             } else {
                 $this->voiceService->speak($narration, $config);
-                $this->info("✅ Voice briefing complete!");
+                $this->info('✅ Voice briefing complete!');
             }
 
             return 0;
         } catch (\Exception $e) {
             $this->error("❌ {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -69,23 +70,24 @@ class VoiceCommand extends Command
     private function validateType(string $type): bool
     {
         $validTypes = ['issue', 'pr', 'repo', 'commit'];
-        
-        if (!in_array($type, $validTypes)) {
-            $this->error("❌ Invalid type '{$type}'. Valid types: " . implode(', ', $validTypes));
-            $this->line("💡 Examples:");
+
+        if (! in_array($type, $validTypes)) {
+            $this->error("❌ Invalid type '{$type}'. Valid types: ".implode(', ', $validTypes));
+            $this->line('💡 Examples:');
             $this->line("  voice issue 123 --claude='Explain like a pirate'");
             $this->line("  voice pr 48 --claude='Channel Gordon Ramsay'");
             $this->line("  voice commit abc123 --claude='David Attenborough narration'");
+
             return false;
         }
-        
+
         return true;
     }
 
     private function fetchContent(string $type, string $target): NarrationContent
     {
         $repo = $this->option('repo') ?? $this->detectRepository();
-        if (!$repo) {
+        if (! $repo) {
             throw new \Exception('Repository required. Use --repo=owner/repo');
         }
 
@@ -102,7 +104,7 @@ class VoiceCommand extends Command
     private function fetchIssueContent(string $owner, string $repo, int $number): NarrationContent
     {
         $issue = $this->fetchViaGH("repos/{$owner}/{$repo}/issues/{$number}");
-        
+
         $comments = null;
         if ($this->option('include-comments')) {
             $commentsData = $this->fetchViaGH("repos/{$owner}/{$repo}/issues/{$number}/comments");
@@ -115,10 +117,10 @@ class VoiceCommand extends Command
     private function fetchPrContent(string $owner, string $repo, int $number): NarrationContent
     {
         $pr = $this->fetchViaGH("repos/{$owner}/{$repo}/pulls/{$number}");
-        
+
         $comments = null;
         $reviews = null;
-        
+
         if ($this->option('include-comments')) {
             $commentsData = $this->fetchViaGH("repos/{$owner}/{$repo}/issues/{$number}/comments");
             $reviewsData = $this->fetchViaGH("repos/{$owner}/{$repo}/pulls/{$number}/reviews");
@@ -132,7 +134,7 @@ class VoiceCommand extends Command
     private function fetchRepoContent(string $owner, string $repo): NarrationContent
     {
         $repoData = $this->fetchViaGH("repos/{$owner}/{$repo}");
-        
+
         return new NarrationContent(
             type: 'repository',
             number: 0,
@@ -155,7 +157,7 @@ class VoiceCommand extends Command
     private function fetchCommitContent(string $owner, string $repo, string $sha): NarrationContent
     {
         $commit = $this->fetchViaGH("repos/{$owner}/{$repo}/commits/{$sha}");
-        
+
         return new NarrationContent(
             type: 'commit',
             number: 0,
@@ -178,22 +180,23 @@ class VoiceCommand extends Command
     {
         $command = "gh api {$endpoint} 2>/dev/null";
         $output = shell_exec($command);
-        
-        if (!$output) {
+
+        if (! $output) {
             throw new \Exception("Could not fetch data from GitHub API: {$endpoint}");
         }
-        
+
         $data = json_decode($output, true);
-        if (!$data) {
-            throw new \Exception("Invalid JSON response from GitHub API");
+        if (! $data) {
+            throw new \Exception('Invalid JSON response from GitHub API');
         }
-        
+
         return $data;
     }
 
     private function generateClaudeNarration(NarrationContent $content, string $prompt): string
     {
-        $this->line("🤖 Claude is crafting your custom narration...");
+        $this->line('🤖 Claude is crafting your custom narration...');
+
         return $this->claudeService->generateNarration($content, $prompt);
     }
 
@@ -205,13 +208,13 @@ class VoiceCommand extends Command
 
     private function displayPreview(string $narration): void
     {
-        $this->line("");
-        $this->line("🎭 VOICE PREVIEW:");
-        $this->line("═══════════════════════════════════");
+        $this->line('');
+        $this->line('🎭 VOICE PREVIEW:');
+        $this->line('═══════════════════════════════════');
         $this->line($narration);
-        $this->line("═══════════════════════════════════");
-        $this->line("");
-        $this->comment("💡 Remove --preview to hear it spoken aloud");
+        $this->line('═══════════════════════════════════');
+        $this->line('');
+        $this->comment('💡 Remove --preview to hear it spoken aloud');
     }
 
     private function detectRepository(): ?string
@@ -219,11 +222,12 @@ class VoiceCommand extends Command
         try {
             $remote = trim(shell_exec('git remote get-url origin 2>/dev/null') ?? '');
             if (preg_match('/github\.com[\/:]([^\/]+)\/([^\/]+?)(?:\.git)?$/', $remote, $matches)) {
-                return $matches[1] . '/' . $matches[2];
+                return $matches[1].'/'.$matches[2];
             }
         } catch (\Exception $e) {
             // Ignore git errors
         }
+
         return null;
     }
 }

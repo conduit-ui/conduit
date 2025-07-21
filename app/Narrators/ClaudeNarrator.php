@@ -17,7 +17,7 @@ class ClaudeNarrator implements VoiceNarratorInterface
 
     public function generate(NarrationContent $content, SpeechConfiguration $config): string
     {
-        if (!$config->claudePrompt) {
+        if (! $config->claudePrompt) {
             throw new \InvalidArgumentException('Claude prompt is required for Claude narrator');
         }
 

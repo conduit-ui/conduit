@@ -14,11 +14,13 @@ trait AnalyzesArtists
 
         foreach ($allTracks as $trackData) {
             $track = $trackData['track'];
-            if (!isset($track['artists'][0])) continue;
-            
+            if (! isset($track['artists'][0])) {
+                continue;
+            }
+
             $artist = $track['artists'][0]['name'];
             $trackName = $track['name'];
-            
+
             $artistFrequency[$artist] = ($artistFrequency[$artist] ?? 0) + 1;
             $artistTracks[$artist][] = [
                 'name' => $trackName,

@@ -12,7 +12,7 @@ class PrAnalysisService
     public function analyzeComprehensive(string $owner, string $repo, int $prNumber, array $options = []): array
     {
         $pr = Github::pullRequests()->get($owner, $repo, $prNumber);
-        
+
         // Core analysis components
         $metadata = $this->extractMetadata($pr);
         $reviews = $this->analyzeReviews($owner, $repo, $prNumber);
@@ -59,18 +59,18 @@ class PrAnalysisService
 
             // Fallback: Try GitHub CLI to get accurate review comments
             $ghComments = $this->fetchReviewCommentsViaGH($owner, $repo, $prNumber);
-            if (!empty($ghComments)) {
+            if (! empty($ghComments)) {
                 $reviewComments = $ghComments;
             }
 
             // Process human reviews
             if (is_array($prReviews) || (is_object($prReviews) && method_exists($prReviews, 'toArray'))) {
                 $reviewsArray = is_array($prReviews) ? $prReviews : $prReviews->toArray();
-                
+
                 foreach ($reviewsArray as $review) {
                     $reviewer = is_array($review) ? ($review['user']['login'] ?? 'unknown') : ($review->user->login ?? 'unknown');
                     $state = is_array($review) ? ($review['state'] ?? 'unknown') : ($review->state ?? 'unknown');
-                    
+
                     if ($reviewer === 'coderabbitai[bot]' || $reviewer === 'coderabbitai') {
                         // Parse CodeRabbit review
                         $reviews['coderabbit'] = $this->parseCodeRabbitReview($review, $reviewComments);
@@ -86,7 +86,7 @@ class PrAnalysisService
             }
 
             // If no CodeRabbit found in reviews but comments exist, parse comments directly
-            if (empty($reviews['coderabbit']) || !($reviews['coderabbit']['found'] ?? false)) {
+            if (empty($reviews['coderabbit']) || ! ($reviews['coderabbit']['found'] ?? false)) {
                 $reviews['coderabbit'] = $this->parseCodeRabbitComments($reviewComments);
             }
 
@@ -111,16 +111,16 @@ class PrAnalysisService
         // Parse review comments for CodeRabbit categorization
         if (is_array($comments) || (is_object($comments) && method_exists($comments, 'toArray'))) {
             $commentsArray = is_array($comments) ? $comments : $comments->toArray();
-            
+
             foreach ($commentsArray as $comment) {
                 $body = is_array($comment) ? ($comment['body'] ?? '') : ($comment->body ?? '');
                 $user = is_array($comment) ? ($comment['user']['login'] ?? '') : ($comment->user->login ?? '');
-                
+
                 if ($user === 'coderabbitai[bot]' || $user === 'coderabbitai') {
                     $coderabbit['found'] = true;
-                    
+
                     // Enhanced categorization based on CodeRabbit patterns
-                    if (preg_match('/\*\*[^*]+\*\*/', $body) || 
+                    if (preg_match('/\*\*[^*]+\*\*/', $body) ||
                         stripos($body, 'consider') !== false ||
                         stripos($body, 'should') !== false ||
                         stripos($body, 'recommend') !== false ||
@@ -155,26 +155,26 @@ class PrAnalysisService
                 escapeshellarg($repo),
                 $prNumber
             );
-            
+
             $output = shell_exec($command);
-            if (!$output) {
+            if (! $output) {
                 return [];
             }
 
             // Parse JSON objects (one per line)
             $comments = [];
             $lines = explode("\n", trim($output));
-            
+
             foreach ($lines as $line) {
                 $line = trim($line);
-                if (!empty($line)) {
+                if (! empty($line)) {
                     $comment = json_decode($line, true);
                     if ($comment && isset($comment['body'], $comment['user']['login'])) {
                         $comments[] = $comment;
                     }
                 }
             }
-            
+
             return $comments;
         } catch (\Exception $e) {
             return [];
@@ -197,16 +197,16 @@ class PrAnalysisService
 
         // Parse comments array/collection
         $commentsArray = is_array($comments) ? $comments : (method_exists($comments, 'toArray') ? $comments->toArray() : []);
-        
+
         foreach ($commentsArray as $comment) {
             $body = is_array($comment) ? ($comment['body'] ?? '') : ($comment->body ?? '');
             $user = is_array($comment) ? ($comment['user']['login'] ?? '') : ($comment->user->login ?? '');
-            
+
             if ($user === 'coderabbitai[bot]' || $user === 'coderabbitai') {
                 $coderabbit['found'] = true;
-                
+
                 // Enhanced categorization
-                if (preg_match('/\*\*[^*]+\*\*/', $body) || 
+                if (preg_match('/\*\*[^*]+\*\*/', $body) ||
                     stripos($body, 'consider') !== false ||
                     stripos($body, 'should') !== false ||
                     stripos($body, 'recommend') !== false ||
@@ -235,46 +235,47 @@ class PrAnalysisService
     {
         // Extract meaningful issue text from CodeRabbit comment
         $lines = explode("\n", $body);
-        
+
         // Look for the main issue description (usually after the first **header**)
         $foundHeader = false;
         foreach ($lines as $line) {
             $line = trim($line);
-            
+
             // Skip empty lines and markdown artifacts
             if (empty($line) || str_starts_with($line, '```') || str_starts_with($line, '<details>') || str_starts_with($line, '<!--')) {
                 continue;
             }
-            
+
             // If we find a **header**, mark it and continue to next line for description
             if (preg_match('/^\*\*(.+)\*\*$/', $line, $matches)) {
                 $foundHeader = true;
+
                 return mb_strimwidth($matches[1], 0, 80, '...');
             }
-            
+
             // If we found a header previously, this might be the description
             if ($foundHeader && strlen($line) > 20) {
                 return mb_strimwidth($line, 0, 80, '...');
             }
-            
+
             // For other meaningful lines
-            if (strlen($line) > 20 && !str_starts_with($line, '_')) {
+            if (strlen($line) > 20 && ! str_starts_with($line, '_')) {
                 return mb_strimwidth($line, 0, 80, '...');
             }
         }
-        
+
         // Fallback to first meaningful line
         return mb_strimwidth($body, 0, 80, '...');
     }
 
     private function analyzeChecks(string $owner, string $repo, ?string $sha): array
     {
-        if (!$sha) {
+        if (! $sha) {
             return [];
         }
 
         $checks = [];
-        
+
         try {
             // Try to get check runs (this might not exist in github-client yet)
             // This is a placeholder for when the endpoint is available
@@ -296,13 +297,13 @@ class PrAnalysisService
     private function detectConflicts($pr): array
     {
         $conflicts = [];
-        
+
         // Check mergeable status
         if (isset($pr->mergeable) && $pr->mergeable === false) {
             $conflicts[] = [
                 'file' => 'Multiple files',
                 'lines' => 'Unknown',
-                'type' => 'merge_conflict'
+                'type' => 'merge_conflict',
             ];
         }
 
@@ -344,7 +345,7 @@ class PrAnalysisService
             }
         }
 
-        if (!$hasApprovals && !empty($reviews['human'])) {
+        if (! $hasApprovals && ! empty($reviews['human'])) {
             $score -= 2;
             $issues[] = 'No approving reviews';
         }
@@ -364,7 +365,7 @@ class PrAnalysisService
         }
 
         // Check conflicts
-        if (!empty($conflicts)) {
+        if (! empty($conflicts)) {
             $score -= 4;
             $issues[] = 'Merge conflicts detected';
         }
@@ -395,23 +396,23 @@ class PrAnalysisService
         // Lower score for large PRs that touch many files
         $fileScore = max(0, 10 - ($metadata['changed_files'] / 5));
         $sizeScore = max(0, 10 - (($metadata['additions'] + $metadata['deletions']) / 100));
-        
+
         return round(($fileScore + $sizeScore) / 2, 1);
     }
 
     private function calculateQualityScore($pr, array $reviews): float
     {
         $score = 7.0; // Start with decent baseline
-        
+
         // Boost for good description
         if (strlen($pr->body ?? '') > 100) {
             $score += 1.0;
         }
-        
+
         // Reduce for high actionable issues
         $actionable = $reviews['coderabbit']['actionable'] ?? 0;
         $score -= min(3.0, $actionable * 0.3);
-        
+
         return max(0, min(10, round($score, 1)));
     }
 
@@ -419,7 +420,7 @@ class PrAnalysisService
     {
         $body = strtolower($pr->body ?? '');
         $title = strtolower($pr->title ?? '');
-        
+
         if (strpos($body, 'documentation') !== false || strpos($title, 'docs') !== false) {
             return 'Positive';
         } elseif (strpos($body, 'readme') !== false || strpos($body, 'doc') !== false) {
@@ -432,7 +433,7 @@ class PrAnalysisService
     private function assessPerformanceRisk(array $metadata): string
     {
         $totalChanges = $metadata['additions'] + $metadata['deletions'];
-        
+
         if ($totalChanges > 1000 || $metadata['changed_files'] > 20) {
             return 'High';
         } elseif ($totalChanges > 200 || $metadata['changed_files'] > 5) {
@@ -446,73 +447,73 @@ class PrAnalysisService
     {
         $body = strtolower($pr->body ?? '');
         $title = strtolower($pr->title ?? '');
-        
+
         $securityKeywords = ['auth', 'password', 'token', 'secret', 'security', 'vulnerability'];
-        
+
         foreach ($securityKeywords as $keyword) {
             if (strpos($body, $keyword) !== false || strpos($title, $keyword) !== false) {
                 return 'Medium';
             }
         }
-        
+
         return 'Low';
     }
 
     private function generateReviewInsights(array $reviews): array
     {
         $insights = [];
-        
+
         if (($reviews['coderabbit']['actionable'] ?? 0) > 3) {
             $insights[] = 'CodeRabbit identified several architectural improvements';
         }
-        
+
         if (empty($reviews['human'])) {
             $insights[] = 'Consider requesting human review for additional perspective';
         }
-        
+
         return $insights;
     }
 
     private function generatePriorityActions($pr, array $reviews): array
     {
         $actions = [];
-        
+
         if (($reviews['coderabbit']['actionable'] ?? 0) > 0) {
             $actions[] = "Address {$reviews['coderabbit']['actionable']} actionable CodeRabbit issues";
         }
-        
+
         if (empty($reviews['human'])) {
             $actions[] = 'Request review from team members';
         }
-        
+
         return $actions;
     }
 
     private function generateQuickWins($pr, array $metadata): array
     {
         $wins = [];
-        
+
         if ($metadata['review_comments'] === 0) {
             $wins[] = 'No review comments to address - clean implementation';
         }
-        
+
         if ($metadata['changed_files'] <= 3) {
             $wins[] = 'Focused change set - easy to review and merge';
         }
-        
+
         return $wins;
     }
 
     private function generateAgentCommands($pr, array $reviews): array
     {
         $commands = [];
-        
+
         if (($reviews['coderabbit']['actionable'] ?? 0) > 0) {
             $commands[] = '@coderabbitai generate action items for this PR';
         }
-        
-        $commands[] = 'conduit pr:analyze ' . $pr->number . ' --include-diff';
-        
+
+        $commands[] = 'conduit pr:analyze '.$pr->number.' --include-diff';
+
         return $commands;
     }
 
@@ -532,10 +533,10 @@ class PrAnalysisService
         $created = strtotime($pr->created_at ?? date('c'));
         $updated = strtotime($pr->updated_at ?? date('c'));
         $daysDiff = max(1, ($updated - $created) / 86400);
-        
+
         $totalChanges = ($pr->additions ?? 0) + ($pr->deletions ?? 0);
         $velocity = $totalChanges / $daysDiff;
-        
+
         if ($velocity > 100) {
             return 'High';
         } elseif ($velocity > 25) {
@@ -549,7 +550,7 @@ class PrAnalysisService
     {
         // Simple heuristic based on file patterns
         $body = strtolower($pr->body ?? '');
-        
+
         if (strpos($body, 'test') !== false || strpos($body, 'spec') !== false) {
             return 'Added';
         } else {
@@ -562,13 +563,13 @@ class PrAnalysisService
         $timestamp = strtotime($datetime);
         $now = time();
         $diff = $now - $timestamp;
-        
+
         if ($diff < 3600) {
-            return floor($diff / 60) . 'm ago';
+            return floor($diff / 60).'m ago';
         } elseif ($diff < 86400) {
-            return floor($diff / 3600) . 'h ago';
+            return floor($diff / 3600).'h ago';
         } elseif ($diff < 2592000) {
-            return floor($diff / 86400) . 'd ago';
+            return floor($diff / 86400).'d ago';
         } else {
             return date('M j', $timestamp);
         }
@@ -578,7 +579,7 @@ class PrAnalysisService
     {
         return match (true) {
             $score >= 9 => 'READY',
-            $score >= 7 => 'REVIEW_NEEDED', 
+            $score >= 7 => 'REVIEW_NEEDED',
             $score >= 5 => 'IMPROVEMENTS_NEEDED',
             default => 'NOT_READY'
         };

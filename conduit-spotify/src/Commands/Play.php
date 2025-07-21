@@ -10,6 +10,7 @@ use Illuminate\Console\Command;
 class Play extends Command
 {
     use ShowsSpotifyStatus;
+
     protected $signature = 'spotify:play 
                            {uri? : Spotify URI, preset name, or search query}
                            {--device= : Device ID to play on}

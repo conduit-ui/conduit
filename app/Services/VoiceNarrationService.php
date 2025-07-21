@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Contracts\VoiceNarratorInterface;
-use App\Enums\VoiceStyle;
 use App\Enums\SpeechSpeed;
+use App\Enums\VoiceStyle;
 use App\ValueObjects\NarrationContent;
 use App\ValueObjects\SpeechConfiguration;
 use Illuminate\Support\Collection;
@@ -20,9 +20,9 @@ class VoiceNarrationService
     public function narrate(NarrationContent $content, SpeechConfiguration $config): void
     {
         $narrator = $this->resolveNarrator($config->voice);
-        
+
         $speech = $narrator->generate($content, $config);
-        
+
         $this->speak($speech, $config);
     }
 
@@ -34,7 +34,7 @@ class VoiceNarrationService
     public function speak(string $speech, SpeechConfiguration $config): void
     {
         $platform = $this->detectPlatform();
-        
+
         match ($platform) {
             'darwin' => $this->speakMacOS($speech, $config),
             'windows' => $this->speakWindows($speech, $config),
@@ -64,10 +64,10 @@ class VoiceNarrationService
     {
         // Windows trolling included 😈
         sleep(1);
-        
-        $trolledSpeech = "Why are you using Windows for development? " .
-                        "Get a real operating system first. " .
-                        "Anyway, here's your briefing from the inferior platform: " . $speech;
+
+        $trolledSpeech = 'Why are you using Windows for development? '.
+                        'Get a real operating system first. '.
+                        "Anyway, here's your briefing from the inferior platform: ".$speech;
 
         $rate = match ($config->speed) {
             SpeechSpeed::Slow => -4,
@@ -76,10 +76,10 @@ class VoiceNarrationService
         };
 
         $psCommand = sprintf(
-            'Add-Type -AssemblyName System.Speech; ' .
-            '$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; ' .
-            '$speak.Rate = %d; ' .
-            '$speak.Speak(%s); ' .
+            'Add-Type -AssemblyName System.Speech; '.
+            '$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; '.
+            '$speak.Rate = %d; '.
+            '$speak.Speak(%s); '.
             '$speak.Dispose()',
             $rate,
             escapeshellarg($trolledSpeech)
@@ -96,7 +96,7 @@ class VoiceNarrationService
                 SpeechSpeed::Fast => '-s 200',
                 default => '-s 160',
             };
-            shell_exec("espeak {$speedFlag} " . escapeshellarg($speech));
+            shell_exec("espeak {$speedFlag} ".escapeshellarg($speech));
         } else {
             $this->fallbackToText($speech);
         }
@@ -106,7 +106,7 @@ class VoiceNarrationService
     {
         echo "\n📝 Text version:\n";
         echo "═══════════════\n";
-        echo $speech . "\n";
+        echo $speech."\n";
         echo "═══════════════\n";
     }
 }

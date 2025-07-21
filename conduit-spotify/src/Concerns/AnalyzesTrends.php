@@ -44,11 +44,13 @@ trait AnalyzesTrends
 
         foreach ($allTracks as $trackData) {
             $track = $trackData['track'];
-            if (!isset($track['artists'][0])) continue;
-            
+            if (! isset($track['artists'][0])) {
+                continue;
+            }
+
             $artist = $track['artists'][0]['name'];
             $artistFrequency[$artist] = ($artistFrequency[$artist] ?? 0) + 1;
-            
+
             if (in_array($trackData['playlist_id'], $recentPlaylistIds)) {
                 $recentArtists[$artist] = ($recentArtists[$artist] ?? 0) + 1;
             }
@@ -72,9 +74,9 @@ trait AnalyzesTrends
         foreach ($playlists as $playlist) {
             $trackCount = $playlist['tracks']['total'] ?? 0;
             $isPublic = $playlist['public'] ?? false;
-            
+
             $momentum = $trackCount * ($isPublic ? 1.2 : 1.0);
-            
+
             $playlistActivity[] = [
                 'name' => $playlist['name'],
                 'track_count' => $trackCount,
@@ -83,7 +85,7 @@ trait AnalyzesTrends
             ];
         }
 
-        usort($playlistActivity, fn($a, $b) => $b['momentum_score'] <=> $a['momentum_score']);
+        usort($playlistActivity, fn ($a, $b) => $b['momentum_score'] <=> $a['momentum_score']);
 
         return [
             'hot_playlists' => array_slice($playlistActivity, 0, 5),

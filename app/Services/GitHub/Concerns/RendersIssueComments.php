@@ -15,38 +15,38 @@ trait RendersIssueComments
         // Comment header
         $author = $comment['user']['login'];
         $createdAt = $this->formatDate($comment['created_at']);
-        $updatedAt = $comment['updated_at'] !== $comment['created_at'] 
-            ? " (edited {$this->formatDate($comment['updated_at'])})" 
+        $updatedAt = $comment['updated_at'] !== $comment['created_at']
+            ? " (edited {$this->formatDate($comment['updated_at'])})"
             : '';
-        
+
         $command->line("<fg=cyan;options=bold>💬 Comment #{$commentNumber}</fg=cyan;options=bold>");
         $command->line("👤 <info>{$author}</info> • 📅 {$createdAt}{$updatedAt}");
-        
+
         // Author association badge
         if (isset($comment['author_association']) && $comment['author_association'] !== 'NONE') {
             $badge = $this->getAuthorAssociationBadge($comment['author_association']);
             $command->line("🏷️  {$badge}");
         }
-        
+
         $command->newLine();
-        
+
         // Comment body
-        if (!empty($comment['body'])) {
+        if (! empty($comment['body'])) {
             $this->renderMarkdownText($command, $comment['body']);
         } else {
             $command->line('<fg=gray>No content</fg=gray>');
         }
-        
+
         // Comment reactions
         if (isset($comment['reactions']) && $comment['reactions']['total_count'] > 0) {
             $this->renderReactions($command, $comment['reactions']);
         }
-        
+
         // Comment URL
         $command->newLine();
         $command->line("🔗 <href={$comment['html_url']}>View on GitHub</href>");
     }
-    
+
     /**
      * Render comment reactions
      */
@@ -55,10 +55,10 @@ trait RendersIssueComments
         if ($reactions['total_count'] === 0) {
             return;
         }
-        
+
         $command->newLine();
         $reactionEmojis = [];
-        
+
         $emojiMap = [
             '+1' => '👍',
             '-1' => '👎',
@@ -67,21 +67,21 @@ trait RendersIssueComments
             'confused' => '😕',
             'heart' => '❤️',
             'rocket' => '🚀',
-            'eyes' => '👀'
+            'eyes' => '👀',
         ];
-        
+
         foreach ($emojiMap as $reaction => $emoji) {
             if (isset($reactions[$reaction]) && $reactions[$reaction] > 0) {
                 $count = $reactions[$reaction];
                 $reactionEmojis[] = "{$emoji} {$count}";
             }
         }
-        
-        if (!empty($reactionEmojis)) {
-            $command->line("🎭 Reactions: " . implode(' • ', $reactionEmojis));
+
+        if (! empty($reactionEmojis)) {
+            $command->line('🎭 Reactions: '.implode(' • ', $reactionEmojis));
         }
     }
-    
+
     /**
      * Get author association badge
      */
@@ -98,7 +98,7 @@ trait RendersIssueComments
             default => "<fg=gray>{$association}</fg=gray>"
         };
     }
-    
+
     /**
      * Render comment thread summary
      */
@@ -107,54 +107,55 @@ trait RendersIssueComments
         if (empty($comments)) {
             return;
         }
-        
+
         $command->newLine();
         $this->renderSeparator($command, 'Comment Summary');
         $command->newLine();
-        
+
         // Participation analysis
         $participants = [];
         $totalComments = count($comments);
-        
+
         foreach ($comments as $comment) {
             $author = $comment['user']['login'];
             $participants[$author] = ($participants[$author] ?? 0) + 1;
         }
-        
-        $command->line("👥 <comment>Participants:</comment> " . count($participants));
+
+        $command->line('👥 <comment>Participants:</comment> '.count($participants));
         $command->line("💬 <comment>Total Comments:</comment> {$totalComments}");
-        
+
         // Top contributors
         arsort($participants);
         $topParticipants = array_slice($participants, 0, 3, true);
-        
+
         $command->newLine();
-        $command->line("<comment>Most Active:</comment>");
+        $command->line('<comment>Most Active:</comment>');
         foreach ($topParticipants as $author => $count) {
             $percentage = round(($count / $totalComments) * 100);
             $command->line("  • <info>{$author}</info>: {$count} comments ({$percentage}%)");
         }
-        
+
         // Timeline
         if ($totalComments > 1) {
             $firstComment = reset($comments);
             $lastComment = end($comments);
             $timespan = strtotime($lastComment['created_at']) - strtotime($firstComment['created_at']);
-            
+
             $command->newLine();
-            $command->line("⏱️  <comment>Discussion Timeline:</comment> " . $this->formatTimespan($timespan));
+            $command->line('⏱️  <comment>Discussion Timeline:</comment> '.$this->formatTimespan($timespan));
         }
     }
-    
+
     /**
      * Format timespan between comments using Carbon's elegant formatting
      */
     protected function formatTimespan(int $seconds): string
     {
         $start = Carbon::now()->subSeconds($seconds);
+
         return $start->diffForHumans(Carbon::now(), true);
     }
-    
+
     /**
      * Render comment navigation
      */
@@ -163,9 +164,9 @@ trait RendersIssueComments
         if ($totalComments <= 1) {
             return;
         }
-        
+
         $command->newLine();
-        $progress = str_repeat('●', $currentComment) . str_repeat('○', $totalComments - $currentComment);
+        $progress = str_repeat('●', $currentComment).str_repeat('○', $totalComments - $currentComment);
         $command->line("<fg=gray>Progress: {$progress} ({$currentComment}/{$totalComments})</fg=gray>");
     }
 }

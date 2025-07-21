@@ -69,15 +69,15 @@ class NarrationContent
     {
         // Remove markdown formatting
         $text = strip_tags($text);
-        
+
         // Remove excessive whitespace and line breaks
         $text = preg_replace('/\s+/', ' ', $text);
-        
+
         // Truncate for speech
         if (strlen($text) > 300) {
-            $text = substr($text, 0, 300) . '... and more details';
+            $text = substr($text, 0, 300).'... and more details';
         }
-        
+
         return trim($text);
     }
 
@@ -88,54 +88,61 @@ class NarrationContent
             $deletions = $this->metadata['deletions'] ?? 0;
             $files = $this->metadata['changed_files'] ?? 0;
             $commits = $this->metadata['commits'] ?? 0;
-            
+
             return "Statistics: {$additions} additions, {$deletions} deletions, {$files} files changed, {$commits} commits";
         }
-        
+
         return '';
     }
 
     public function getCommentsSummary(): string
     {
-        if (!$this->comments || $this->comments->isEmpty()) {
+        if (! $this->comments || $this->comments->isEmpty()) {
             return 'No comments yet.';
         }
 
         $total = $this->comments->count();
         $recentComments = $this->comments->sortByDesc('created_at')->take(3);
-        
+
         $summary = "There are {$total} comments. ";
-        
+
         if ($total <= 3) {
-            $summary .= "Recent discussion includes: ";
+            $summary .= 'Recent discussion includes: ';
             $summary .= $recentComments->map(function ($comment) {
                 $author = $comment['user']['login'] ?? 'Someone';
                 $snippet = substr(strip_tags($comment['body'] ?? ''), 0, 50);
+
                 return "{$author} said: {$snippet}";
             })->join('. ');
         } else {
-            $summary .= "Most recent comments from: ";
+            $summary .= 'Most recent comments from: ';
             $summary .= $recentComments->pluck('user.login')->unique()->join(', ');
         }
-        
+
         return $summary;
     }
 
     public function getReviewsSummary(): string
     {
-        if (!$this->reviews || $this->reviews->isEmpty()) {
+        if (! $this->reviews || $this->reviews->isEmpty()) {
             return 'No reviews yet.';
         }
 
         $approved = $this->reviews->where('state', 'APPROVED')->count();
         $requestedChanges = $this->reviews->where('state', 'CHANGES_REQUESTED')->count();
         $commented = $this->reviews->where('state', 'COMMENTED')->count();
-        
+
         $parts = [];
-        if ($approved > 0) $parts[] = "{$approved} approvals";
-        if ($requestedChanges > 0) $parts[] = "{$requestedChanges} change requests";
-        if ($commented > 0) $parts[] = "{$commented} review comments";
-        
-        return 'Review status: ' . implode(', ', $parts);
+        if ($approved > 0) {
+            $parts[] = "{$approved} approvals";
+        }
+        if ($requestedChanges > 0) {
+            $parts[] = "{$requestedChanges} change requests";
+        }
+        if ($commented > 0) {
+            $parts[] = "{$commented} review comments";
+        }
+
+        return 'Review status: '.implode(', ', $parts);
     }
 }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\ValueObjects;
 
-use App\Enums\VoiceStyle;
 use App\Enums\SpeechSpeed;
+use App\Enums\VoiceStyle;
 
 class SpeechConfiguration
 {
@@ -30,6 +30,6 @@ class SpeechConfiguration
 
     public function isClaudePowered(): bool
     {
-        return !is_null($this->claudePrompt);
+        return ! is_null($this->claudePrompt);
     }
 }

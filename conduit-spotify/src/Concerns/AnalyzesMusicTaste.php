@@ -14,14 +14,18 @@ trait AnalyzesMusicTaste
 
         foreach ($allTracks as $trackData) {
             $track = $trackData['track'];
-            if (!isset($track['artists'][0]['id'])) continue;
-            
+            if (! isset($track['artists'][0]['id'])) {
+                continue;
+            }
+
             $artistId = $track['artists'][0]['id'];
-            if (!$artistId) continue;
-            
+            if (! $artistId) {
+                continue;
+            }
+
             $artist = $this->getMemoizedArtist($api, $artistId);
             $genres = $artist['genres'] ?? [];
-            
+
             foreach ($genres as $genre) {
                 $genreData[$genre] = ($genreData[$genre] ?? 0) + 1;
                 $totalTracks++;
@@ -39,7 +43,7 @@ trait AnalyzesMusicTaste
         }
 
         // Sort by count descending
-        usort($genreProfile, fn($a, $b) => $b['count'] <=> $a['count']);
+        usort($genreProfile, fn ($a, $b) => $b['count'] <=> $a['count']);
 
         return [
             'total_tracks' => $totalTracks,
@@ -62,8 +66,8 @@ trait AnalyzesMusicTaste
     {
         $genreProfile = $this->getGenreProfile($api);
         $topGenres = array_slice($genreProfile['top_genres'], 0, 3);
-        
-        $complexity = $genreProfile['genre_diversity'] > 10 ? 'High' : 
+
+        $complexity = $genreProfile['genre_diversity'] > 10 ? 'High' :
                      ($genreProfile['genre_diversity'] > 5 ? 'Medium' : 'Low');
 
         return [

@@ -10,6 +10,7 @@ use Illuminate\Console\Command;
 class Skip extends Command
 {
     use ShowsSpotifyStatus;
+
     protected $signature = 'spotify:skip 
                            {--previous : Skip to previous track instead of next}
                            {--device= : Device ID to control}';
