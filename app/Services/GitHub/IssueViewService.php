@@ -4,6 +4,7 @@ namespace App\Services\GitHub;
 
 use App\Services\GitHub\Concerns\RendersIssueDetails;
 use App\Services\GitHub\Concerns\RendersIssueComments;
+use Carbon\Carbon;
 use JordanPartridge\GithubClient\Facades\Github;
 use LaravelZero\Framework\Commands\Command;
 
@@ -71,11 +72,9 @@ class IssueViewService
         
         $cacheKey = "issue_events_{$issueNumber}";
         if (!isset($this->memoizedData[$cacheKey])) {
-            [$owner, $repoName] = explode('/', $repo);
-            
+            // Note: Events API would need to be implemented in github-client
+            // For now, return empty array without parsing repo since we're not using it yet
             try {
-                // Note: Events API would need to be implemented in github-client
-                // For now, return empty array
                 $this->memoizedData[$cacheKey] = [];
             } catch (\Exception $e) {
                 $this->memoizedData[$cacheKey] = [];
@@ -130,8 +129,8 @@ class IssueViewService
                 $command->newLine();
                 $hasAssignmentInfo = true;
             }
-            $labels = array_map(fn($label) => $label['name'], $issue['labels']);
-            $command->line("🏷️  Labels: <info>" . implode(', ', $labels) . "</info>");
+            $formattedLabels = $this->formatLabels($issue['labels']);
+            $command->line("🏷️  Labels: " . implode(', ', $formattedLabels));
         }
         
         if (!empty($issue['milestone'])) {
@@ -232,22 +231,10 @@ class IssueViewService
     }
 
     /**
-     * Format date for display
+     * Format date for display using Carbon's elegant formatting
      */
     private function formatDate(string $date): string
     {
-        $timestamp = strtotime($date);
-        $now = time();
-        $diff = $now - $timestamp;
-
-        if ($diff < 3600) {
-            return floor($diff / 60) . 'm ago';
-        } elseif ($diff < 86400) {
-            return floor($diff / 3600) . 'h ago';
-        } elseif ($diff < 2592000) {
-            return floor($diff / 86400) . 'd ago';
-        } else {
-            return date('M j, Y', $timestamp);
-        }
+        return Carbon::parse($date)->diffForHumans();
     }
 }

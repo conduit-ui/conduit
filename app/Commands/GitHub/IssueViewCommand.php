@@ -16,7 +16,7 @@ class IssueViewCommand extends Command
 
     protected $description = 'View detailed issue information with comments and formatting';
 
-    public function handle(GithubAuthService $githubAuth): int
+    public function handle(GithubAuthService $githubAuth, IssueViewService $issueViewService): int
     {
         if (!$githubAuth->isAuthenticated()) {
             $this->error('❌ Not authenticated with GitHub');
@@ -35,8 +35,6 @@ class IssueViewCommand extends Command
                 return 1;
             }
         }
-
-        $issueViewService = new IssueViewService();
 
         try {
             if ($this->option('format') === 'json') {

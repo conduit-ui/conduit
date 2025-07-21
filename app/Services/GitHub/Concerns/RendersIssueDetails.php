@@ -37,17 +37,17 @@ trait RendersIssueDetails
             // Handle headers
             if (preg_match('/^(#{1,6})\s+(.+)$/', $line, $matches)) {
                 $level = strlen($matches[1]);
-                $text = $matches[2];
+                $headerText = $matches[2];
                 
                 switch ($level) {
                     case 1:
-                        $command->line("<fg=cyan;options=bold>🔸 {$text}</fg=cyan;options=bold>");
+                        $command->line("<fg=cyan;options=bold>🔸 {$headerText}</fg=cyan;options=bold>");
                         break;
                     case 2:
-                        $command->line("<fg=cyan;options=bold>  🔹 {$text}</fg=cyan;options=bold>");
+                        $command->line("<fg=cyan;options=bold>  🔹 {$headerText}</fg=cyan;options=bold>");
                         break;
                     default:
-                        $command->line("<fg=cyan>    • {$text}</fg=cyan>");
+                        $command->line("<fg=cyan>    • {$headerText}</fg=cyan>");
                         break;
                 }
                 continue;
@@ -116,7 +116,7 @@ trait RendersIssueDetails
     }
     
     /**
-     * Format labels with colors
+     * Format labels with GitHub's actual colors mapped to terminal colors
      */
     protected function formatLabels(array $labels): array
     {
@@ -126,21 +126,62 @@ trait RendersIssueDetails
             $name = $label['name'];
             $color = $label['color'] ?? '000000';
             
-            // Simple color mapping based on label type
+            // Map GitHub hex colors to terminal colors
+            $terminalColor = $this->mapGitHubColorToTerminal($color);
+            
+            // Also add semantic color overrides for common label types
             if (in_array(strtolower($name), ['bug', 'critical', 'p0'])) {
-                $formatted[] = "<fg=red>{$name}</fg=red>";
+                $terminalColor = 'red';
             } elseif (in_array(strtolower($name), ['enhancement', 'feature'])) {
-                $formatted[] = "<fg=green>{$name}</fg=green>";
+                $terminalColor = 'green';
             } elseif (in_array(strtolower($name), ['documentation', 'docs'])) {
-                $formatted[] = "<fg=blue>{$name}</fg=blue>";
+                $terminalColor = 'blue';
             } elseif (in_array(strtolower($name), ['question', 'help'])) {
-                $formatted[] = "<fg=yellow>{$name}</fg=yellow>";
-            } else {
-                $formatted[] = "<fg=gray>{$name}</fg=gray>";
+                $terminalColor = 'yellow';
             }
+            
+            $formatted[] = "<fg={$terminalColor}>{$name}</fg={$terminalColor}>";
         }
         
         return $formatted;
+    }
+    
+    /**
+     * Map GitHub hex colors to nearest terminal colors
+     */
+    protected function mapGitHubColorToTerminal(string $hexColor): string
+    {
+        // Remove # if present
+        $hex = ltrim($hexColor, '#');
+        
+        // Convert hex to RGB
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2)); 
+        $b = hexdec(substr($hex, 4, 2));
+        
+        // Calculate brightness
+        $brightness = ($r * 299 + $g * 587 + $b * 114) / 1000;
+        
+        // Map to nearest terminal color based on dominant channel and brightness
+        if ($brightness < 60) {
+            return 'black';
+        } elseif ($brightness > 200) {
+            return 'white';
+        } elseif ($r > $g && $r > $b) {
+            return $r > 180 ? 'red' : 'red';
+        } elseif ($g > $r && $g > $b) {
+            return $g > 180 ? 'green' : 'green';
+        } elseif ($b > $r && $b > $g) {
+            return $b > 180 ? 'blue' : 'blue';
+        } elseif ($r > 150 && $g > 150) {
+            return 'yellow';
+        } elseif ($r > 150 && $b > 150) {
+            return 'magenta';
+        } elseif ($g > 150 && $b > 150) {
+            return 'cyan';
+        } else {
+            return 'gray';
+        }
     }
     
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Services\GitHub\Concerns;
 
+use Carbon\Carbon;
 use LaravelZero\Framework\Commands\Command;
 
 trait RendersIssueComments
@@ -146,19 +147,12 @@ trait RendersIssueComments
     }
     
     /**
-     * Format timespan between comments
+     * Format timespan between comments using Carbon's elegant formatting
      */
     protected function formatTimespan(int $seconds): string
     {
-        if ($seconds < 3600) {
-            return floor($seconds / 60) . ' minutes';
-        } elseif ($seconds < 86400) {
-            return floor($seconds / 3600) . ' hours';
-        } elseif ($seconds < 2592000) {
-            return floor($seconds / 86400) . ' days';
-        } else {
-            return floor($seconds / 2592000) . ' months';
-        }
+        $start = Carbon::now()->subSeconds($seconds);
+        return $start->diffForHumans(Carbon::now(), true);
     }
     
     /**
