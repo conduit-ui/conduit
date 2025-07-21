@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use App\Commands\GitHub\AuthCommand;
+use App\Commands\GitHub\IssueAssignCommand;
+use App\Commands\GitHub\IssueCloseCommand;
+use App\Commands\GitHub\IssueCreateCommand;
+use App\Commands\GitHub\IssueEditCommand;
 use App\Commands\GitHub\IssueViewCommand;
 use App\Commands\IssuesCommand;
 use App\Commands\Know\Add;
@@ -58,6 +62,10 @@ class AppServiceProvider extends ServiceProvider
                 StatusCommand::class,
                 AuthCommand::class,
                 IssueViewCommand::class,
+                IssueCreateCommand::class,
+                IssueEditCommand::class,
+                IssueCloseCommand::class,
+                IssueAssignCommand::class,
                 \App\Commands\PrAnalyzeCommand::class,
                 \App\Commands\GitHubClientGapAnalysisCommand::class,
                 \App\Commands\CodeRabbitStatusCommand::class,
