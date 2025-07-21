@@ -10,6 +10,7 @@ use App\Services\GitHub\Concerns\OpensExternalEditor;
 use App\Services\GitHub\Concerns\RendersIssueDetails;
 use App\Services\GitHub\Concerns\RendersIssuePreviews;
 use App\Services\GitHub\Concerns\ValidatesPrData;
+use JordanPartridge\GithubClient\Data\Pulls\PullRequestDetailDTO;
 use JordanPartridge\GithubClient\Facades\Github;
 
 class PrCreateService implements PrCreateInterface
@@ -31,7 +32,7 @@ class PrCreateService implements PrCreateInterface
     /**
      * Create a new GitHub pull request
      */
-    public function createPullRequest(string $repo, array $prData): ?object
+    public function createPullRequest(string $repo, array $prData): ?PullRequestDetailDTO
     {
         [$owner, $repoName] = explode('/', $repo);
 

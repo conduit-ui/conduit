@@ -19,7 +19,9 @@ use App\Commands\Know\Optimize;
 use App\Commands\Know\Search;
 use App\Commands\Know\SetupCommand;
 use App\Commands\Know\Show;
+use App\Commands\GitHub\PrAnalysisCommand;
 use App\Commands\GitHub\PrCreateCommand;
+use App\Commands\GitHub\PrStatusCommand;
 use App\Commands\PrsCommand;
 use App\Commands\ReposCommand;
 use App\Commands\StatusCommand;
@@ -30,6 +32,7 @@ use App\Contracts\PackageInstallerInterface;
 use App\Services\ComponentInstallationService;
 use App\Services\ComponentManager;
 use App\Services\ComponentStorage;
+use App\Services\GitHub\PrAnalysisService;
 use App\Services\GitHub\PrCreateService;
 use App\Services\GithubAuthService;
 use App\Services\KnowledgeService;
@@ -70,6 +73,8 @@ class AppServiceProvider extends ServiceProvider
                 IssueCloseCommand::class,
                 IssueAssignCommand::class,
                 PrCreateCommand::class,
+                PrAnalysisCommand::class,
+                PrStatusCommand::class,
                 \App\Commands\PrAnalyzeCommand::class,
                 \App\Commands\GitHubClientGapAnalysisCommand::class,
                 \App\Commands\CodeRabbitStatusCommand::class,
@@ -120,5 +125,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ServiceProviderDetector::class);
         $this->app->singleton(ComponentInstallationService::class);
         $this->app->singleton(KnowledgeService::class);
+        $this->app->singleton(PrAnalysisService::class);
     }
 }

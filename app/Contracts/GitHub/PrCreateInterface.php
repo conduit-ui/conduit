@@ -2,12 +2,14 @@
 
 namespace App\Contracts\GitHub;
 
+use JordanPartridge\GithubClient\Data\Pulls\PullRequestDetailDTO;
+
 interface PrCreateInterface extends BranchManagementInterface, ReviewerManagementInterface
 {
     /**
      * Create a new GitHub pull request
      */
-    public function createPullRequest(string $repo, array $prData): ?object;
+    public function createPullRequest(string $repo, array $prData): ?PullRequestDetailDTO;
 
     /**
      * Get available reviewers for repository
