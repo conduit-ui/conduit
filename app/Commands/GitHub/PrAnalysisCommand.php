@@ -30,7 +30,7 @@ class PrAnalysisCommand extends Command
             return 1;
         }
 
-        $repo = $this->option('repo') ?: $this->detectRepository();
+        $repo = $this->option('repo') ?: $this->detectCurrentRepo();
         if (!$repo) {
             $repo = text('Repository (owner/repo):');
         }
