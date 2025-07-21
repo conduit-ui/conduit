@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Commands\GitHub\AuthCommand;
+use App\Commands\GitHub\IssueViewCommand;
 use App\Commands\IssuesCommand;
 use App\Commands\Know\Add;
 use App\Commands\Know\AutoCaptureCommand;
@@ -56,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
                 IssuesCommand::class,
                 StatusCommand::class,
                 AuthCommand::class,
+                IssueViewCommand::class,
                 \App\Commands\PrAnalyzeCommand::class,
                 \App\Commands\GitHubClientGapAnalysisCommand::class,
                 \App\Commands\CodeRabbitStatusCommand::class,
