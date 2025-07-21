@@ -2,7 +2,6 @@
 
 namespace App\Services\GitHub\Concerns;
 
-use LaravelZero\Framework\Commands\Command;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\confirm;
 
@@ -11,7 +10,7 @@ trait ManagesReviewers
     /**
      * Interactive reviewer selection
      */
-    public function selectReviewers(?Command $command, array $availableReviewers): array
+    public function selectReviewers(?object $command, array $availableReviewers): array
     {
         if (!$command || empty($availableReviewers)) {
             return [];
@@ -70,7 +69,7 @@ trait ManagesReviewers
     /**
      * Request review from specific users
      */
-    public function requestReviews(?Command $command, string $repo, int $prNumber, array $reviewers): bool
+    public function requestReviews(?object $command, string $repo, int $prNumber, array $reviewers): bool
     {
         if (!$command || empty($reviewers)) {
             return true;

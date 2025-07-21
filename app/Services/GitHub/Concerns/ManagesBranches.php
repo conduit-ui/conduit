@@ -2,6 +2,7 @@
 
 namespace App\Services\GitHub\Concerns;
 
+use Illuminate\Support\Facades\Process;
 use LaravelZero\Framework\Commands\Command;
 use function Laravel\Prompts\text;
 use function Laravel\Prompts\select;
@@ -15,7 +16,13 @@ trait ManagesBranches
     public function getCurrentBranch(): ?string
     {
         try {
-            $branch = trim(shell_exec('git branch --show-current 2>/dev/null') ?: '');
+            $result = Process::run('git branch --show-current');
+            
+            if ($result->failed()) {
+                return null;
+            }
+            
+            $branch = trim($result->output());
             return !empty($branch) ? $branch : null;
         } catch (\Exception $e) {
             return null;
@@ -28,16 +35,18 @@ trait ManagesBranches
     public function getAvailableBranches(): array
     {
         try {
-            exec('git branch -r --format="%(refname:short)" 2>/dev/null', $output, $returnCode);
+            $result = Process::run('git branch -r --format="%(refname:short)"');
             
-            if ($returnCode !== 0) {
+            if ($result->failed()) {
                 return ['main', 'master', 'develop']; // Common defaults
             }
 
+            $output = array_filter(explode("\n", trim($result->output())));
             $branches = [];
+            
             foreach ($output as $branch) {
                 // Clean up origin/ prefix and skip HEAD
-                $cleanBranch = preg_replace('/^origin\//', '', $branch);
+                $cleanBranch = preg_replace('/^origin\//', '', trim($branch));
                 if ($cleanBranch !== 'HEAD' && !empty($cleanBranch)) {
                     $branches[] = $cleanBranch;
                 }
