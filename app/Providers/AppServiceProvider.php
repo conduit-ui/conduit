@@ -19,15 +19,18 @@ use App\Commands\Know\Optimize;
 use App\Commands\Know\Search;
 use App\Commands\Know\SetupCommand;
 use App\Commands\Know\Show;
+use App\Commands\GitHub\PrCreateCommand;
 use App\Commands\PrsCommand;
 use App\Commands\ReposCommand;
 use App\Commands\StatusCommand;
 use App\Contracts\ComponentManagerInterface;
 use App\Contracts\ComponentStorageInterface;
+use App\Contracts\GitHub\PrCreateInterface;
 use App\Contracts\PackageInstallerInterface;
 use App\Services\ComponentInstallationService;
 use App\Services\ComponentManager;
 use App\Services\ComponentStorage;
+use App\Services\GitHub\PrCreateService;
 use App\Services\GithubAuthService;
 use App\Services\KnowledgeService;
 use App\Services\SecurePackageInstaller;
@@ -66,6 +69,7 @@ class AppServiceProvider extends ServiceProvider
                 IssueEditCommand::class,
                 IssueCloseCommand::class,
                 IssueAssignCommand::class,
+                PrCreateCommand::class,
                 \App\Commands\PrAnalyzeCommand::class,
                 \App\Commands\GitHubClientGapAnalysisCommand::class,
                 \App\Commands\CodeRabbitStatusCommand::class,
@@ -107,6 +111,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ComponentStorageInterface::class, ComponentStorage::class);
         $this->app->singleton(ComponentManagerInterface::class, ComponentManager::class);
         $this->app->singleton(PackageInstallerInterface::class, SecurePackageInstaller::class);
+        $this->app->singleton(PrCreateInterface::class, PrCreateService::class);
 
         // Register concrete services
         $this->app->singleton(ComponentStorage::class);
