@@ -95,15 +95,9 @@ class IssueEditService
      */
     public function getAvailableLabels(string $repo): array
     {
-        $this->initializeCache($repo);
-        
-        $cacheKey = 'labels';
-        if (!isset($this->memoizedData[$cacheKey])) {
-            // TODO: Implement label fetching when github-client supports it
-            $this->memoizedData[$cacheKey] = [];
-        }
-        
-        return $this->memoizedData[$cacheKey];
+        throw new \BadMethodCallException(
+            '🚧 Labels API coming soon! This feature requires github-client v2.0+ with labels support.'
+        );
     }
 
     /**
@@ -111,15 +105,9 @@ class IssueEditService
      */
     public function getCollaborators(string $repo): array
     {
-        $this->initializeCache($repo);
-        
-        $cacheKey = 'collaborators';
-        if (!isset($this->memoizedData[$cacheKey])) {
-            // TODO: Implement collaborators fetching when github-client supports it
-            $this->memoizedData[$cacheKey] = [];
-        }
-        
-        return $this->memoizedData[$cacheKey];
+        throw new \BadMethodCallException(
+            '🚧 Collaborators API coming soon! This feature requires github-client v2.0+ with collaborators support.'
+        );
     }
 
     /**
@@ -127,15 +115,9 @@ class IssueEditService
      */
     public function getMilestones(string $repo): array
     {
-        $this->initializeCache($repo);
-        
-        $cacheKey = 'milestones';
-        if (!isset($this->memoizedData[$cacheKey])) {
-            // TODO: Implement milestones fetching when github-client supports it
-            $this->memoizedData[$cacheKey] = [];
-        }
-        
-        return $this->memoizedData[$cacheKey];
+        throw new \BadMethodCallException(
+            '🚧 Milestones API coming soon! This feature requires github-client v2.0+ with milestones support.'
+        );
     }
 
     /**

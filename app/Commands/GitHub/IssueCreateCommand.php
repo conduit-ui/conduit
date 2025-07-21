@@ -181,7 +181,12 @@ class IssueCreateCommand extends Command
 
         // Interactive label selection
         if (empty($data['labels'])) {
-            $availableLabels = $service->getAvailableLabels($repo);
+            try {
+                $availableLabels = $service->getAvailableLabels($repo);
+            } catch (\BadMethodCallException $e) {
+                $this->warn($e->getMessage());
+                $availableLabels = [];
+            }
             if (! empty($availableLabels)) {
                 $selectedLabels = $service->selectLabels($this, $availableLabels);
                 $data['labels'] = $selectedLabels;
