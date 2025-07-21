@@ -31,13 +31,15 @@ class CodeRabbitStatusCommand extends Command
         $prNumber = $this->option('pr');
         $repo = $this->option('repo') ?? $this->detectRepository();
 
-        if (!$prNumber) {
+        if (! $prNumber) {
             $this->error('❌ PR number is required');
+
             return 1;
         }
 
-        if (!$repo) {
+        if (! $repo) {
             $this->error('❌ Repository is required');
+
             return 1;
         }
 
@@ -45,14 +47,15 @@ class CodeRabbitStatusCommand extends Command
 
         try {
             $this->info("🤖 Analyzing CodeRabbit resolution status for PR #{$prNumber}...");
-            
+
             $statusData = $this->analyzeCodeRabbitStatus($owner, $repoName, (int) $prNumber);
-            
+
             $this->displayStatus($statusData);
-            
+
             return 0;
         } catch (\Exception $e) {
             $this->error("❌ Failed to analyze CodeRabbit status: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -62,11 +65,12 @@ class CodeRabbitStatusCommand extends Command
         try {
             $remote = trim(shell_exec('git remote get-url origin 2>/dev/null') ?? '');
             if (preg_match('/github\.com[\/:]([^\/]+)\/([^\/]+?)(?:\.git)?$/', $remote, $matches)) {
-                return $matches[1] . '/' . $matches[2];
+                return $matches[1].'/'.$matches[2];
             }
         } catch (\Exception $e) {
             // Ignore git errors
         }
+
         return null;
     }
 
@@ -74,7 +78,7 @@ class CodeRabbitStatusCommand extends Command
     {
         // Get PR review comments via GitHub CLI (github-client doesn't support this yet)
         $reviewComments = $this->fetchReviewCommentsViaGH($owner, $repo, $prNumber);
-        
+
         $coderabbitComments = array_filter($reviewComments, function ($comment) {
             return isset($comment['user']['login']) && $comment['user']['login'] === 'coderabbitai[bot]';
         });
@@ -87,7 +91,7 @@ class CodeRabbitStatusCommand extends Command
             $issue = $this->parseCodeRabbitComment($comment);
             if ($issue) {
                 $issues[] = $issue;
-                
+
                 // Check if issue has been resolved (has reply indicating fix)
                 if ($this->isIssueResolved($comment, $reviewComments)) {
                     $resolvedIssues[] = $issue;
@@ -98,9 +102,9 @@ class CodeRabbitStatusCommand extends Command
         }
 
         // Categorize by priority
-        $highPriority = array_filter($remainingIssues, fn($issue) => $issue['priority'] === 'high');
-        $mediumPriority = array_filter($remainingIssues, fn($issue) => $issue['priority'] === 'medium');
-        $lowPriority = array_filter($remainingIssues, fn($issue) => $issue['priority'] === 'low');
+        $highPriority = array_filter($remainingIssues, fn ($issue) => $issue['priority'] === 'high');
+        $mediumPriority = array_filter($remainingIssues, fn ($issue) => $issue['priority'] === 'medium');
+        $lowPriority = array_filter($remainingIssues, fn ($issue) => $issue['priority'] === 'low');
 
         return [
             'pr_number' => $prNumber,
@@ -126,7 +130,7 @@ class CodeRabbitStatusCommand extends Command
     private function parseCodeRabbitComment(array $comment): ?array
     {
         $body = $comment['body'] ?? '';
-        
+
         // Skip if it's just a summary comment
         if (str_contains($body, '## Summary') || str_contains($body, '## Performance') || str_contains($body, 'Commits')) {
             return null;
@@ -142,11 +146,17 @@ class CodeRabbitStatusCommand extends Command
 
         // Extract category
         $category = 'general';
-        if (str_contains($body, 'security')) $category = 'security';
-        elseif (str_contains($body, 'performance')) $category = 'performance';
-        elseif (str_contains($body, 'style')) $category = 'style';
-        elseif (str_contains($body, 'duplication')) $category = 'duplication';
-        elseif (str_contains($body, 'error')) $category = 'error_handling';
+        if (str_contains($body, 'security')) {
+            $category = 'security';
+        } elseif (str_contains($body, 'performance')) {
+            $category = 'performance';
+        } elseif (str_contains($body, 'style')) {
+            $category = 'style';
+        } elseif (str_contains($body, 'duplication')) {
+            $category = 'duplication';
+        } elseif (str_contains($body, 'error')) {
+            $category = 'error_handling';
+        }
 
         return [
             'id' => $comment['id'],
@@ -166,10 +176,11 @@ class CodeRabbitStatusCommand extends Command
         $lines = explode("\n", $body);
         foreach ($lines as $line) {
             $line = trim($line);
-            if (!empty($line) && !str_starts_with($line, '#') && !str_starts_with($line, '```')) {
-                return substr($line, 0, 100) . (strlen($line) > 100 ? '...' : '');
+            if (! empty($line) && ! str_starts_with($line, '#') && ! str_starts_with($line, '```')) {
+                return substr($line, 0, 100).(strlen($line) > 100 ? '...' : '');
             }
         }
+
         return 'CodeRabbit feedback';
     }
 
@@ -178,23 +189,25 @@ class CodeRabbitStatusCommand extends Command
         $escapedOwner = escapeshellarg($owner);
         $escapedRepo = escapeshellarg($repo);
         $escapedPrNumber = escapeshellarg((string) $prNumber);
-        
+
         $command = "gh api repos/{$escapedOwner}/{$escapedRepo}/pulls/{$escapedPrNumber}/comments --paginate 2>/dev/null";
         $output = shell_exec($command);
-        
-        if (!$output) {
+
+        if (! $output) {
             $this->warn('⚠️  Could not fetch review comments via GitHub CLI');
+
             return [];
         }
-        
+
         $comments = json_decode($output, true);
+
         return is_array($comments) ? $comments : [];
     }
 
     private function isIssueResolved(array $comment, array $allComments): bool
     {
         $commentId = $comment['id'];
-        
+
         // Look for replies to this comment indicating resolution
         foreach ($allComments as $otherComment) {
             if (isset($otherComment['in_reply_to_id']) && $otherComment['in_reply_to_id'] == $commentId) {
@@ -213,9 +226,10 @@ class CodeRabbitStatusCommand extends Command
     private function displayStatus(array $status): void
     {
         $format = $this->option('format');
-        
+
         if ($format === 'json') {
             $this->line(json_encode($status, JSON_PRETTY_PRINT));
+
             return;
         }
 
@@ -230,26 +244,26 @@ class CodeRabbitStatusCommand extends Command
         $this->newLine();
 
         // Overall summary
-        $resolvedPercent = $status['total_issues'] > 0 
+        $resolvedPercent = $status['total_issues'] > 0
             ? round(($status['resolved_count'] / $status['total_issues']) * 100, 1)
             : 0;
-        
-        $this->info("📊 Overall Progress:");
+
+        $this->info('📊 Overall Progress:');
         $this->line("   ✅ Resolved: {$status['resolved_count']}/{$status['total_issues']} ({$resolvedPercent}%)");
         $this->line("   ⏳ Remaining: {$status['remaining_count']}");
         $this->newLine();
 
         // Priority breakdown
         if ($status['remaining_count'] > 0) {
-            $this->error("🔥 Remaining Issues by Priority:");
+            $this->error('🔥 Remaining Issues by Priority:');
             $this->line("   🚨 High Priority: {$status['priority_breakdown']['high']} (security, critical)");
             $this->line("   ⚠️  Medium Priority: {$status['priority_breakdown']['medium']} (architecture, performance)");
             $this->line("   💡 Low Priority: {$status['priority_breakdown']['low']} (style, suggestions)");
             $this->newLine();
 
             // Show high priority issues first
-            if (!empty($status['categorized_remaining']['high'])) {
-                $this->error("🚨 HIGH PRIORITY ISSUES (Immediate Action Required):");
+            if (! empty($status['categorized_remaining']['high'])) {
+                $this->error('🚨 HIGH PRIORITY ISSUES (Immediate Action Required):');
                 foreach ($status['categorized_remaining']['high'] as $issue) {
                     $this->line("   📁 {$issue['file']}:{$issue['line']} - {$issue['description']}");
                     $this->line("      🔗 {$issue['url']}");
@@ -258,21 +272,21 @@ class CodeRabbitStatusCommand extends Command
             }
 
             // Show medium priority if requested or if no filters
-            if (!$this->option('show-fixed') && !empty($status['categorized_remaining']['medium'])) {
-                $this->comment("⚠️  MEDIUM PRIORITY ISSUES:");
+            if (! $this->option('show-fixed') && ! empty($status['categorized_remaining']['medium'])) {
+                $this->comment('⚠️  MEDIUM PRIORITY ISSUES:');
                 foreach (array_slice($status['categorized_remaining']['medium'], 0, 5) as $issue) {
                     $this->line("   📁 {$issue['file']}:{$issue['line']} - {$issue['description']}");
                 }
                 if (count($status['categorized_remaining']['medium']) > 5) {
-                    $this->line("   ... and " . (count($status['categorized_remaining']['medium']) - 5) . " more");
+                    $this->line('   ... and '.(count($status['categorized_remaining']['medium']) - 5).' more');
                 }
                 $this->newLine();
             }
         }
 
         // Show resolved issues if requested
-        if ($this->option('show-fixed') && !empty($status['resolved_issues'])) {
-            $this->info("✅ RESOLVED ISSUES:");
+        if ($this->option('show-fixed') && ! empty($status['resolved_issues'])) {
+            $this->info('✅ RESOLVED ISSUES:');
             foreach ($status['resolved_issues'] as $issue) {
                 $this->line("   📁 {$issue['file']}:{$issue['line']} - {$issue['description']}");
             }
@@ -281,7 +295,7 @@ class CodeRabbitStatusCommand extends Command
 
         // Next steps
         if ($status['remaining_count'] > 0) {
-            $this->comment("💡 Next Steps:");
+            $this->comment('💡 Next Steps:');
             if ($status['priority_breakdown']['high'] > 0) {
                 $this->line("   1. Address {$status['priority_breakdown']['high']} high-priority security issues first");
             }
@@ -293,7 +307,7 @@ class CodeRabbitStatusCommand extends Command
             }
             $this->line("   4. Run 'conduit coderabbit:status --pr={$status['pr_number']} --show-fixed' to see progress");
         } else {
-            $this->info("🎉 All CodeRabbit issues have been addressed! PR is ready for review.");
+            $this->info('🎉 All CodeRabbit issues have been addressed! PR is ready for review.');
         }
     }
 }

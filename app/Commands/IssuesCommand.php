@@ -418,13 +418,13 @@ class IssuesCommand extends Command
         try {
             switch ($os) {
                 case 'Darwin':
-                    shell_exec('open ' . escapeshellarg($url) . ' > /dev/null 2>&1');
+                    shell_exec('open '.escapeshellarg($url).' > /dev/null 2>&1');
                     break;
                 case 'Windows':
-                    shell_exec('start ' . escapeshellarg($url) . ' > /dev/null 2>&1');
+                    shell_exec('start '.escapeshellarg($url).' > /dev/null 2>&1');
                     break;
                 case 'Linux':
-                    shell_exec('xdg-open ' . escapeshellarg($url) . ' > /dev/null 2>&1');
+                    shell_exec('xdg-open '.escapeshellarg($url).' > /dev/null 2>&1');
                     break;
             }
             info('🌐 Opened in browser');

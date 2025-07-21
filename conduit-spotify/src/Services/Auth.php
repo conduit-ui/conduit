@@ -370,7 +370,6 @@ PHP;
         return false;
     }
 
-
     /**
      * Attempt automatic login using available methods.
      */
@@ -386,9 +385,10 @@ PHP;
         if ($refreshToken) {
             try {
                 $this->refreshToken($refreshToken);
+
                 return ! empty($this->getAccessToken());
             } catch (\Exception $e) {
-                \Log::debug('Refresh token failed: ' . $e->getMessage());
+                \Log::debug('Refresh token failed: '.$e->getMessage());
             }
         }
 

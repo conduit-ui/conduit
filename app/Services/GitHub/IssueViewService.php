@@ -2,16 +2,16 @@
 
 namespace App\Services\GitHub;
 
-use App\Services\GitHub\Concerns\RendersIssueDetails;
 use App\Services\GitHub\Concerns\RendersIssueComments;
+use App\Services\GitHub\Concerns\RendersIssueDetails;
 use Carbon\Carbon;
 use JordanPartridge\GithubClient\Facades\Github;
 use LaravelZero\Framework\Commands\Command;
 
 class IssueViewService
 {
-    use RendersIssueDetails;
     use RendersIssueComments;
+    use RendersIssueDetails;
 
     /** @var array Cache for API responses */
     private array $memoizedData = [];
@@ -25,11 +25,11 @@ class IssueViewService
     public function getIssue(string $repo, int $issueNumber): ?array
     {
         $this->initializeCache($repo);
-        
+
         $cacheKey = "issue_{$issueNumber}";
-        if (!isset($this->memoizedData[$cacheKey])) {
+        if (! isset($this->memoizedData[$cacheKey])) {
             [$owner, $repoName] = explode('/', $repo);
-            
+
             try {
                 $issue = Github::issues()->get($owner, $repoName, $issueNumber);
                 $this->memoizedData[$cacheKey] = $issue->toArray();
@@ -37,7 +37,7 @@ class IssueViewService
                 return null;
             }
         }
-        
+
         return $this->memoizedData[$cacheKey];
     }
 
@@ -47,19 +47,19 @@ class IssueViewService
     public function getIssueComments(string $repo, int $issueNumber): array
     {
         $this->initializeCache($repo);
-        
+
         $cacheKey = "issue_comments_{$issueNumber}";
-        if (!isset($this->memoizedData[$cacheKey])) {
+        if (! isset($this->memoizedData[$cacheKey])) {
             [$owner, $repoName] = explode('/', $repo);
-            
+
             try {
                 $comments = Github::issues()->comments($owner, $repoName, $issueNumber);
-                $this->memoizedData[$cacheKey] = array_map(fn($comment) => $comment->toArray(), $comments);
+                $this->memoizedData[$cacheKey] = array_map(fn ($comment) => $comment->toArray(), $comments);
             } catch (\Exception $e) {
                 $this->memoizedData[$cacheKey] = [];
             }
         }
-        
+
         return $this->memoizedData[$cacheKey];
     }
 
@@ -69,9 +69,9 @@ class IssueViewService
     public function getIssueEvents(string $repo, int $issueNumber): array
     {
         $this->initializeCache($repo);
-        
+
         $cacheKey = "issue_events_{$issueNumber}";
-        if (!isset($this->memoizedData[$cacheKey])) {
+        if (! isset($this->memoizedData[$cacheKey])) {
             // Note: Events API would need to be implemented in github-client
             // For now, return empty array without parsing repo since we're not using it yet
             try {
@@ -80,7 +80,7 @@ class IssueViewService
                 $this->memoizedData[$cacheKey] = [];
             }
         }
-        
+
         return $this->memoizedData[$cacheKey];
     }
 
@@ -90,10 +90,10 @@ class IssueViewService
     public function displayIssueHeader(Command $command, array $issue): void
     {
         $command->newLine();
-        
+
         $status = $this->getIssueStatusIcon($issue);
         $command->info("{$status} Issue #{$issue['number']}");
-        
+
         $command->line("📝 <fg=cyan;options=bold>{$issue['title']}</>");
     }
 
@@ -103,44 +103,44 @@ class IssueViewService
     public function displayIssueMetadata(Command $command, array $issue): void
     {
         $command->newLine();
-        
+
         // Basic info
         $command->line("👤 Author: <info>{$issue['user']['login']}</info>");
-        $command->line("📊 State: <info>" . ucfirst($issue['state']) . "</info>");
+        $command->line('📊 State: <info>'.ucfirst($issue['state']).'</info>');
         $command->newLine();
-        
+
         // Timing info
         $command->line("📅 Created: <info>{$this->formatDate($issue['created_at'])}</info>");
         $command->line("📅 Updated: <info>{$this->formatDate($issue['updated_at'])}</info>");
-        
+
         // Assignment and organization info
         $hasAssignmentInfo = false;
-        if (!empty($issue['assignees'])) {
-            if (!$hasAssignmentInfo) {
+        if (! empty($issue['assignees'])) {
+            if (! $hasAssignmentInfo) {
                 $command->newLine();
                 $hasAssignmentInfo = true;
             }
-            $assignees = array_map(fn($assignee) => $assignee['login'], $issue['assignees']);
-            $command->line("👨‍💻 Assignees: <info>" . implode(', ', $assignees) . "</info>");
+            $assignees = array_map(fn ($assignee) => $assignee['login'], $issue['assignees']);
+            $command->line('👨‍💻 Assignees: <info>'.implode(', ', $assignees).'</info>');
         }
-        
-        if (!empty($issue['labels'])) {
-            if (!$hasAssignmentInfo) {
+
+        if (! empty($issue['labels'])) {
+            if (! $hasAssignmentInfo) {
                 $command->newLine();
                 $hasAssignmentInfo = true;
             }
             $formattedLabels = $this->formatLabels($issue['labels']);
-            $command->line("🏷️  Labels: " . implode(', ', $formattedLabels));
+            $command->line('🏷️  Labels: '.implode(', ', $formattedLabels));
         }
-        
-        if (!empty($issue['milestone'])) {
-            if (!$hasAssignmentInfo) {
+
+        if (! empty($issue['milestone'])) {
+            if (! $hasAssignmentInfo) {
                 $command->newLine();
                 $hasAssignmentInfo = true;
             }
             $command->line("🎯 Milestone: <info>{$issue['milestone']['title']}</info>");
         }
-        
+
         // Activity and links
         $command->newLine();
         $command->line("💬 Comments: <info>{$issue['comments']}</info>");
@@ -155,13 +155,14 @@ class IssueViewService
         if (empty($issue['body'])) {
             $command->newLine();
             $command->line('<fg=gray>No description provided</fg=gray>');
+
             return;
         }
 
         $command->newLine();
         $command->line('<comment>Description:</comment>');
         $command->newLine();
-        
+
         $this->renderMarkdownText($command, $issue['body']);
     }
 
@@ -170,15 +171,15 @@ class IssueViewService
      */
     public function displayComments(Command $command, array $comments): void
     {
-        $command->line("<comment>💬 Comments (" . count($comments) . "):</comment>");
+        $command->line('<comment>💬 Comments ('.count($comments).'):</comment>');
         $command->newLine();
-        
+
         foreach ($comments as $index => $comment) {
             $this->renderComment($command, $comment, $index + 1);
-            
+
             if ($index < count($comments) - 1) {
                 $command->newLine();
-                $command->line('<fg=gray>' . str_repeat('─', 50) . '</fg=gray>');
+                $command->line('<fg=gray>'.str_repeat('─', 50).'</fg=gray>');
                 $command->newLine();
             }
         }
@@ -205,7 +206,7 @@ class IssueViewService
         }
 
         // Check for priority/type labels
-        $labels = array_map(fn($label) => strtolower($label['name']), $issue['labels']);
+        $labels = array_map(fn ($label) => strtolower($label['name']), $issue['labels']);
 
         if (in_array('bug', $labels)) {
             return '🐛';

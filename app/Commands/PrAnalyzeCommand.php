@@ -4,10 +4,9 @@ namespace App\Commands;
 
 use App\Services\PrAnalysisService;
 use Illuminate\Console\Command;
-use JordanPartridge\GithubClient\Facades\Github;
-use function Laravel\Prompts\info;
-use function Laravel\Prompts\warning;
+
 use function Laravel\Prompts\error;
+use function Laravel\Prompts\info;
 
 class PrAnalyzeCommand extends Command
 {
@@ -24,16 +23,17 @@ class PrAnalyzeCommand extends Command
     {
         $prNumber = (int) $this->argument('number');
         $repoSpec = $this->option('repo') ?? $this->detectRepository();
-        
-        if (!$repoSpec) {
+
+        if (! $repoSpec) {
             error('Could not detect repository. Use --repo=owner/repo');
+
             return 1;
         }
 
         [$owner, $repo] = explode('/', $repoSpec);
 
         try {
-            $analysisService = new PrAnalysisService();
+            $analysisService = new PrAnalysisService;
             $analysis = $analysisService->analyzeComprehensive($owner, $repo, $prNumber, [
                 'include_diff' => $this->option('include-diff'),
                 'include_ai_insights' => $this->option('include-ai-insights'),
@@ -47,6 +47,7 @@ class PrAnalyzeCommand extends Command
 
         } catch (\Exception $e) {
             error("Analysis failed: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -59,19 +60,19 @@ class PrAnalyzeCommand extends Command
 
         // Header with PR overview
         $this->displayHeader($pr, $meta);
-        
+
         // Core metrics dashboard
         $this->displayMetricsDashboard($meta, $intelligence);
-        
+
         // Review analysis with AI insights
         $this->displayReviewAnalysis($analysis['reviews'], $intelligence);
-        
+
         // Technical health check
         $this->displayTechnicalHealth($analysis['checks'], $analysis['conflicts']);
-        
+
         // AI-powered recommendations
         $this->displayAIRecommendations($intelligence);
-        
+
         // Merge readiness assessment
         $this->displayMergeReadiness($analysis['mergeability']);
 
@@ -90,16 +91,16 @@ class PrAnalyzeCommand extends Command
         $this->line("<options=bold>#{$pr['number']}: {$pr['title']}</options>");
         $this->line("<fg=gray>by {$pr['author']} • {$pr['state']} • Updated {$meta['updated_relative']}</fg>");
         $this->line('');
-        
+
         // Quick stats bar
         $stats = [
             "📝 {$meta['total_commits']} commits",
             "📊 +{$meta['additions']} -{$meta['deletions']}",
             "📁 {$meta['changed_files']} files",
             "💬 {$meta['discussion_count']} comments",
-            "📋 {$meta['review_comments']} reviews"
+            "📋 {$meta['review_comments']} reviews",
         ];
-        $this->line('<fg=cyan>' . implode(' • ', $stats) . '</fg>');
+        $this->line('<fg=cyan>'.implode(' • ', $stats).'</fg>');
         $this->line('');
     }
 
@@ -107,11 +108,11 @@ class PrAnalyzeCommand extends Command
     {
         $this->line('<options=bold>📊 METRICS DASHBOARD</options>');
         $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        
+
         // Create metrics grid
         $leftColumn = [
             $this->formatMetric('📈 Size Impact', $this->calculateSizeImpact($meta), $this->getSizeColor($meta)),
-            $this->formatMetric('🎯 Focus Score', $intelligence['focus_score'] . '/10', $this->getScoreColor($intelligence['focus_score'])),
+            $this->formatMetric('🎯 Focus Score', $intelligence['focus_score'].'/10', $this->getScoreColor($intelligence['focus_score'])),
             $this->formatMetric('🔄 Change Velocity', $meta['velocity'], 'cyan'),
             $this->formatMetric('📝 Documentation', $intelligence['docs_impact'], $this->getImpactColor($intelligence['docs_impact'])),
         ];
@@ -120,7 +121,7 @@ class PrAnalyzeCommand extends Command
             $this->formatMetric('🧪 Test Coverage', $meta['test_coverage'] ?? 'Unknown', 'yellow'),
             $this->formatMetric('⚡ Performance Impact', $intelligence['performance_risk'], $this->getRiskColor($intelligence['performance_risk'])),
             $this->formatMetric('🔒 Security Risk', $intelligence['security_risk'], $this->getRiskColor($intelligence['security_risk'])),
-            $this->formatMetric('🎨 Code Quality', $intelligence['quality_score'] . '/10', $this->getScoreColor($intelligence['quality_score'])),
+            $this->formatMetric('🎨 Code Quality', $intelligence['quality_score'].'/10', $this->getScoreColor($intelligence['quality_score'])),
         ];
 
         // Display side by side
@@ -138,12 +139,12 @@ class PrAnalyzeCommand extends Command
         $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
         // Review breakdown
-        if (!empty($reviews['coderabbit']) && ($reviews['coderabbit']['found'] ?? false)) {
+        if (! empty($reviews['coderabbit']) && ($reviews['coderabbit']['found'] ?? false)) {
             $this->displayCodeRabbitAnalysis($reviews['coderabbit']);
         }
 
         // Human reviews
-        if (!empty($reviews['human'])) {
+        if (! empty($reviews['human'])) {
             $this->line('<fg=green>👥 HUMAN REVIEWS:</fg>');
             foreach ($reviews['human'] as $review) {
                 $icon = $this->getReviewIcon($review['state']);
@@ -153,7 +154,7 @@ class PrAnalyzeCommand extends Command
         }
 
         // AI insights on review patterns
-        if (!empty($intelligence['review_insights'])) {
+        if (! empty($intelligence['review_insights'])) {
             $this->line('<fg=blue>🤖 AI REVIEW INSIGHTS:</fg>');
             foreach ($intelligence['review_insights'] as $insight) {
                 $this->line("  💡 {$insight}");
@@ -165,11 +166,11 @@ class PrAnalyzeCommand extends Command
     private function displayCodeRabbitAnalysis(array $coderabbit): void
     {
         $this->line('<fg=yellow>🤖 CODERABBIT ANALYSIS:</fg>');
-        
+
         // Summary stats
         $total = $coderabbit['actionable'] + $coderabbit['nitpick'] + $coderabbit['outside_range'];
         $this->line("  📋 Total Issues: {$total} ({$coderabbit['actionable']} actionable, {$coderabbit['nitpick']} nitpicks)");
-        
+
         // Category breakdown with progress bars
         $categories = [
             '🚨 Critical Issues' => ['count' => $coderabbit['actionable'], 'color' => 'red'],
@@ -183,7 +184,7 @@ class PrAnalyzeCommand extends Command
         }
 
         // Top actionable items
-        if (!empty($coderabbit['top_issues'])) {
+        if (! empty($coderabbit['top_issues'])) {
             $this->line('');
             $this->line('  <fg=red>🎯 TOP ACTIONABLE ITEMS:</fg>');
             foreach (array_slice($coderabbit['top_issues'], 0, 3) as $issue) {
@@ -208,7 +209,7 @@ class PrAnalyzeCommand extends Command
         $this->line('');
 
         // Merge conflicts
-        if (!empty($conflicts)) {
+        if (! empty($conflicts)) {
             $this->line('<fg=red>⚠️ MERGE CONFLICTS:</fg>');
             foreach ($conflicts as $conflict) {
                 $this->line("  🔴 {$conflict['file']} ({$conflict['lines']} lines)");
@@ -225,7 +226,7 @@ class PrAnalyzeCommand extends Command
         $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
         // Prioritized actions
-        if (!empty($intelligence['priority_actions'])) {
+        if (! empty($intelligence['priority_actions'])) {
             $this->line('<fg=red>🎯 PRIORITY ACTIONS:</fg>');
             foreach ($intelligence['priority_actions'] as $action) {
                 $this->line("  🔥 {$action}");
@@ -234,7 +235,7 @@ class PrAnalyzeCommand extends Command
         }
 
         // Quick wins
-        if (!empty($intelligence['quick_wins'])) {
+        if (! empty($intelligence['quick_wins'])) {
             $this->line('<fg=green>⚡ QUICK WINS:</fg>');
             foreach ($intelligence['quick_wins'] as $win) {
                 $this->line("  ✨ {$win}");
@@ -243,7 +244,7 @@ class PrAnalyzeCommand extends Command
         }
 
         // Agent commands
-        if (!empty($intelligence['agent_commands'])) {
+        if (! empty($intelligence['agent_commands'])) {
             $this->line('<fg=blue>🤖 AGENT COMMANDS:</fg>');
             foreach ($intelligence['agent_commands'] as $cmd) {
                 $this->line("  <fg=cyan>$</fg> {$cmd}");
@@ -261,7 +262,7 @@ class PrAnalyzeCommand extends Command
         $score = $mergeability['confidence_score'];
         $color = $score >= 8 ? 'green' : ($score >= 6 ? 'yellow' : 'red');
         $emoji = $score >= 8 ? '🎉' : ($score >= 6 ? '⚠️' : '🚫');
-        
+
         $this->line("<fg={$color}>{$emoji} OVERALL SCORE: {$score}/10 ({$mergeability['status']})</fg>");
         $this->line('');
 
@@ -294,18 +295,22 @@ class PrAnalyzeCommand extends Command
 
     private function createProgressBar(int $current, int $total, int $width): string
     {
-        if ($total === 0) return str_repeat('░', $width);
-        
+        if ($total === 0) {
+            return str_repeat('░', $width);
+        }
+
         $filled = (int) round(($current / $total) * $width);
-        return str_repeat('█', $filled) . str_repeat('░', $width - $filled);
+
+        return str_repeat('█', $filled).str_repeat('░', $width - $filled);
     }
 
     private function calculateSizeImpact(array $meta): string
     {
         $total = $meta['additions'] + $meta['deletions'];
+
         return match (true) {
             $total < 100 => 'Small',
-            $total < 500 => 'Medium', 
+            $total < 500 => 'Medium',
             $total < 2000 => 'Large',
             default => 'XL'
         };
@@ -314,6 +319,7 @@ class PrAnalyzeCommand extends Command
     private function getSizeColor(array $meta): string
     {
         $total = $meta['additions'] + $meta['deletions'];
+
         return match (true) {
             $total < 100 => 'green',
             $total < 500 => 'yellow',
@@ -363,10 +369,10 @@ class PrAnalyzeCommand extends Command
     private function generateMergeRecommendation(array $mergeability): string
     {
         $score = $mergeability['confidence_score'];
-        
+
         return match (true) {
             $score >= 9 => '🎉 READY TO MERGE - Excellent quality, all checks pass',
-            $score >= 7 => '✅ MERGE WITH CONFIDENCE - Minor issues, safe to proceed', 
+            $score >= 7 => '✅ MERGE WITH CONFIDENCE - Minor issues, safe to proceed',
             $score >= 5 => '⚠️ MERGE WITH CAUTION - Address key issues first',
             default => '🚫 DO NOT MERGE - Critical issues must be resolved'
         };
@@ -376,7 +382,7 @@ class PrAnalyzeCommand extends Command
     {
         // Implement git remote detection logic
         $remoteUrl = trim(shell_exec('git remote get-url origin 2>/dev/null') ?? '');
-        
+
         if (preg_match('/github\.com[\/:]([^\/]+)\/(.+?)(?:\.git)?$/', $remoteUrl, $matches)) {
             return "{$matches[1]}/{$matches[2]}";
         }
@@ -387,6 +393,7 @@ class PrAnalyzeCommand extends Command
     private function outputJson(array $analysis): int
     {
         $this->line(json_encode($analysis, JSON_PRETTY_PRINT));
+
         return 0;
     }
 
@@ -400,7 +407,7 @@ class PrAnalyzeCommand extends Command
         $this->line("Score: {$mergeability['confidence_score']}/10 ({$mergeability['status']})");
         $this->line("Size: +{$meta['additions']} -{$meta['deletions']} in {$meta['changed_files']} files");
         $this->line("Reviews: {$meta['review_comments']} comments, {$meta['discussion_count']} discussions");
-        
+
         return 0;
     }
 }

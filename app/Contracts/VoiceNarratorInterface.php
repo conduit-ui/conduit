@@ -10,6 +10,6 @@ use App\ValueObjects\SpeechConfiguration;
 interface VoiceNarratorInterface
 {
     public function generate(NarrationContent $content, SpeechConfiguration $config): string;
-    
+
     public function supports(string $contentType): bool;
 }

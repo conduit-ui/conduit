@@ -5,11 +5,7 @@ namespace Conduit\Spotify\Contracts;
 /**
  * Main analytics interface that extends all intelligent analysis capabilities.
  */
-interface IntelligentAnalyticsInterface extends 
-    MusicTasteAnalyzerInterface,
-    TrendAnalyzerInterface,
-    LibraryOverviewInterface,
-    ArtistAnalyzerInterface
+interface IntelligentAnalyticsInterface extends ArtistAnalyzerInterface, LibraryOverviewInterface, MusicTasteAnalyzerInterface, TrendAnalyzerInterface
 {
     /**
      * Run comprehensive intelligent analysis.

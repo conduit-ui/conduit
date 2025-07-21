@@ -10,6 +10,7 @@ use Illuminate\Console\Command;
 class Pause extends Command
 {
     use ShowsSpotifyStatus;
+
     protected $signature = 'spotify:pause {--device= : Device ID to pause}';
 
     protected $description = 'Pause Spotify playback';

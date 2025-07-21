@@ -7,6 +7,7 @@ use Conduit\Spotify\Contracts\AuthInterface;
 trait HandlesAuthentication
 {
     use ShowsSpotifyStatus;
+
     protected function ensureAuthenticatedWithRetry(AuthInterface $auth, int $maxAttempts = 3): bool
     {
         // First try the enhanced ensureAuthenticated method (with automatic retries)
@@ -30,6 +31,7 @@ trait HandlesAuthentication
                 if ($auth->ensureAuthenticated()) {
                     $this->info('🎵 Ready to rock! Continuing...');
                     $this->showSpotifyStatusBar();
+
                     return true;
                 }
 
@@ -45,7 +47,7 @@ trait HandlesAuthentication
         }
 
         $this->error('❌ All auto-login attempts failed. You might need to manually run: conduit spotify:login');
-        
+
         return false;
     }
 
@@ -56,5 +58,4 @@ trait HandlesAuthentication
     {
         return $auth->ensureAuthenticated();
     }
-
 }

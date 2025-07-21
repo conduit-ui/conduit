@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\ValueObjects\NarrationContent;
+
 // use Illuminate\Process\Process;
 
 class ClaudeNarrationService
@@ -12,9 +13,9 @@ class ClaudeNarrationService
     public function generateNarration(NarrationContent $content, string $prompt): string
     {
         $contextData = $this->buildContext($content);
-        
+
         $claudePrompt = $this->buildClaudePrompt($contextData, $prompt);
-        
+
         return $this->callClaude($claudePrompt);
     }
 
@@ -62,7 +63,7 @@ class ClaudeNarrationService
     private function buildClaudePrompt(array $context, string $userPrompt): string
     {
         $contextJson = json_encode($context, JSON_PRETTY_PRINT);
-        
+
         return <<<PROMPT
 You are a voice narrator for a developer tool. Your job is to create engaging spoken narration about GitHub issues and pull requests.
 
@@ -87,19 +88,19 @@ PROMPT;
     {
         // Use Claude Code CLI with shell_exec (Laravel Zero compatible)
         $escapedPrompt = escapeshellarg($prompt);
-        
+
         $command = "claude -p {$escapedPrompt} 2>/dev/null";
         $output = shell_exec($command);
-        
-        if (!$output) {
+
+        if (! $output) {
             throw new \Exception('Claude Code CLI failed or not available');
         }
 
         $output = trim($output);
-        
+
         // Clean up any Claude formatting
         $output = $this->cleanClaudeOutput($output);
-        
+
         return $output;
     }
 
@@ -108,13 +109,13 @@ PROMPT;
         // Remove common Claude response patterns
         $patterns = [
             '/^Here\'s.*?:\s*/i',
-            '/^I\'ll.*?:\s*/i', 
+            '/^I\'ll.*?:\s*/i',
             '/^Let me.*?:\s*/i',
             '/^```.*?```/s',
             '/\*\*(.*?)\*\*/', // Bold markdown
             '/\*(.*?)\*/',     // Italic markdown
         ];
-        
+
         $replacements = [
             '',
             '',
@@ -123,12 +124,12 @@ PROMPT;
             '$1',
             '$1',
         ];
-        
+
         $cleaned = preg_replace($patterns, $replacements, $output);
-        
+
         // Normalize whitespace
         $cleaned = preg_replace('/\s+/', ' ', $cleaned);
-        
+
         return trim($cleaned);
     }
 }

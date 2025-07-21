@@ -2,12 +2,17 @@
 
 namespace App\Commands\GitHub;
 
+use App\Commands\GitHub\Concerns\DetectsRepository;
+use App\Commands\GitHub\Concerns\OpensBrowser;
 use App\Services\GitHub\IssueViewService;
 use App\Services\GithubAuthService;
 use LaravelZero\Framework\Commands\Command;
+use function Laravel\Prompts\confirm;
 
 class IssueViewCommand extends Command
 {
+    use DetectsRepository;
+    use OpensBrowser;
     protected $signature = 'issues:view 
                            {issue : Issue number to view}
                            {--repo= : Repository (owner/repo)}
@@ -18,20 +23,22 @@ class IssueViewCommand extends Command
 
     public function handle(GithubAuthService $githubAuth, IssueViewService $issueViewService): int
     {
-        if (!$githubAuth->isAuthenticated()) {
+        if (! $githubAuth->isAuthenticated()) {
             $this->error('❌ Not authenticated with GitHub');
             $this->info('💡 Run: gh auth login');
+
             return 1;
         }
 
         $issueNumber = (int) $this->argument('issue');
         $repo = $this->option('repo');
-        
-        if (!$repo) {
+
+        if (! $repo) {
             $repo = $this->detectCurrentRepo();
-            if (!$repo) {
+            if (! $repo) {
                 $this->error('📂 No repository specified and none detected from current directory');
                 $this->info('💡 Use --repo=owner/repo or run from within a git repository');
+
                 return 1;
             }
         }
@@ -49,6 +56,7 @@ class IssueViewCommand extends Command
 
         } catch (\Exception $e) {
             $this->error("❌ Failed to fetch issue: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -56,36 +64,43 @@ class IssueViewCommand extends Command
     private function showIssueDetails(IssueViewService $service, string $repo, int $issueNumber): int
     {
         $this->info("🔍 Fetching issue #{$issueNumber} from {$repo}...");
-        
+
         $issue = $service->getIssue($repo, $issueNumber);
-        
-        if (!$issue) {
+
+        if (! $issue) {
             $this->error("❌ Issue #{$issueNumber} not found in {$repo}");
+
             return 1;
         }
 
         $service->displayIssueHeader($this, $issue);
         $service->displayIssueMetadata($this, $issue);
         $service->displayIssueBody($this, $issue);
-        
+
+        // Ask to open in browser
+        if (confirm('🌐 Open issue in browser?', false)) {
+            $this->openInBrowser($issue['html_url']);
+        }
+
         return 0;
     }
 
     private function showWithComments(IssueViewService $service, string $repo, int $issueNumber): int
     {
         $this->info("🔍 Fetching issue #{$issueNumber} with comments from {$repo}...");
-        
+
         $issue = $service->getIssue($repo, $issueNumber);
-        
-        if (!$issue) {
+
+        if (! $issue) {
             $this->error("❌ Issue #{$issueNumber} not found in {$repo}");
+
             return 1;
         }
 
         $service->displayIssueHeader($this, $issue);
         $service->displayIssueMetadata($this, $issue);
         $service->displayIssueBody($this, $issue);
-        
+
         if ($issue['comments'] > 0) {
             $this->newLine();
             $comments = $service->getIssueComments($repo, $issueNumber);
@@ -94,63 +109,34 @@ class IssueViewCommand extends Command
             $this->newLine();
             $this->line('💬 No comments yet');
         }
-        
+
+        // Ask to open in browser
+        if (confirm('🌐 Open issue in browser?', false)) {
+            $this->openInBrowser($issue['html_url']);
+        }
+
         return 0;
     }
 
     private function showJson(IssueViewService $service, string $repo, int $issueNumber): int
     {
         $issue = $service->getIssue($repo, $issueNumber);
-        
-        if (!$issue) {
+
+        if (! $issue) {
             $this->error("❌ Issue #{$issueNumber} not found in {$repo}");
+
             return 1;
         }
 
         $output = ['issue' => $issue];
-        
+
         if ($this->option('with-comments')) {
             $output['comments'] = $service->getIssueComments($repo, $issueNumber);
         }
-        
+
         $this->line(json_encode($output, JSON_PRETTY_PRINT));
+
         return 0;
     }
 
-    private function detectCurrentRepo(): ?string
-    {
-        if (!$this->isGitRepository()) {
-            return null;
-        }
-
-        $remoteUrl = trim(shell_exec('git config --get remote.origin.url 2>/dev/null') ?: '');
-        if (empty($remoteUrl)) {
-            return null;
-        }
-
-        return $this->parseGitHubRepo($remoteUrl);
-    }
-
-    private function isGitRepository(): bool
-    {
-        $gitDir = shell_exec('git rev-parse --git-dir 2>/dev/null');
-        return !empty(trim($gitDir ?? ''));
-    }
-
-    private function parseGitHubRepo(string $remoteUrl): ?string
-    {
-        $patterns = [
-            '/git@github\.com:([^\/]+)\/(.+)\.git$/',
-            '/https:\/\/github\.com\/([^\/]+)\/(.+)\.git$/',
-            '/https:\/\/github\.com\/([^\/]+)\/(.+)$/',
-        ];
-
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $remoteUrl, $matches)) {
-                return "{$matches[1]}/{$matches[2]}";
-            }
-        }
-
-        return null;
-    }
 }

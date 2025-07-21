@@ -13,7 +13,6 @@ use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\error;
 use function Laravel\Prompts\info;
 use function Laravel\Prompts\search;
-use function Laravel\Prompts\select;
 use function Laravel\Prompts\table;
 
 class ReposCommand extends Command
@@ -259,7 +258,6 @@ class ReposCommand extends Command
         $this->line("   • conduit status --repo={$repo->full_name}");
         $this->line("   • open {$repo->html_url}");
     }
-
 
     private function openInBrowser(string $url): void
     {
