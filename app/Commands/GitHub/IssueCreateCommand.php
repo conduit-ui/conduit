@@ -3,13 +3,17 @@
 namespace App\Commands\GitHub;
 
 use App\Commands\GitHub\Concerns\DetectsRepository;
+use App\Commands\GitHub\Concerns\OpensBrowser;
 use App\Services\GitHub\IssueCreateService;
 use App\Services\GithubAuthService;
 use LaravelZero\Framework\Commands\Command;
+use function Laravel\Prompts\text;
+use function Laravel\Prompts\confirm;
 
 class IssueCreateCommand extends Command
 {
     use DetectsRepository;
+    use OpensBrowser;
     protected $signature = 'issues:create 
                            {--repo= : Repository (owner/repo)}
                            {--title= : Issue title}
@@ -75,7 +79,7 @@ class IssueCreateCommand extends Command
         // Preview the issue
         $this->showIssuePreview($service, $issueData);
 
-        if (! $this->confirm('Create this issue?', true)) {
+        if (! confirm('Create this issue?', true)) {
             $this->info('❌ Issue creation cancelled');
 
             return 1;
@@ -93,6 +97,11 @@ class IssueCreateCommand extends Command
 
         // Display success
         $this->displaySuccessMessage($issue);
+
+        // Ask to open in browser
+        if (confirm('🌐 Open issue in browser?', true)) {
+            $this->openInBrowser($issue->html_url);
+        }
 
         return 0;
     }
@@ -151,18 +160,22 @@ class IssueCreateCommand extends Command
 
         // Interactive title input
         if (empty($data['title'])) {
-            $data['title'] = $this->ask('📝 Issue title');
-            if (empty($data['title'])) {
-                return null;
-            }
+            $data['title'] = text(
+                label: '📝 Issue title',
+                placeholder: 'Enter a descriptive title...',
+                required: true
+            );
         }
 
         // Interactive body input with template or editor
         if (empty($data['body'])) {
-            if ($this->confirm('📄 Open editor for issue body?', false)) {
-                $data['body'] = $service->openEditor($data['body'] ?? '');
+            if (confirm('📄 Open markdown editor for issue body?', false)) {
+                $data['body'] = $service->openEditor($data['body'] ?? '', $this);
             } else {
-                $data['body'] = $this->ask('📄 Issue body (markdown)');
+                $data['body'] = text(
+                    label: '📄 Issue body (markdown)',
+                    placeholder: 'Brief description or use markdown editor above...'
+                );
             }
         }
 
@@ -216,5 +229,6 @@ class IssueCreateCommand extends Command
         $this->line("🔗 <href={$issue->html_url}>{$issue->html_url}</>");
         $this->newLine();
     }
+
 
 }

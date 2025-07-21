@@ -3,13 +3,16 @@
 namespace App\Commands\GitHub;
 
 use App\Commands\GitHub\Concerns\DetectsRepository;
+use App\Commands\GitHub\Concerns\OpensBrowser;
 use App\Services\GitHub\IssueViewService;
 use App\Services\GithubAuthService;
 use LaravelZero\Framework\Commands\Command;
+use function Laravel\Prompts\confirm;
 
 class IssueViewCommand extends Command
 {
     use DetectsRepository;
+    use OpensBrowser;
     protected $signature = 'issues:view 
                            {issue : Issue number to view}
                            {--repo= : Repository (owner/repo)}
@@ -74,6 +77,11 @@ class IssueViewCommand extends Command
         $service->displayIssueMetadata($this, $issue);
         $service->displayIssueBody($this, $issue);
 
+        // Ask to open in browser
+        if (confirm('🌐 Open issue in browser?', false)) {
+            $this->openInBrowser($issue['html_url']);
+        }
+
         return 0;
     }
 
@@ -100,6 +108,11 @@ class IssueViewCommand extends Command
         } else {
             $this->newLine();
             $this->line('💬 No comments yet');
+        }
+
+        // Ask to open in browser
+        if (confirm('🌐 Open issue in browser?', false)) {
+            $this->openInBrowser($issue['html_url']);
         }
 
         return 0;

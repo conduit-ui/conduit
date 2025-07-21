@@ -183,9 +183,9 @@ class IssueEditCommand extends Command
 
     private function gatherChangesWithEditor(IssueEditService $service, array $currentIssue): array
     {
-        $this->info('📝 Opening editor for issue editing...');
+        $this->info('📝 Opening interactive editor for issue editing...');
         
-        $editData = $service->openIssueEditor($currentIssue);
+        $editData = $service->openIssueEditor($this, $currentIssue);
         
         $changes = [];
         if ($editData['title'] !== $currentIssue['title']) {
@@ -213,8 +213,8 @@ class IssueEditCommand extends Command
         }
 
         // Body
-        if ($this->confirm('📄 Edit body?', false)) {
-            $changes['body'] = $service->openEditor($currentIssue['body'] ?? '');
+        if ($this->confirm('📄 Edit body with markdown editor?', false)) {
+            $changes['body'] = $service->openEditor($currentIssue['body'] ?? '', $this);
         }
 
         // State
