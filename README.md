@@ -276,3 +276,4 @@ This project is built with Laravel Zero and uses the `jordanpartridge/github-cli
 ## License
 
 MIT
+# Auto-capture test
