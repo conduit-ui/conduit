@@ -20,9 +20,7 @@ class AutoCaptureCommand extends Command
     public function handle(): int
     {
         if (! $this->isDatabaseReady()) {
-            if (! $this->option('quiet')) {
-                $this->initializeDatabase();
-            }
+            $this->initializeDatabase();
         }
 
         $type = $this->argument('type');
@@ -40,10 +38,7 @@ class AutoCaptureCommand extends Command
             $gitContext = $this->getGitContext();
 
             if (! $gitContext['commit_sha']) {
-                if (! $this->option('quiet')) {
-                    $this->line('🔍 No recent commit found for auto-capture');
-                }
-
+                $this->line('🔍 No recent commit found for auto-capture');
                 return 0;
             }
 
@@ -85,17 +80,13 @@ class AutoCaptureCommand extends Command
             $this->addMetadataToEntry($id, 'priority', 'low');
             $this->addMetadataToEntry($id, 'status', 'open');
 
-            if (! $this->option('quiet')) {
-                $this->info("📝 Auto-captured commit knowledge (ID: {$id})");
-                $this->line("   {$knowledge}");
-            }
+            $this->info("📝 Auto-captured commit knowledge (ID: {$id})");
+            $this->line("   {$knowledge}");
 
             return 0;
 
         } catch (\Exception $e) {
-            if (! $this->option('quiet')) {
-                $this->error("❌ Error auto-capturing commit: {$e->getMessage()}");
-            }
+            $this->error("❌ Error auto-capturing commit: {$e->getMessage()}");
 
             return 1;
         }
@@ -134,17 +125,13 @@ class AutoCaptureCommand extends Command
             $this->addMetadataToEntry($id, 'priority', 'medium');
             $this->addMetadataToEntry($id, 'status', 'open');
 
-            if (! $this->option('quiet')) {
-                $this->info("🚨 Auto-captured command failure (ID: {$id})");
-                $this->line("   {$knowledge}");
-            }
+            $this->info("🚨 Auto-captured command failure (ID: {$id})");
+            $this->line("   {$knowledge}");
 
             return 0;
 
         } catch (\Exception $e) {
-            if (! $this->option('quiet')) {
-                $this->error("❌ Error auto-capturing failure: {$e->getMessage()}");
-            }
+            $this->error("❌ Error auto-capturing failure: {$e->getMessage()}");
 
             return 1;
         }
@@ -305,26 +292,38 @@ class AutoCaptureCommand extends Command
                     continue;
                 }
 
-                // Get or create tag
-                $tagId = DB::table('knowledge_tags')->where('name', $tagName)->value('id');
-                if (! $tagId) {
-                    $tagId = DB::table('knowledge_tags')->insertGetId([
-                        'name' => $tagName,
-                        'usage_count' => 1,
+                // Get or create tag with race condition handling
+                $tag = DB::table('knowledge_tags')->where('name', $tagName)->first();
+                
+                if (!$tag) {
+                    try {
+                        $tagId = DB::table('knowledge_tags')->insertGetId([
+                            'name' => $tagName,
+                            'usage_count' => 0,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    } catch (\Exception $e) {
+                        // Another process may have created it, try to get it again
+                        $tag = DB::table('knowledge_tags')->where('name', $tagName)->first();
+                        $tagId = $tag ? $tag->id : null;
+                    }
+                } else {
+                    $tagId = $tag->id;
+                }
+                
+                if ($tagId) {
+                    // Increment usage count
+                    DB::table('knowledge_tags')->where('id', $tagId)->increment('usage_count');
+                    
+                    // Link entry to tag (prevent duplicates)
+                    DB::table('knowledge_entry_tags')->insertOrIgnore([
+                        'entry_id' => $entryId,
+                        'tag_id' => $tagId,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
-                } else {
-                    DB::table('knowledge_tags')->where('id', $tagId)->increment('usage_count');
                 }
-
-                // Link entry to tag
-                DB::table('knowledge_entry_tags')->insert([
-                    'entry_id' => $entryId,
-                    'tag_id' => $tagId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
             }
         } catch (\Exception $e) {
             // Silently fail if tags can't be added
@@ -345,14 +344,19 @@ class AutoCaptureCommand extends Command
                 return;
             }
 
-            DB::table('knowledge_metadata')->insert([
-                'entry_id' => $entryId,
-                'key' => $key,
-                'value' => $value,
-                'type' => 'string',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            // Use updateOrInsert to prevent duplicates
+            DB::table('knowledge_metadata')->updateOrInsert(
+                [
+                    'entry_id' => $entryId,
+                    'key' => $key,
+                ],
+                [
+                    'value' => $value,
+                    'type' => 'string', // Currently all our metadata is string-based
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
         } catch (\Exception $e) {
             // Silently fail if metadata can't be added
         }
