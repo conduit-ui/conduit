@@ -9,10 +9,13 @@ trait OpensBrowser
      */
     protected function openInBrowser(string $url): void
     {
+        // Properly escape the URL to prevent command injection
+        $escapedUrl = escapeshellarg($url);
+        
         $command = match (PHP_OS_FAMILY) {
-            'Darwin' => "open '{$url}'",
-            'Windows' => "start '{$url}'",
-            'Linux' => "xdg-open '{$url}'",
+            'Darwin' => "open {$escapedUrl}",
+            'Windows' => "start {$escapedUrl}",
+            'Linux' => "xdg-open {$escapedUrl}",
             default => null,
         };
 
