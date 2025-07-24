@@ -74,12 +74,16 @@ class AutoCaptureCommand extends Command
                 'commit_sha' => $gitContext['commit_sha'],
                 'author' => $gitContext['author'],
                 'project_type' => $gitContext['project_type'],
-                'tags' => json_encode(['auto-capture', 'git-commit']),
-                'priority' => 'low',
-                'status' => 'open',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            // Handle tags for v2 schema
+            $this->addTagsToEntry($id, ['auto-capture', 'git-commit']);
+            
+            // Handle metadata for v2 schema
+            $this->addMetadataToEntry($id, 'priority', 'low');
+            $this->addMetadataToEntry($id, 'status', 'open');
 
             if (! $this->option('quiet')) {
                 $this->info("📝 Auto-captured commit knowledge (ID: {$id})");
@@ -119,12 +123,16 @@ class AutoCaptureCommand extends Command
                 'commit_sha' => $gitContext['commit_sha'],
                 'author' => $gitContext['author'],
                 'project_type' => $gitContext['project_type'],
-                'tags' => json_encode(['auto-capture', 'command-failure', 'debugging']),
-                'priority' => 'medium',
-                'status' => 'open',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            // Handle tags for v2 schema
+            $this->addTagsToEntry($id, ['auto-capture', 'command-failure', 'debugging']);
+            
+            // Handle metadata for v2 schema
+            $this->addMetadataToEntry($id, 'priority', 'medium');
+            $this->addMetadataToEntry($id, 'status', 'open');
 
             if (! $this->option('quiet')) {
                 $this->info("🚨 Auto-captured command failure (ID: {$id})");
@@ -276,6 +284,77 @@ class AutoCaptureCommand extends Command
             $schemaManager->initializeGlobalDatabase();
         } catch (\Exception $e) {
             // Silently fail if we can't initialize
+        }
+    }
+
+    private function addTagsToEntry(int $entryId, array $tagNames): void
+    {
+        try {
+            // Check if we're using v2 schema
+            if (! Schema::hasTable('knowledge_tags')) {
+                // Fallback for v1 schema
+                DB::table('knowledge_entries')
+                    ->where('id', $entryId)
+                    ->update(['tags' => json_encode($tagNames)]);
+                return;
+            }
+
+            foreach ($tagNames as $tagName) {
+                $tagName = trim($tagName);
+                if (empty($tagName)) {
+                    continue;
+                }
+
+                // Get or create tag
+                $tagId = DB::table('knowledge_tags')->where('name', $tagName)->value('id');
+                if (! $tagId) {
+                    $tagId = DB::table('knowledge_tags')->insertGetId([
+                        'name' => $tagName,
+                        'usage_count' => 1,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                } else {
+                    DB::table('knowledge_tags')->where('id', $tagId)->increment('usage_count');
+                }
+
+                // Link entry to tag
+                DB::table('knowledge_entry_tags')->insert([
+                    'entry_id' => $entryId,
+                    'tag_id' => $tagId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Silently fail if tags can't be added
+        }
+    }
+
+    private function addMetadataToEntry(int $entryId, string $key, string $value): void
+    {
+        try {
+            // Check if we're using v2 schema
+            if (! Schema::hasTable('knowledge_metadata')) {
+                // Fallback for v1 schema - update column directly
+                if (in_array($key, ['priority', 'status'])) {
+                    DB::table('knowledge_entries')
+                        ->where('id', $entryId)
+                        ->update([$key => $value]);
+                }
+                return;
+            }
+
+            DB::table('knowledge_metadata')->insert([
+                'entry_id' => $entryId,
+                'key' => $key,
+                'value' => $value,
+                'type' => 'string',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } catch (\Exception $e) {
+            // Silently fail if metadata can't be added
         }
     }
 }
