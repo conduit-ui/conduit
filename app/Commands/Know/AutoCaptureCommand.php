@@ -13,8 +13,7 @@ class AutoCaptureCommand extends Command
     protected $signature = 'know:auto-capture 
                             {type=commit : Type of auto-capture (commit/failure)}
                             {--command= : Failed command to capture}
-                            {--exit-code= : Exit code of failed command}
-                            {--quiet : Suppress output}';
+                            {--exit-code= : Exit code of failed command}';
 
     protected $description = 'Auto-capture knowledge from git commits and command failures (internal use)';
 
