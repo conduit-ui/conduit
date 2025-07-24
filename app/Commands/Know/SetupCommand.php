@@ -59,10 +59,17 @@ class SetupCommand extends Command
                 return $this->createPostCommitHook($hooksDir);
             });
 
+            // Create post-push hook
+            $this->runTask('Installing post-push hook', function () use ($hooksDir) {
+                return $this->createPostPushHook($hooksDir);
+            });
+
             // Make hooks executable
             $this->runTask('Making hooks executable', function () use ($hooksDir) {
                 chmod($hooksDir.'/post-commit', 0755);
-
+                if (file_exists($hooksDir.'/post-push')) {
+                    chmod($hooksDir.'/post-push', 0755);
+                }
                 return true;
             });
 
@@ -193,5 +200,31 @@ BASH;
 
             return false;
         }
+    }
+
+    private function createPostPushHook(string $hooksDir): bool
+    {
+        $hookContent = <<<'BASH'
+#!/bin/bash
+# Conduit Knowledge Auto-Enhance Hook
+# Automatically adds GitHub URLs to knowledge entries after push
+
+# Only run if conduit is available
+if command -v conduit &> /dev/null; then
+    # Get the branch that was pushed
+    BRANCH=$(git branch --show-current)
+    
+    # Run auto-enhance in the background
+    conduit know:auto-enhance --branch="$BRANCH" --quiet &
+elif [ -f "$(pwd)/conduit" ] && [ -f "$(pwd)/composer.json" ] && grep -q "conduit-ui/conduit" "$(pwd)/composer.json" 2>/dev/null; then
+    # Use local development version
+    BRANCH=$(git branch --show-current)
+    php "$(pwd)/conduit" know:auto-enhance --branch="$BRANCH" --quiet &
+fi
+BASH;
+
+        $hookPath = $hooksDir.'/post-push';
+
+        return file_put_contents($hookPath, $hookContent) !== false;
     }
 }
