@@ -4,30 +4,28 @@ use App\Services\ProcessResult;
 
 it('creates process result with all properties', function () {
     $result = new ProcessResult(
-        exitCode: 0,
+        successful: true,
         output: 'Success output',
-        errorOutput: '',
-        command: 'test command'
+        errorOutput: ''
     );
     
-    expect($result->getExitCode())->toBe(0);
+    expect($result->isSuccessful())->toBeTrue();
     expect($result->getOutput())->toBe('Success output');
     expect($result->getErrorOutput())->toBe('');
-    expect($result->getCommand())->toBe('test command');
 });
 
 it('identifies successful result', function () {
-    $success = new ProcessResult(0, 'output', '', 'command');
+    $success = new ProcessResult(true, 'output', '');
     expect($success->isSuccessful())->toBeTrue();
     
-    $failure = new ProcessResult(1, 'output', 'error', 'command');
+    $failure = new ProcessResult(false, 'output', 'error');
     expect($failure->isSuccessful())->toBeFalse();
 });
 
-it('identifies failed result', function () {
-    $success = new ProcessResult(0, 'output', '', 'command');
-    expect($success->failed())->toBeFalse();
+it('identifies error state', function () {
+    $success = new ProcessResult(true, 'output', '');
+    expect($success->hasError())->toBeFalse();
     
-    $failure = new ProcessResult(1, 'output', 'error', 'command');
-    expect($failure->failed())->toBeTrue();
+    $failure = new ProcessResult(false, 'output', 'error');
+    expect($failure->hasError())->toBeTrue();
 });
