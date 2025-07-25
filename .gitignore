@@ -8,3 +8,9 @@
 /database/database.sqlite
 builds/
 *.phar
+
+# Testing & Coverage
+/coverage
+build/
+.phpunit.cache/
+phpunit.xml

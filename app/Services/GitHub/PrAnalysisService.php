@@ -45,10 +45,10 @@ class PrAnalysisService
                 'change_size' => $this->getChangeSizeCategory($pr),
             ],
             'discussion_analysis' => [
-                'total_comments' => $pr->getTotalComments(),
+                'total_comments' => ($pr->comments ?? 0) + ($pr->review_comments ?? 0),
                 'regular_comments' => $pr->comments,
                 'review_comments' => $pr->review_comments,
-                'has_discussion' => $pr->hasComments(),
+                'has_discussion' => ($pr->comments ?? 0) + ($pr->review_comments ?? 0) > 0,
                 'commits' => $pr->commits,
             ],
             'recommendations' => $this->getRecommendations($pr),
@@ -98,7 +98,7 @@ class PrAnalysisService
     /**
      * Get intelligent merge recommendations
      */
-    private function getRecommendations(PullRequestDetailDTO $pr): array
+    private function getRecommendations(PullRequestDTO $pr): array
     {
         $recommendations = [];
         
