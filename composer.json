@@ -48,6 +48,17 @@
             "Tests\\": "tests/"
         }
     },
+    "scripts": {
+        "test": "./vendor/bin/pest",
+        "test:coverage": [
+            "@putenv XDEBUG_MODE=coverage",
+            "./vendor/bin/pest --coverage"
+        ],
+        "test:coverage:html": [
+            "@putenv XDEBUG_MODE=coverage",
+            "./vendor/bin/pest --coverage-html=build/coverage"
+        ]
+    },
     "config": {
         "preferred-install": "dist",
         "sort-packages": true,
