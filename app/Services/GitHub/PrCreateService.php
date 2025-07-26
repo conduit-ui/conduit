@@ -77,8 +77,9 @@ class PrCreateService implements PrCreateInterface
             logger()->error('Failed to create PR', [
                 'repo' => $repo,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return null;
         }
     }
@@ -105,36 +106,36 @@ class PrCreateService implements PrCreateInterface
     {
         try {
             // Validate repo format
-            if (!str_contains($repo, '/')) {
+            if (! str_contains($repo, '/')) {
                 return [];
             }
-            
+
             [$owner, $repoName] = explode('/', $repo);
-            
+
             // Skip API calls for test repositories
             if ($owner === 'nonexistent' || $repoName === 'repo') {
                 return [];
             }
-            
+
             // Get recent PRs to extract frequent reviewers/collaborators
             $recentPrs = Github::pullRequests()->summaries($owner, $repoName, [
                 'state' => 'all',
                 'sort' => 'updated',
                 'direction' => 'desc',
-                'per_page' => 50
+                'per_page' => 50,
             ]);
-            
+
             // Extract unique users from PR authors and reviewers
             $reviewers = $this->extractReviewersFromPrHistory($recentPrs);
-            
+
             // If we have few reviewers, try to get repository contributors
             if (count($reviewers) < 3) {
                 $contributors = $this->fetchRepositoryContributors($owner, $repoName);
                 $reviewers = $this->mergeReviewersAndContributors($reviewers, $contributors);
             }
-            
+
             return $this->formatReviewersForDisplay($reviewers);
-            
+
         } catch (\Exception $e) {
             // Graceful degradation - return empty array
             return [];
@@ -148,10 +149,10 @@ class PrCreateService implements PrCreateInterface
     {
         $reviewers = [];
         $seenLogins = [];
-        
+
         foreach ($prs as $pr) {
             // Add PR author as potential reviewer
-            if (isset($pr->user->login) && !in_array($pr->user->login, $seenLogins)) {
+            if (isset($pr->user->login) && ! in_array($pr->user->login, $seenLogins)) {
                 $reviewers[] = [
                     'login' => $pr->user->login,
                     'name' => $pr->user->name ?? null,
@@ -162,7 +163,7 @@ class PrCreateService implements PrCreateInterface
                 $seenLogins[] = $pr->user->login;
             }
         }
-        
+
         return $reviewers;
     }
 
@@ -174,13 +175,13 @@ class PrCreateService implements PrCreateInterface
         try {
             // Use github-client's connector for authenticated requests
             $response = Github::getConnector()->get("/repos/{$owner}/{$repo}/contributors", [
-                'per_page' => 20
+                'per_page' => 20,
             ]);
-            
+
             if ($response->ok()) {
                 return $response->json() ?? [];
             }
-            
+
             return [];
         } catch (\Exception $e) {
             return [];
@@ -193,9 +194,9 @@ class PrCreateService implements PrCreateInterface
     private function mergeReviewersAndContributors(array $reviewers, array $contributors): array
     {
         $existingLogins = array_column($reviewers, 'login');
-        
+
         foreach ($contributors as $contributor) {
-            if (isset($contributor['login']) && !in_array($contributor['login'], $existingLogins)) {
+            if (isset($contributor['login']) && ! in_array($contributor['login'], $existingLogins)) {
                 $reviewers[] = [
                     'login' => $contributor['login'],
                     'name' => $contributor['name'] ?? null,
@@ -205,7 +206,7 @@ class PrCreateService implements PrCreateInterface
                 ];
             }
         }
-        
+
         return $reviewers;
     }
 
@@ -222,7 +223,7 @@ class PrCreateService implements PrCreateInterface
                 'type' => $reviewer['type'] ?? 'contributor',
                 'html_url' => $reviewer['html_url'] ?? '',
             ];
-        }, array_filter($reviewers, fn($r) => !empty($r['login'])));
+        }, array_filter($reviewers, fn ($r) => ! empty($r['login'])));
     }
 
     /**

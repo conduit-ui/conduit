@@ -11,7 +11,7 @@ trait OpensBrowser
     {
         // Properly escape the URL to prevent command injection
         $escapedUrl = escapeshellarg($url);
-        
+
         $command = match (PHP_OS_FAMILY) {
             'Darwin' => "open {$escapedUrl}",
             'Windows' => "start {$escapedUrl}",

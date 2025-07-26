@@ -6,9 +6,9 @@ use App\Services\ProcessResult;
 it('creates success result', function () {
     $componentInfo = ['name' => 'test-component', 'version' => '1.0'];
     $commands = ['test:command', 'another:command'];
-    
+
     $result = ComponentInstallationResult::success($componentInfo, $commands);
-    
+
     expect($result->isSuccessful())->toBeTrue();
     expect($result->getMessage())->toBe('Component installed successfully');
     expect($result->getComponentInfo())->toBe($componentInfo);
@@ -19,7 +19,7 @@ it('creates success result', function () {
 it('creates failure result', function () {
     $processResult = new ProcessResult(1, 'output', 'error output', 'failed command');
     $result = ComponentInstallationResult::failed('Installation failed', $processResult);
-    
+
     expect($result->isSuccessful())->toBeFalse();
     expect($result->getMessage())->toBe('Installation failed');
     expect($result->getComponentInfo())->toBe([]);
@@ -29,7 +29,7 @@ it('creates failure result', function () {
 
 it('creates failure result without process result', function () {
     $result = ComponentInstallationResult::failed('Installation failed');
-    
+
     expect($result->isSuccessful())->toBeFalse();
     expect($result->getMessage())->toBe('Installation failed');
     expect($result->getProcessResult())->toBeNull();

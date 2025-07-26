@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Commands\GitHub;
 
-use App\Commands\GitHub\PrStatusCommand;
 use App\Services\GitHub\PrAnalysisService;
 use App\Services\GithubAuthService;
 use Mockery;
@@ -10,7 +9,7 @@ use Mockery;
 beforeEach(function () {
     $this->mockAuthService = Mockery::mock(GithubAuthService::class);
     $this->mockAnalysisService = Mockery::mock(PrAnalysisService::class);
-    
+
     app()->instance(GithubAuthService::class, $this->mockAuthService);
     app()->instance(PrAnalysisService::class, $this->mockAnalysisService);
 });
@@ -20,7 +19,7 @@ it('requires authentication to check PR status', function () {
         ->shouldReceive('getToken')
         ->once()
         ->andReturn(null);
-    
+
     $this->artisan('prs:status 123')
         ->expectsOutput('❌ GitHub authentication required. Run: conduit github:auth')
         ->assertExitCode(1);
@@ -31,7 +30,7 @@ it('shows PR ready to merge status', function () {
         ->shouldReceive('getToken')
         ->once()
         ->andReturn('test-token');
-    
+
     $this->mockAnalysisService
         ->shouldReceive('analyzeMergeReadiness')
         ->once()
@@ -52,9 +51,9 @@ it('shows PR ready to merge status', function () {
                 'mergeable' => true,
                 'mergeable_state' => 'clean',
                 'rebaseable' => true,
-            ]
+            ],
         ]);
-    
+
     $this->artisan('prs:status 123 --repo=owner/repo')
         ->expectsOutput('⏳ Checking merge status for PR #123...')
         ->expectsOutputToContain('🔍 PR #123: Test PR')
@@ -68,7 +67,7 @@ it('shows PR with conflicts status', function () {
         ->shouldReceive('getToken')
         ->once()
         ->andReturn('test-token');
-    
+
     $this->mockAnalysisService
         ->shouldReceive('analyzeMergeReadiness')
         ->once()
@@ -89,9 +88,9 @@ it('shows PR with conflicts status', function () {
                 'mergeable' => false,
                 'mergeable_state' => 'dirty',
                 'rebaseable' => false,
-            ]
+            ],
         ]);
-    
+
     $this->artisan('prs:status 456 --repo=owner/repo')
         ->expectsOutputToContain('❌ Has Merge Conflicts - Requires resolution')
         ->expectsOutputToContain('🔧 Action needed: Resolve merge conflicts before merging')
@@ -103,7 +102,7 @@ it('shows draft PR status', function () {
         ->shouldReceive('getToken')
         ->once()
         ->andReturn('test-token');
-    
+
     $this->mockAnalysisService
         ->shouldReceive('analyzeMergeReadiness')
         ->once()
@@ -123,9 +122,9 @@ it('shows draft PR status', function () {
                 'mergeable' => true,
                 'mergeable_state' => 'draft',
                 'rebaseable' => true,
-            ]
+            ],
         ]);
-    
+
     $this->artisan('prs:status 789 --repo=owner/repo')
         ->expectsOutputToContain('📝 Note: This is a draft PR')
         ->assertExitCode(0);
@@ -136,7 +135,7 @@ it('outputs JSON format when requested', function () {
         ->shouldReceive('getToken')
         ->once()
         ->andReturn('test-token');
-    
+
     $analysisData = [
         'pr_info' => [
             'number' => 999,
@@ -146,14 +145,14 @@ it('outputs JSON format when requested', function () {
         'merge_analysis' => [
             'ready_to_merge' => true,
             'has_conflicts' => false,
-        ]
+        ],
     ];
-    
+
     $this->mockAnalysisService
         ->shouldReceive('analyzeMergeReadiness')
         ->once()
         ->andReturn($analysisData);
-    
+
     $this->artisan('prs:status 999 --repo=owner/repo --format=json')
         ->expectsOutputToContain('999')
         ->assertExitCode(0);
@@ -164,12 +163,12 @@ it('handles PR not found error', function () {
         ->shouldReceive('getToken')
         ->once()
         ->andReturn('test-token');
-    
+
     $this->mockAnalysisService
         ->shouldReceive('analyzeMergeReadiness')
         ->once()
         ->andReturn(['error' => 'Pull request not found']);
-    
+
     $this->artisan('prs:status 404 --repo=owner/repo')
         ->expectsOutput('❌ Pull request not found')
         ->assertExitCode(1);

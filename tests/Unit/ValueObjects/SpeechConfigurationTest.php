@@ -1,8 +1,8 @@
 <?php
 
-use App\ValueObjects\SpeechConfiguration;
-use App\Enums\VoiceStyle;
 use App\Enums\SpeechSpeed;
+use App\Enums\VoiceStyle;
+use App\ValueObjects\SpeechConfiguration;
 
 it('creates from options array', function () {
     $config = SpeechConfiguration::fromOptions([
@@ -10,9 +10,9 @@ it('creates from options array', function () {
         'speed' => 'fast',
         'include-stats' => true,
         'include-comments' => true,
-        'claude' => 'custom prompt'
+        'claude' => 'custom prompt',
     ]);
-    
+
     expect($config->voice)->toBe(VoiceStyle::Dramatic);
     expect($config->speed)->toBe(SpeechSpeed::Fast);
     expect($config->includeStats)->toBeTrue();
@@ -22,7 +22,7 @@ it('creates from options array', function () {
 
 it('uses default values when options are empty', function () {
     $config = SpeechConfiguration::fromOptions([]);
-    
+
     expect($config->voice)->toBe(VoiceStyle::Default);
     expect($config->speed)->toBe(SpeechSpeed::Normal);
     expect($config->includeStats)->toBeFalse();
@@ -33,7 +33,7 @@ it('uses default values when options are empty', function () {
 it('identifies claude powered based on prompt presence', function () {
     $withClaude = SpeechConfiguration::fromOptions(['claude' => 'some prompt']);
     expect($withClaude->isClaudePowered())->toBeTrue();
-    
+
     $withoutClaude = SpeechConfiguration::fromOptions([]);
     expect($withoutClaude->isClaudePowered())->toBeFalse();
 });

@@ -3,6 +3,7 @@
 namespace App\Services\GitHub\Concerns;
 
 use Illuminate\Console\Command;
+
 use function Laravel\Prompts\multiselect;
 
 trait ManagesReviewers
@@ -17,7 +18,6 @@ trait ManagesReviewers
         }
 
         $command->line('<comment>👥 Select reviewers for this PR:</comment>');
-
 
         $reviewerOptions = [];
         foreach ($availableReviewers as $reviewer) {

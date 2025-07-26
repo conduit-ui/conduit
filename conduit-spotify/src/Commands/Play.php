@@ -10,7 +10,7 @@ use Illuminate\Console\Command;
 
 class Play extends Command
 {
-    use ShowsSpotifyStatus, SendsNotifications;
+    use SendsNotifications, ShowsSpotifyStatus;
 
     protected $signature = 'spotify:play 
                            {uri? : Spotify URI, preset name, or search query}
@@ -257,7 +257,7 @@ class Play extends Command
     {
         try {
             $currentTrack = $api->getCurrentTrack();
-            
+
             if ($currentTrack && isset($currentTrack['item'])) {
                 $this->notifyNowPlaying($currentTrack['item']);
             }

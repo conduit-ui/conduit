@@ -119,7 +119,7 @@ class PrCreateServiceTest extends TestCase
             // Missing required title
         ];
 
-        expect(fn() => $this->service->createPullRequest('owner/repo', $invalidData))
+        expect(fn () => $this->service->createPullRequest('owner/repo', $invalidData))
             ->toThrow(\InvalidArgumentException::class, 'Validation failed: Title is required');
     }
 
@@ -140,7 +140,7 @@ class PrCreateServiceTest extends TestCase
             // Missing required title
         ];
 
-        expect(fn() => $this->service->createPullRequest('owner/repo', $invalidData))
+        expect(fn () => $this->service->createPullRequest('owner/repo', $invalidData))
             ->toThrow(\InvalidArgumentException::class, 'Validation failed: Title is required');
     }
 

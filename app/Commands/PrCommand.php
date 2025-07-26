@@ -57,17 +57,20 @@ class PrCommand extends Command
             if ($pr) {
                 $this->info('✅ Pull request created successfully!');
                 $this->info("🔗 {$pr->html_url}");
+
                 return 0;
             } else {
                 $this->error('❌ Failed to create PR: Unknown error');
+
                 return 1;
             }
 
         } catch (\Exception $e) {
             $this->error("❌ Failed to create PR: {$e->getMessage()}");
             if ($this->output->isVerbose()) {
-                $this->error("Debug: " . $e->getTraceAsString());
+                $this->error('Debug: '.$e->getTraceAsString());
             }
+
             return 1;
         }
     }
