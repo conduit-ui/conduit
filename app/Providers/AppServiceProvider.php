@@ -12,6 +12,7 @@ use App\Commands\GitHub\PrAnalysisCommand;
 use App\Commands\GitHub\PrCommentsCommand;
 use App\Commands\GitHub\PrCreateCommand;
 use App\Commands\GitHub\PrStatusCommand;
+use App\Commands\GitHub\PrThreadsCommand;
 use App\Commands\IssuesCommand;
 use App\Commands\Know\Add;
 use App\Commands\Know\AutoCaptureCommand;
@@ -33,6 +34,7 @@ use App\Contracts\PackageInstallerInterface;
 use App\Services\ComponentInstallationService;
 use App\Services\ComponentManager;
 use App\Services\ComponentStorage;
+use App\Services\GitHub\CommentThreadService;
 use App\Services\GitHub\PrAnalysisService;
 use App\Services\GitHub\PrCreateService;
 use App\Services\GithubAuthService;
@@ -79,6 +81,7 @@ class AppServiceProvider extends ServiceProvider
                 PrAnalysisCommand::class,
                 PrStatusCommand::class,
                 PrCommentsCommand::class,
+                PrThreadsCommand::class,
                 \App\Commands\PrAnalyzeCommand::class,
                 \App\Commands\GitHubClientGapAnalysisCommand::class,
                 \App\Commands\CodeRabbitStatusCommand::class,
@@ -130,6 +133,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ComponentInstallationService::class);
         $this->app->singleton(KnowledgeService::class);
         $this->app->singleton(PrAnalysisService::class);
+        $this->app->singleton(CommentThreadService::class);
 
         // Register voice narration system
         $this->registerVoiceNarrationSystem();
