@@ -119,8 +119,8 @@ class PrCreateServiceTest extends TestCase
             // Missing required title
         ];
 
-        $result = $this->service->createPullRequest('owner/repo', $invalidData);
-        expect($result)->toBeNull();
+        expect(fn() => $this->service->createPullRequest('owner/repo', $invalidData))
+            ->toThrow(\InvalidArgumentException::class, 'Validation failed: Title is required');
     }
 
     public function test_should_add_attribution_setting()
@@ -140,15 +140,15 @@ class PrCreateServiceTest extends TestCase
             // Missing required title
         ];
 
-        $result = $this->service->createPullRequest('owner/repo', $invalidData);
-        expect($result)->toBeNull();
+        expect(fn() => $this->service->createPullRequest('owner/repo', $invalidData))
+            ->toThrow(\InvalidArgumentException::class, 'Validation failed: Title is required');
     }
 
     public function test_get_available_reviewers_returns_array()
     {
-        // Test that method returns array (implementation handles errors gracefully)
-        // Note: This test may make API calls but should handle failures gracefully
-        $reviewers = $this->service->getAvailableReviewers('test/repo');
+        // Test that method returns array even when API fails
+        // The implementation is designed to handle errors gracefully and return empty array
+        $reviewers = $this->service->getAvailableReviewers('nonexistent/repo');
         expect($reviewers)->toBeArray();
     }
 }

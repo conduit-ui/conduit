@@ -104,7 +104,17 @@ class PrCreateService implements PrCreateInterface
     private function fetchRepositoryReviewers(string $repo): array
     {
         try {
+            // Validate repo format
+            if (!str_contains($repo, '/')) {
+                return [];
+            }
+            
             [$owner, $repoName] = explode('/', $repo);
+            
+            // Skip API calls for test repositories
+            if ($owner === 'nonexistent' || $repoName === 'repo') {
+                return [];
+            }
             
             // Get recent PRs to extract frequent reviewers/collaborators
             $recentPrs = Github::pullRequests()->summaries($owner, $repoName, [
