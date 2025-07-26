@@ -2,6 +2,7 @@
 
 namespace App\Commands\Know;
 
+use App\Events\KnowledgeCaptured;
 use App\Services\DatabaseSchemaManager;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -209,7 +210,7 @@ class AutoCaptureCommand extends Command
             }
 
             $context['branch'] = $this->runGitCommand(['git', 'branch', '--show-current']);
-            $context['commit_sha'] = substr($this->runGitCommand(['git', 'rev-parse', 'HEAD']) ?: '', 0, 7);
+            $context['commit_sha'] = $this->runGitCommand(['git', 'rev-parse', 'HEAD']);
             $context['author'] = $this->runGitCommand(['git', 'config', 'user.name']);
             $context['project_type'] = $this->detectProjectType();
 
