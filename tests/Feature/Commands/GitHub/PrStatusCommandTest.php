@@ -1,8 +1,11 @@
 <?php
 
+namespace Tests\Feature\Commands\GitHub;
+
 use App\Commands\GitHub\PrStatusCommand;
 use App\Services\GitHub\PrAnalysisService;
 use App\Services\GithubAuthService;
+use Mockery;
 
 beforeEach(function () {
     $this->mockAuthService = Mockery::mock(GithubAuthService::class);

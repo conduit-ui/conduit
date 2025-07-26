@@ -98,7 +98,7 @@ class PrAnalysisService
     /**
      * Get intelligent merge recommendations
      */
-    private function getRecommendations(PullRequestDTO $pr): array
+    private function getRecommendations(PullRequestDetailDTO $pr): array
     {
         $recommendations = [];
 
