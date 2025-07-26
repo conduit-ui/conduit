@@ -2,6 +2,7 @@
 
 namespace Conduit\Spotify\Commands;
 
+use Conduit\Spotify\Concerns\SendsNotifications;
 use Conduit\Spotify\Concerns\ShowsSpotifyStatus;
 use Conduit\Spotify\Contracts\ApiInterface;
 use Conduit\Spotify\Contracts\AuthInterface;
@@ -9,7 +10,7 @@ use Illuminate\Console\Command;
 
 class Play extends Command
 {
-    use ShowsSpotifyStatus;
+    use ShowsSpotifyStatus, SendsNotifications;
 
     protected $signature = 'spotify:play 
                            {uri? : Spotify URI, preset name, or search query}
@@ -173,11 +174,15 @@ class Play extends Command
                     $this->info("▶️  Playing: {$uri}");
                 } else {
                     $this->info('▶️  Resuming playback');
+                    $this->notifyPlaybackResumed();
                 }
 
                 // Show status bar after playback starts
                 sleep(1);
                 $this->showSpotifyStatusBar();
+
+                // Send notification with current track info
+                $this->sendNowPlayingNotification($api);
 
                 return 0;
             } else {
@@ -242,6 +247,22 @@ class Play extends Command
             $this->error("❌ Error: {$message}");
 
             return 1;
+        }
+    }
+
+    /**
+     * Send notification with current playing track info
+     */
+    private function sendNowPlayingNotification(ApiInterface $api): void
+    {
+        try {
+            $currentTrack = $api->getCurrentTrack();
+            
+            if ($currentTrack && isset($currentTrack['item'])) {
+                $this->notifyNowPlaying($currentTrack['item']);
+            }
+        } catch (\Exception $e) {
+            // Silently fail - notifications are not critical
         }
     }
 }
