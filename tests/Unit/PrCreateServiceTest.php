@@ -4,7 +4,6 @@ namespace Tests\Unit;
 
 use App\Contracts\GitHub\PrCreateInterface;
 use App\Services\GitHub\PrCreateService;
-use JordanPartridge\GithubClient\Facades\Github;
 use Tests\TestCase;
 
 class PrCreateServiceTest extends TestCase
@@ -63,7 +62,7 @@ class PrCreateServiceTest extends TestCase
         ];
 
         $errors = $this->service->validatePrData($invalidData);
-        
+
         expect($errors)
             ->toContain('Title is required')
             ->toContain('Head branch is required')
@@ -128,7 +127,7 @@ class PrCreateServiceTest extends TestCase
     {
         config(['conduit.github.add_attribution' => true]);
         expect($this->service->shouldAddAttribution())->toBeTrue();
-        
+
         config(['conduit.github.add_attribution' => false]);
         expect($this->service->shouldAddAttribution())->toBeFalse();
     }
@@ -145,9 +144,11 @@ class PrCreateServiceTest extends TestCase
         expect($result)->toBeNull();
     }
 
-    public function test_get_available_reviewers_returns_empty_array()
+    public function test_get_available_reviewers_returns_array()
     {
-        $reviewers = $this->service->getAvailableReviewers('owner/repo');
-        expect($reviewers)->toBeArray()->toBeEmpty();
+        // Test that method returns array (implementation handles errors gracefully)
+        // Note: This test may make API calls but should handle failures gracefully
+        $reviewers = $this->service->getAvailableReviewers('test/repo');
+        expect($reviewers)->toBeArray();
     }
 }

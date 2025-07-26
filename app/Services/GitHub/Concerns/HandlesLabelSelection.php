@@ -50,13 +50,13 @@ trait HandlesLabelSelection
     public function interactiveLabelManagement(Command $command, string $repo, array $currentLabels): array
     {
         $changes = [];
-        $currentLabelNames = array_map(fn($label) => $label['name'], $currentLabels);
-        
+        $currentLabelNames = array_map(fn ($label) => $label['name'], $currentLabels);
+
         // Add labels
         $availableLabels = $this->getAvailableLabels($repo);
-        $availableToAdd = array_filter($availableLabels, fn($label) => !in_array($label['name'], $currentLabelNames));
-        
-        if (!empty($availableToAdd)) {
+        $availableToAdd = array_filter($availableLabels, fn ($label) => ! in_array($label['name'], $currentLabelNames));
+
+        if (! empty($availableToAdd)) {
             $command->line('🏷️  <comment>Available labels to add:</comment>');
             $choices = [];
             foreach ($availableToAdd as $index => $label) {
@@ -64,7 +64,7 @@ trait HandlesLabelSelection
                 $choices[$index] = $label['name'];
                 $command->line("  [{$index}] <fg={$color}>{$label['name']}</fg={$color}>");
             }
-            
+
             $selected = $command->ask('🏷️  Add labels (comma-separated numbers, or Enter to skip)');
             if ($selected) {
                 $selectedIndices = array_map('trim', explode(',', $selected));
@@ -74,14 +74,14 @@ trait HandlesLabelSelection
                         $addLabels[] = $choices[$index];
                     }
                 }
-                if (!empty($addLabels)) {
+                if (! empty($addLabels)) {
                     $changes['add_labels'] = $addLabels;
                 }
             }
         }
-        
+
         // Remove labels
-        if (!empty($currentLabels)) {
+        if (! empty($currentLabels)) {
             $command->newLine();
             $command->line('🏷️  <comment>Current labels to remove:</comment>');
             $choices = [];
@@ -90,7 +90,7 @@ trait HandlesLabelSelection
                 $choices[$index] = $label['name'];
                 $command->line("  [{$index}] <fg={$color}>{$label['name']}</fg={$color}>");
             }
-            
+
             $selected = $command->ask('🏷️  Remove labels (comma-separated numbers, or Enter to skip)');
             if ($selected) {
                 $selectedIndices = array_map('trim', explode(',', $selected));
@@ -100,12 +100,12 @@ trait HandlesLabelSelection
                         $removeLabels[] = $choices[$index];
                     }
                 }
-                if (!empty($removeLabels)) {
+                if (! empty($removeLabels)) {
                     $changes['remove_labels'] = $removeLabels;
                 }
             }
         }
-        
+
         return $changes;
     }
 
@@ -115,14 +115,14 @@ trait HandlesLabelSelection
     protected function formatLabels(array $labels): array
     {
         $formatted = [];
-        
+
         foreach ($labels as $label) {
             $name = $label['name'];
             $color = $label['color'] ?? '000000';
-            
+
             // Map GitHub hex colors to terminal colors
             $terminalColor = $this->mapGitHubColorToTerminal($color);
-            
+
             // Also add semantic color overrides for common label types
             if (in_array(strtolower($name), ['bug', 'critical', 'p0'])) {
                 $terminalColor = 'red';
@@ -133,10 +133,10 @@ trait HandlesLabelSelection
             } elseif (in_array(strtolower($name), ['question', 'help'])) {
                 $terminalColor = 'yellow';
             }
-            
+
             $formatted[] = "<fg={$terminalColor}>{$name}</fg={$terminalColor}>";
         }
-        
+
         return $formatted;
     }
 
@@ -147,15 +147,15 @@ trait HandlesLabelSelection
     {
         // Remove # if present
         $hex = ltrim($hexColor, '#');
-        
+
         // Convert hex to RGB
         $r = hexdec(substr($hex, 0, 2));
         $g = hexdec(substr($hex, 2, 2));
         $b = hexdec(substr($hex, 4, 2));
-        
+
         // Calculate brightness
         $brightness = ($r * 299 + $g * 587 + $b * 114) / 1000;
-        
+
         // Map to nearest terminal color based on dominant channel and brightness
         if ($brightness < 60) {
             return 'black';

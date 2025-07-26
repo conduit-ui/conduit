@@ -2,30 +2,26 @@
 
 namespace App\Services\GitHub\Concerns;
 
+use Illuminate\Console\Command;
 use function Laravel\Prompts\multiselect;
-use function Laravel\Prompts\confirm;
 
 trait ManagesReviewers
 {
     /**
      * Interactive reviewer selection
      */
-    public function selectReviewers(?object $command, array $availableReviewers): array
+    public function selectReviewers(?Command $command, array $availableReviewers): array
     {
-        if (!$command || empty($availableReviewers)) {
+        if (! $command || empty($availableReviewers)) {
             return [];
         }
 
         $command->line('<comment>👥 Select reviewers for this PR:</comment>');
-        
-        if (empty($availableReviewers)) {
-            $command->warn('⚠️ No reviewers available. Add reviewers manually after creation.');
-            return [];
-        }
+
 
         $reviewerOptions = [];
         foreach ($availableReviewers as $reviewer) {
-            $reviewerOptions[$reviewer['login']] = "👤 {$reviewer['login']} (" . ($reviewer['name'] ?? 'No name') . ")";
+            $reviewerOptions[$reviewer['login']] = "👤 {$reviewer['login']} (".($reviewer['name'] ?? 'No name').')';
         }
 
         $selectedReviewers = multiselect(
@@ -71,16 +67,17 @@ trait ManagesReviewers
      */
     public function requestReviews(?object $command, string $repo, int $prNumber, array $reviewers): bool
     {
-        if (!$command || empty($reviewers)) {
+        if (! $command || empty($reviewers)) {
             return true;
         }
 
-        $command->info("📤 Requesting reviews from: " . implode(', ', $reviewers));
-        
+        $command->info('📤 Requesting reviews from: '.implode(', ', $reviewers));
+
         try {
             return $this->addReviewers($repo, $prNumber, $reviewers);
         } catch (\Exception $e) {
             $command->warn("⚠️ Could not request reviews: {$e->getMessage()}");
+
             return false;
         }
     }
@@ -90,7 +87,7 @@ trait ManagesReviewers
      */
     public function displayReviewerSummary(?Command $command, array $reviewers): void
     {
-        if (!$command || empty($reviewers)) {
+        if (! $command || empty($reviewers)) {
             return;
         }
 
@@ -109,8 +106,9 @@ trait ManagesReviewers
         $errors = [];
 
         foreach ($reviewers as $reviewer) {
-            if (empty($reviewer) || !is_string($reviewer)) {
+            if (empty($reviewer) || ! is_string($reviewer)) {
                 $errors[] = 'Reviewer username cannot be empty';
+
                 continue;
             }
 
@@ -118,7 +116,7 @@ trait ManagesReviewers
                 $errors[] = "Reviewer username '{$reviewer}' is too long (max 39 characters)";
             }
 
-            if (!preg_match('/^[a-zA-Z0-9-]+$/', $reviewer)) {
+            if (! preg_match('/^[a-zA-Z0-9-]+$/', $reviewer)) {
                 $errors[] = "Reviewer username '{$reviewer}' contains invalid characters";
             }
         }

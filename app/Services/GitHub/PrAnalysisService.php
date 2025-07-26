@@ -14,8 +14,8 @@ class PrAnalysisService
     {
         [$owner, $repoName] = explode('/', $repo);
         $pr = Github::pullRequests()->detail($owner, $repoName, $prNumber);
-        
-        if (!$pr) {
+
+        if (! $pr) {
             return ['error' => 'Pull request not found'];
         }
 
@@ -61,13 +61,13 @@ class PrAnalysisService
     public function getHealthScore(string $repo, int $prNumber): array
     {
         $analysis = $this->analyzeMergeReadiness($repo, $prNumber);
-        
+
         if (isset($analysis['error'])) {
             return $analysis;
         }
 
         $score = $this->calculateHealthScore($analysis);
-        
+
         return [
             'health_score' => $score,
             'grade' => $this->getGrade($score),
@@ -82,11 +82,11 @@ class PrAnalysisService
     public function batchAnalyze(string $repo, array $prNumbers): array
     {
         $results = [];
-        
+
         foreach ($prNumbers as $prNumber) {
             $results[$prNumber] = $this->analyzeMergeReadiness($repo, $prNumber);
         }
-        
+
         return [
             'repository' => $repo,
             'analyzed_prs' => count($prNumbers),
@@ -101,14 +101,14 @@ class PrAnalysisService
     private function getRecommendations(PullRequestDTO $pr): array
     {
         $recommendations = [];
-        
+
         // Handle closed/merged PRs first
         if ($pr->state === 'closed') {
             if ($pr->merged) {
                 $recommendations[] = [
                     'type' => 'success',
                     'action' => 'already_merged',
-                    'message' => '✅ PR successfully merged' . ($pr->merged_at ? ' on ' . date('M j, Y', strtotime($pr->merged_at)) : ''),
+                    'message' => '✅ PR successfully merged'.($pr->merged_at ? ' on '.date('M j, Y', strtotime($pr->merged_at)) : ''),
                 ];
             } else {
                 $recommendations[] = [
@@ -117,9 +117,10 @@ class PrAnalysisService
                     'message' => '🚫 PR was closed without merging',
                 ];
             }
+
             return $recommendations;
         }
-        
+
         // Recommendations for open PRs
         if ($pr->hasMergeConflicts()) {
             $recommendations[] = [
@@ -128,7 +129,7 @@ class PrAnalysisService
                 'message' => 'Resolve merge conflicts before proceeding',
             ];
         }
-        
+
         if ($pr->draft) {
             $recommendations[] = [
                 'type' => 'warning',
@@ -136,15 +137,15 @@ class PrAnalysisService
                 'message' => 'Mark as ready for review when complete',
             ];
         }
-        
-        if (!$pr->hasComments() && $pr->getTotalLinesChanged() > 100) {
+
+        if (! $pr->hasComments() && $pr->getTotalLinesChanged() > 100) {
             $recommendations[] = [
                 'type' => 'suggestion',
                 'action' => 'request_review',
                 'message' => 'Consider requesting reviews for large changes',
             ];
         }
-        
+
         if ($pr->isReadyToMerge()) {
             $recommendations[] = [
                 'type' => 'success',
@@ -152,15 +153,15 @@ class PrAnalysisService
                 'message' => 'PR is ready to merge - no conflicts detected',
             ];
         }
-        
-        if ($pr->canRebase() && !$pr->isReadyToMerge()) {
+
+        if ($pr->canRebase() && ! $pr->isReadyToMerge()) {
             $recommendations[] = [
                 'type' => 'info',
                 'action' => 'consider_rebase',
                 'message' => 'Consider rebasing to update with latest changes',
             ];
         }
-        
+
         return $recommendations;
     }
 
@@ -170,7 +171,7 @@ class PrAnalysisService
     private function getChangeSizeCategory(PullRequestDetailDTO $pr): string
     {
         $totalChanges = $pr->getTotalLinesChanged();
-        
+
         return match (true) {
             $totalChanges < 10 => 'tiny',
             $totalChanges < 50 => 'small',
@@ -187,14 +188,14 @@ class PrAnalysisService
     private function calculateHealthScore(array $analysis): int
     {
         $score = 100;
-        
+
         // Merge readiness (40% weight)
         if ($analysis['merge_analysis']['has_conflicts']) {
             $score -= 40;
-        } elseif (!$analysis['merge_analysis']['ready_to_merge']) {
+        } elseif (! $analysis['merge_analysis']['ready_to_merge']) {
             $score -= 20;
         }
-        
+
         // Code quality indicators (30% weight)
         $changeSize = $analysis['code_analysis']['change_size'];
         if (in_array($changeSize, ['huge', 'massive'])) {
@@ -202,22 +203,22 @@ class PrAnalysisService
         } elseif ($changeSize === 'large') {
             $score -= 5;
         }
-        
+
         // Discussion quality (20% weight)
         $totalChanges = $analysis['code_analysis']['total_changes'];
         $hasDiscussion = $analysis['discussion_analysis']['has_discussion'];
-        
-        if ($totalChanges > 100 && !$hasDiscussion) {
+
+        if ($totalChanges > 100 && ! $hasDiscussion) {
             $score -= 20;
-        } elseif ($totalChanges > 50 && !$hasDiscussion) {
+        } elseif ($totalChanges > 50 && ! $hasDiscussion) {
             $score -= 10;
         }
-        
+
         // Draft status (10% weight)
         if ($analysis['pr_info']['draft']) {
             $score -= 10;
         }
-        
+
         return max(0, min(100, $score));
     }
 
@@ -258,7 +259,7 @@ class PrAnalysisService
         $readyToMerge = 0;
         $hasConflicts = 0;
         $drafts = 0;
-        
+
         foreach ($results as $result) {
             if (isset($result['merge_analysis'])) {
                 if ($result['merge_analysis']['ready_to_merge']) {
@@ -272,7 +273,7 @@ class PrAnalysisService
                 }
             }
         }
-        
+
         return [
             'total_prs' => $total,
             'ready_to_merge' => $readyToMerge,

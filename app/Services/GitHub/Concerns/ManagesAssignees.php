@@ -49,20 +49,20 @@ trait ManagesAssignees
     public function interactiveAssigneeManagement(Command $command, string $repo, array $currentAssignees): array
     {
         $changes = [];
-        $currentAssigneeLogins = array_map(fn($assignee) => $assignee['login'], $currentAssignees);
-        
+        $currentAssigneeLogins = array_map(fn ($assignee) => $assignee['login'], $currentAssignees);
+
         // Add assignees
         $collaborators = $this->getCollaborators($repo);
-        $availableToAdd = array_filter($collaborators, fn($collab) => !in_array($collab['login'], $currentAssigneeLogins));
-        
-        if (!empty($availableToAdd)) {
+        $availableToAdd = array_filter($collaborators, fn ($collab) => ! in_array($collab['login'], $currentAssigneeLogins));
+
+        if (! empty($availableToAdd)) {
             $command->line('👥 <comment>Available assignees to add:</comment>');
             $choices = [];
             foreach ($availableToAdd as $index => $collaborator) {
                 $choices[$index] = $collaborator['login'];
                 $command->line("  [{$index}] {$collaborator['login']}");
             }
-            
+
             $selected = $command->ask('👥 Add assignees (comma-separated numbers, or Enter to skip)');
             if ($selected) {
                 $selectedIndices = array_map('trim', explode(',', $selected));
@@ -72,14 +72,14 @@ trait ManagesAssignees
                         $addAssignees[] = $choices[$index];
                     }
                 }
-                if (!empty($addAssignees)) {
+                if (! empty($addAssignees)) {
                     $changes['add_assignees'] = $addAssignees;
                 }
             }
         }
-        
+
         // Remove assignees
-        if (!empty($currentAssignees)) {
+        if (! empty($currentAssignees)) {
             $command->newLine();
             $command->line('👥 <comment>Current assignees to remove:</comment>');
             $choices = [];
@@ -87,7 +87,7 @@ trait ManagesAssignees
                 $choices[$index] = $assignee['login'];
                 $command->line("  [{$index}] {$assignee['login']}");
             }
-            
+
             $selected = $command->ask('👥 Remove assignees (comma-separated numbers, or Enter to skip)');
             if ($selected) {
                 $selectedIndices = array_map('trim', explode(',', $selected));
@@ -97,12 +97,12 @@ trait ManagesAssignees
                         $removeAssignees[] = $choices[$index];
                     }
                 }
-                if (!empty($removeAssignees)) {
+                if (! empty($removeAssignees)) {
                     $changes['remove_assignees'] = $removeAssignees;
                 }
             }
         }
-        
+
         return $changes;
     }
 
@@ -111,8 +111,8 @@ trait ManagesAssignees
      */
     public function determineAssignmentChanges(object $issue, array $options): array
     {
-        $currentAssignees = array_map(fn($assignee) => $assignee['login'], $issue->assignees ?? []);
-        
+        $currentAssignees = array_map(fn ($assignee) => $assignee['login'], $issue->assignees ?? []);
+
         // Handle --clear flag
         if ($options['clear'] ?? false) {
             return ['assignees' => []];
@@ -121,7 +121,7 @@ trait ManagesAssignees
         // Handle --me flag
         if ($options['me'] ?? false) {
             $currentUser = $this->getCurrentUser();
-            if ($currentUser && !in_array($currentUser, $currentAssignees)) {
+            if ($currentUser && ! in_array($currentUser, $currentAssignees)) {
                 $currentAssignees[] = $currentUser;
             }
         }
@@ -129,7 +129,7 @@ trait ManagesAssignees
         // Handle --add
         $addUsers = $options['add'] ?? [];
         foreach ($addUsers as $user) {
-            if (!in_array($user, $currentAssignees)) {
+            if (! in_array($user, $currentAssignees)) {
                 $currentAssignees[] = $user;
             }
         }
@@ -157,7 +157,7 @@ trait ManagesAssignees
     {
         $command->newLine();
         $command->line('<comment>📋 Assignment Preview:</comment>');
-        
+
         if (empty($changes['assignees'])) {
             $command->line('👥 Assignees: <fg=yellow>None (cleared)</fg=yellow>');
         } else {

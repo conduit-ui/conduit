@@ -20,7 +20,7 @@ trait OpensBrowser
         };
 
         if ($command) {
-            exec($command . ' 2>/dev/null &');
+            exec($command.' 2>/dev/null &');
             $this->info('🌐 Opening in browser...');
         } else {
             $this->warn('⚠️ Could not detect browser command for your OS');

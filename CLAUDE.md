@@ -53,24 +53,34 @@ conduit laravel migrate                     # Database migrations
 
 ## Architecture
 
-### Microkernel Design
-- **Core**: Minimal framework with component system only
-- **Components**: All functionality via installable components
-- **Discovery**: Automated component finding via GitHub/Packagist
-- **Registry**: Tiered components (core/certified/community)
+### Current Architecture (Laravel Zero Foundation)
+- **Core Application**: Laravel Zero CLI framework with standard command structure
+- **Commands**: Extend `LaravelZero\Framework\Commands\Command` 
+- **Services**: Trait-based composition with dependency injection
+- **Components**: External component system via `conduit-components/` directory
 
-### Component Structure
-All components extend base `ConduitComponent` class:
-- Standard installation/uninstallation
-- Self-validation capabilities
-- Metadata provision (commands, env vars, etc.)
-- MCP integration hooks
+### Actual Component Structure
+Components in `conduit-components/` use:
+- **AbstractGitHubComponent**: Base class for GitHub integrations
+- **Service Providers**: Laravel service provider registration
+- **Standalone Architecture**: Can work independently or within Conduit
+
+### Current Command Patterns
+- Commands extend Laravel Zero's `Command` class
+- Service layer with trait composition (e.g., `ManagesBranches`, `ManagesReviewers`)
+- Interface-driven design with proper separation of concerns
+- Dependency injection via constructor or service container
 
 ### Development Philosophy
 - **Conduit builds Conduit**: Use Conduit itself for development tasks
-- **Component-first**: Everything is a discoverable, installable component
-- **AI-ready**: MCP integration for AI tool collaboration
-- **Microkernel**: Core remains minimal and focused
+- **Component Discovery**: Automated finding and installation of functionality
+- **AI-ready**: MCP integration for AI tool collaboration  
+- **Laravel Zero Foundation**: Built on proven CLI framework patterns
+
+### Planned Future Architecture
+- **Component-first Evolution**: Migrate toward discoverable component system
+- **Microkernel Vision**: Minimal core with modular functionality
+- **Enhanced MCP Integration**: Deeper AI agent collaboration features
 
 ## Testing Strategy
 - **Unit Tests**: Individual component testing

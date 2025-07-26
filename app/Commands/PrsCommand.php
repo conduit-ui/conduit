@@ -341,7 +341,7 @@ class PrsCommand extends Command
         info("🔀 Pull Request #{$pr['number']}");
         $this->line("📝 <fg=cyan>{$pr['title']}</>");
         $this->line("👤 Author: {$pr['user']['login']}");
-        $this->line("🌿 {$pr['head']['ref']} → {$pr['base']['ref']}");
+        $this->line("🌿 {$pr['head_ref']} → {$pr['base_ref']}");
         $this->line('📅 Updated: '.$this->formatDate($pr['updated_at']));
         $this->line("🔗 {$pr['html_url']}");
 
@@ -476,7 +476,7 @@ class PrsCommand extends Command
             return;
         }
 
-        $branchName = "pr-{$pr['number']}-".preg_replace('/[^a-zA-Z0-9_-]/', '_', $pr['head']['ref']);
+        $branchName = "pr-{$pr['number']}-".preg_replace('/[^a-zA-Z0-9_-]/', '_', $pr['head_ref']);
 
         $escapedBranchName = escapeshellarg($branchName);
         $commands = [

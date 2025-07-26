@@ -23,14 +23,4 @@ interface PrManagementInterface extends BranchManagementInterface, ReviewerManag
      * Close pull request
      */
     public function closePullRequest(string $repo, int $prNumber): ?array;
-
-    /**
-     * Add reviewers to pull request
-     */
-    public function addReviewers(string $repo, int $prNumber, array $reviewers): bool;
-
-    /**
-     * Remove reviewers from pull request
-     */
-    public function removeReviewers(string $repo, int $prNumber, array $reviewers): bool;
 }

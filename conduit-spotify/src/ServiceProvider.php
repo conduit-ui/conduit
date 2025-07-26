@@ -9,6 +9,7 @@ use Conduit\Spotify\Commands\Devices;
 use Conduit\Spotify\Commands\Focus;
 use Conduit\Spotify\Commands\Login;
 use Conduit\Spotify\Commands\Logout;
+use Conduit\Spotify\Commands\Next;
 use Conduit\Spotify\Commands\Pause;
 use Conduit\Spotify\Commands\Play;
 use Conduit\Spotify\Commands\Playlists;
@@ -50,6 +51,7 @@ class ServiceProvider extends BaseServiceProvider
             Play::class,
             Pause::class,
             Skip::class,
+            Next::class, // Alias for Skip (next track only)
             Current::class,
             Volume::class,
             Playlists::class,

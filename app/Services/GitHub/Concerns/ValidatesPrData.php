@@ -43,7 +43,7 @@ trait ValidatesPrData
         }
 
         // Reviewers validation
-        if (isset($prData['reviewers']) && !is_array($prData['reviewers'])) {
+        if (isset($prData['reviewers']) && ! is_array($prData['reviewers'])) {
             $errors[] = 'Reviewers must be an array';
         }
 
@@ -80,7 +80,7 @@ trait ValidatesPrData
         if (isset($prData['reviewers']) && is_array($prData['reviewers'])) {
             $sanitized['reviewers'] = array_filter(
                 array_map('trim', $prData['reviewers']),
-                fn($reviewer) => !empty($reviewer)
+                fn ($reviewer) => ! empty($reviewer)
             );
         }
 
@@ -120,10 +120,10 @@ trait ValidatesPrData
         }
 
         // Check reviewers
-        if (isset($newData['add_reviewers']) && !empty($newData['add_reviewers'])) {
+        if (isset($newData['add_reviewers']) && ! empty($newData['add_reviewers'])) {
             return true;
         }
-        if (isset($newData['remove_reviewers']) && !empty($newData['remove_reviewers'])) {
+        if (isset($newData['remove_reviewers']) && ! empty($newData['remove_reviewers'])) {
             return true;
         }
 
@@ -137,8 +137,9 @@ trait ValidatesPrData
     {
         return array_filter($data, function ($value) {
             if (is_array($value)) {
-                return !empty($value);
+                return ! empty($value);
             }
+
             return $value !== null && $value !== '';
         });
     }
@@ -149,16 +150,16 @@ trait ValidatesPrData
     public function validateStateTransition(string $currentState, string $newState): array
     {
         $errors = [];
-        
+
         $validStates = ['open', 'closed'];
-        
-        if (!in_array($newState, $validStates)) {
+
+        if (! in_array($newState, $validStates)) {
             $errors[] = "Invalid state '{$newState}'. Must be 'open' or 'closed'";
         }
 
         // Additional business logic can be added here
         // For example, preventing certain state transitions based on conditions
-        
+
         return $errors;
     }
 
@@ -168,13 +169,13 @@ trait ValidatesPrData
     public function validateMergeMethod(string $mergeMethod): array
     {
         $errors = [];
-        
+
         $validMethods = ['merge', 'squash', 'rebase'];
-        
-        if (!in_array($mergeMethod, $validMethods)) {
+
+        if (! in_array($mergeMethod, $validMethods)) {
             $errors[] = "Invalid merge method '{$mergeMethod}'. Must be 'merge', 'squash', or 'rebase'";
         }
-        
+
         return $errors;
     }
 }

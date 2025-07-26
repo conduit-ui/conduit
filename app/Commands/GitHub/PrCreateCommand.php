@@ -7,6 +7,7 @@ use App\Commands\GitHub\Concerns\OpensBrowser;
 use App\Services\GitHub\PrCreateService;
 use App\Services\GithubAuthService;
 use LaravelZero\Framework\Commands\Command;
+
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\text;
 
@@ -64,6 +65,7 @@ class PrCreateCommand extends Command
         $prData = $this->gatherPrData($service, $repo);
         if (! $prData) {
             $this->error('❌ PR creation cancelled');
+
             return 1;
         }
 
@@ -72,6 +74,7 @@ class PrCreateCommand extends Command
 
         if (! confirm('Create this pull request?', true)) {
             $this->info('❌ PR creation cancelled');
+
             return 1;
         }
 
@@ -81,6 +84,7 @@ class PrCreateCommand extends Command
 
         if (! $pr) {
             $this->error('❌ Failed to create pull request');
+
             return 1;
         }
 
@@ -106,16 +110,18 @@ class PrCreateCommand extends Command
         ];
 
         // Filter out empty values
-        $prData = array_filter($prData, fn($value) => $value !== null);
+        $prData = array_filter($prData, fn ($value) => $value !== null);
 
         $pr = $service->createPullRequest($repo, $prData);
 
         if (! $pr) {
             $this->error('❌ Failed to create pull request');
+
             return 1;
         }
 
         $this->line(json_encode($pr->toArray(), JSON_PRETTY_PRINT));
+
         return 0;
     }
 
@@ -128,6 +134,7 @@ class PrCreateCommand extends Command
             $templateData = $service->applyTemplateInteractively($this, $template);
             if (empty($templateData)) {
                 $this->error("❌ Invalid template: {$template}");
+
                 return null;
             }
             $data = array_merge($data, $templateData);
@@ -205,7 +212,7 @@ class PrCreateCommand extends Command
         $this->newLine();
 
         // Body preview
-        if (!empty($prData['body'])) {
+        if (! empty($prData['body'])) {
             $this->line('<comment>Body:</comment>');
             $this->newLine();
             $service->renderMarkdownText($this, $prData['body']);
@@ -213,12 +220,12 @@ class PrCreateCommand extends Command
         }
 
         // Reviewers
-        if (!empty($prData['reviewers'])) {
+        if (! empty($prData['reviewers'])) {
             $service->displayReviewerSummary($this, $prData['reviewers']);
         }
 
         // Draft status
-        if (!empty($prData['draft'])) {
+        if (! empty($prData['draft'])) {
             $this->line('📝 <fg=yellow>Draft PR</fg=yellow>');
             $this->newLine();
         }

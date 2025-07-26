@@ -10,6 +10,7 @@ use LaravelZero\Framework\Commands\Command;
 class IssueEditCommand extends Command
 {
     use DetectsRepository;
+
     protected $signature = 'issues:edit 
                            {issue : Issue number to edit}
                            {--repo= : Repository (owner/repo)}
@@ -28,20 +29,22 @@ class IssueEditCommand extends Command
 
     public function handle(GithubAuthService $githubAuth, IssueEditService $issueEditService): int
     {
-        if (!$githubAuth->isAuthenticated()) {
+        if (! $githubAuth->isAuthenticated()) {
             $this->error('❌ Not authenticated with GitHub');
             $this->info('💡 Run: gh auth login');
+
             return 1;
         }
 
         $issueNumber = (int) $this->argument('issue');
         $repo = $this->option('repo');
-        
-        if (!$repo) {
+
+        if (! $repo) {
             $repo = $this->detectCurrentRepo();
-            if (!$repo) {
+            if (! $repo) {
                 $this->error('📂 No repository specified and none detected from current directory');
                 $this->info('💡 Use --repo=owner/repo or run from within a git repository');
+
                 return 1;
             }
         }
@@ -55,6 +58,7 @@ class IssueEditCommand extends Command
 
         } catch (\Exception $e) {
             $this->error("❌ Failed to edit issue: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -63,8 +67,9 @@ class IssueEditCommand extends Command
     {
         // First, get current issue
         $currentIssue = $service->getIssue($repo, $issueNumber);
-        if (!$currentIssue) {
+        if (! $currentIssue) {
             $this->error("❌ Issue #{$issueNumber} not found in {$repo}");
+
             return 1;
         }
 
@@ -76,17 +81,19 @@ class IssueEditCommand extends Command
 
         // Gather changes
         $changes = $this->gatherChanges($service, $repo, $currentIssue);
-        
+
         if (empty($changes)) {
             $this->info('ℹ️  No changes specified');
+
             return 0;
         }
 
         // Preview changes
         $this->showChangePreview($service, $currentIssue, $changes);
-        
-        if (!$this->confirm('Apply these changes?', true)) {
+
+        if (! $this->confirm('Apply these changes?', true)) {
             $this->info('❌ Edit cancelled');
+
             return 1;
         }
 
@@ -94,14 +101,15 @@ class IssueEditCommand extends Command
         $this->info('🚀 Updating issue...');
         $updatedIssue = $service->updateIssue($repo, $issueNumber, $changes);
 
-        if (!$updatedIssue) {
+        if (! $updatedIssue) {
             $this->error('❌ Failed to update issue');
+
             return 1;
         }
 
         // Display success
         $this->displaySuccessMessage($updatedIssue);
-        
+
         return 0;
     }
 
@@ -118,16 +126,18 @@ class IssueEditCommand extends Command
             'milestone' => $this->option('milestone'),
         ];
 
-        $changes = array_filter($changes, fn($value) => $value !== null);
+        $changes = array_filter($changes, fn ($value) => $value !== null);
 
         $updatedIssue = $service->updateIssue($repo, $issueNumber, $changes);
-        
-        if (!$updatedIssue) {
+
+        if (! $updatedIssue) {
             $this->error('❌ Failed to update issue');
+
             return 1;
         }
 
         $this->line(json_encode($updatedIssue, JSON_PRETTY_PRINT));
+
         return 0;
     }
 
@@ -184,14 +194,14 @@ class IssueEditCommand extends Command
     private function gatherChangesWithEditor(IssueEditService $service, array $currentIssue): array
     {
         $this->info('📝 Opening interactive editor for issue editing...');
-        
+
         $editData = $service->openIssueEditor($this, $currentIssue);
-        
+
         $changes = [];
         if ($editData['title'] !== $currentIssue['title']) {
             $changes['title'] = $editData['title'];
         }
-        
+
         if ($editData['body'] !== ($currentIssue['body'] ?? '')) {
             $changes['body'] = $editData['body'];
         }
@@ -252,16 +262,16 @@ class IssueEditCommand extends Command
         $this->newLine();
         $this->line('<comment>📋 Change Preview:</comment>');
         $this->newLine();
-        
+
         $service->displayChangePreview($this, $currentIssue, $changes);
     }
 
     private function displaySuccessMessage(array $issue): void
     {
         $this->newLine();
-        $this->info("✅ Issue updated successfully!");
+        $this->info('✅ Issue updated successfully!');
         $this->newLine();
-        
+
         $this->line("📋 <fg=cyan;options=bold>Issue #{$issue['number']}</fg=cyan;options=bold>");
         $this->line("📝 <info>{$issue['title']}</info>");
         $this->line("🔗 <href={$issue['html_url']}>{$issue['html_url']}</>");
@@ -270,7 +280,7 @@ class IssueEditCommand extends Command
 
     private function detectCurrentRepo(): ?string
     {
-        if (!$this->isGitRepository()) {
+        if (! $this->isGitRepository()) {
             return null;
         }
 
@@ -285,7 +295,8 @@ class IssueEditCommand extends Command
     private function isGitRepository(): bool
     {
         $gitDir = shell_exec('git rev-parse --git-dir 2>/dev/null');
-        return !empty(trim($gitDir ?? ''));
+
+        return ! empty(trim($gitDir ?? ''));
     }
 
     private function parseGitHubRepo(string $remoteUrl): ?string

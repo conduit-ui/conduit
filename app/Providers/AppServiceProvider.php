@@ -8,6 +8,10 @@ use App\Commands\GitHub\IssueCloseCommand;
 use App\Commands\GitHub\IssueCreateCommand;
 use App\Commands\GitHub\IssueEditCommand;
 use App\Commands\GitHub\IssueViewCommand;
+use App\Commands\GitHub\PrAnalysisCommand;
+use App\Commands\GitHub\PrCommentsCommand;
+use App\Commands\GitHub\PrCreateCommand;
+use App\Commands\GitHub\PrStatusCommand;
 use App\Commands\IssuesCommand;
 use App\Commands\Know\Add;
 use App\Commands\Know\AutoCaptureCommand;
@@ -19,9 +23,6 @@ use App\Commands\Know\Optimize;
 use App\Commands\Know\Search;
 use App\Commands\Know\SetupCommand;
 use App\Commands\Know\Show;
-use App\Commands\GitHub\PrAnalysisCommand;
-use App\Commands\GitHub\PrCreateCommand;
-use App\Commands\GitHub\PrStatusCommand;
 use App\Commands\PrsCommand;
 use App\Commands\ReposCommand;
 use App\Commands\StatusCommand;
@@ -75,6 +76,7 @@ class AppServiceProvider extends ServiceProvider
                 PrCreateCommand::class,
                 PrAnalysisCommand::class,
                 PrStatusCommand::class,
+                PrCommentsCommand::class,
                 \App\Commands\PrAnalyzeCommand::class,
                 \App\Commands\GitHubClientGapAnalysisCommand::class,
                 \App\Commands\CodeRabbitStatusCommand::class,

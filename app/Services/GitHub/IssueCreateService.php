@@ -40,22 +40,22 @@ class IssueCreateService
             // Validate and sanitize data
             $issueData = $this->sanitizeIssueData($issueData);
             $errors = $this->validateIssueData($issueData);
-            
-            if (!empty($errors)) {
-                throw new \InvalidArgumentException('Validation failed: ' . implode(', ', $errors));
+
+            if (! empty($errors)) {
+                throw new \InvalidArgumentException('Validation failed: '.implode(', ', $errors));
             }
 
             // Prepare issue data for GitHub API
             $body = $issueData['body'] ?? '';
-            
+
             // Add Conduit attribution if enabled
-            if (!empty($body) && $this->shouldAddAttribution()) {
+            if (! empty($body) && $this->shouldAddAttribution()) {
                 $body .= "\n\n---\n🤖 Created with [Conduit](https://github.com/conduit-ui/conduit) - Supercharge your developer workflows";
             }
 
             // Create the issue
             $issue = Github::issues()->create($owner, $repoName, $issueData['title'], $body);
-            
+
             // The DTO has all the data we need - return it directly
             // TODO: Handle labels/assignees/milestone updates when github-client supports it
             return $issue;

@@ -7,12 +7,14 @@ use App\Commands\GitHub\Concerns\OpensBrowser;
 use App\Services\GitHub\IssueViewService;
 use App\Services\GithubAuthService;
 use LaravelZero\Framework\Commands\Command;
+
 use function Laravel\Prompts\confirm;
 
 class IssueViewCommand extends Command
 {
     use DetectsRepository;
     use OpensBrowser;
+
     protected $signature = 'issues:view 
                            {issue : Issue number to view}
                            {--repo= : Repository (owner/repo)}
@@ -138,5 +140,4 @@ class IssueViewCommand extends Command
 
         return 0;
     }
-
 }

@@ -141,9 +141,10 @@ class PrAnalysisServiceTest extends TestCase
 
     private function createMockPrDto(int $totalChanges): object
     {
-        return new class($totalChanges) {
+        return new class($totalChanges)
+        {
             public function __construct(private int $totalChanges) {}
-            
+
             public function getTotalLinesChanged(): int
             {
                 return $this->totalChanges;
