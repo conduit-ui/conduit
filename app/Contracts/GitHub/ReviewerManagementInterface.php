@@ -3,7 +3,6 @@
 namespace App\Contracts\GitHub;
 
 use Illuminate\Console\Command;
-
 interface ReviewerManagementInterface
 {
     /**

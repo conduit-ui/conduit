@@ -74,7 +74,6 @@ class PrsCommand extends Command
         if ($state !== 'all') {
             $query .= " is:{$state}";
         }
-
         if ($context === 'mine') {
             $currentUser = $this->getCurrentUser();
             if ($currentUser) {
@@ -87,7 +86,6 @@ class PrsCommand extends Command
 
         // Use pull requests recentDetails method to get comment counts
         $searchResult = Github::pullRequests()->recentDetails($owner, $repoName, $limit, $state);
-
         // Convert Collection to array if needed
         if ($searchResult instanceof \Illuminate\Support\Collection) {
             // Convert each object to array recursively
@@ -95,7 +93,6 @@ class PrsCommand extends Command
                 return $this->convertToArray($pr);
             })->toArray();
         }
-
         return $searchResult;
     }
 
@@ -292,7 +289,6 @@ class PrsCommand extends Command
             $updated = $this->formatDate($pr['updated_at'] ?? date('c'));
             $options[] = "#{$pr['number']} • {$pr['title']} • {$pr['user']['login']} • 💬{$generalComments} 📝{$reviewComments} • {$updated}";
         }
-
         $options[] = '🔙 Back';
 
         $selected = $this->choice(
@@ -304,7 +300,6 @@ class PrsCommand extends Command
         if ($selected === '🔙 Back') {
             return 0;
         }
-
         // Show PR actions menu
         $actions = [
             '👁️  View Details',
@@ -312,15 +307,13 @@ class PrsCommand extends Command
             '🔀 Check Merge Status',
             '💬 Manage Reviews',
             '🌐 Open in Browser',
-            '🔙 Back',
+            '🔙 Back'
         ];
-
         $action = $this->choice(
             'What would you like to do?',
             $actions,
             count($actions) - 1
         );
-
         return 0;
     }
 
@@ -545,7 +538,6 @@ class PrsCommand extends Command
             return date('M j', $timestamp);
         }
     }
-
     private function convertToArray($obj)
     {
         return json_decode(json_encode($obj), true);

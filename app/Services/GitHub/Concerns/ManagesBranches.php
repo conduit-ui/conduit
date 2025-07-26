@@ -94,7 +94,6 @@ trait ManagesBranches
 
         // Base branch (target)
         $defaultBase = $this->detectDefaultBranch($availableBranches);
-
         if (count($availableBranches) > 1) {
             $baseBranch = select(
                 label: 'Base branch (merge target)',
@@ -138,7 +137,6 @@ trait ManagesBranches
         foreach (['head', 'base'] as $type) {
             if (isset($branches[$type])) {
                 $branch = $branches[$type];
-
                 if (strlen($branch) > 250) {
                     $errors[] = ucfirst($type).' branch name is too long (max 250 characters)';
                 }
@@ -160,7 +158,6 @@ trait ManagesBranches
     {
         // Priority order for default branches
         $priorities = ['main', 'master', 'develop', 'dev'];
-
         foreach ($priorities as $branch) {
             if (in_array($branch, $availableBranches)) {
                 return $branch;
@@ -185,13 +182,11 @@ trait ManagesBranches
 
         if (empty($head) || empty($base)) {
             $command->error('❌ Both head and base branches must be specified');
-
             return false;
         }
 
         if ($head === $base) {
             $command->error('❌ Head and base branches cannot be the same');
-
             return false;
         }
 
@@ -205,7 +200,6 @@ trait ManagesBranches
 
             if ($switch) {
                 $command->warn("⚠️ Please run: git checkout {$head}");
-
                 return false;
             }
         }
