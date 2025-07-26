@@ -82,8 +82,14 @@ class PrsCommand extends Command
             }
         }
 
-        // Use search API as tests expect
-        $searchResult = Github::search()->pulls($query);
+        // Parse repo into owner/name
+        [$owner, $repoName] = explode('/', $repo);
+        
+        // Use pull requests summaries method
+        $searchResult = Github::pullRequests()->summaries($owner, $repoName, [
+            'state' => $state,
+            'per_page' => $this->option('limit'),
+        ]);
         
         // Convert Collection to array if needed
         if ($searchResult instanceof \Illuminate\Support\Collection) {
@@ -260,15 +266,15 @@ class PrsCommand extends Command
         $rows = [];
 
         foreach ($prs as $pr) {
-            $generalComments = $pr['comments'] ?? 0;
-            $reviewComments = $pr['review_comments'] ?? 0;
+            $generalComments = $pr->comments ?? 0;
+            $reviewComments = $pr->review_comments ?? 0;
             $rows[] = [
-                $pr['number'] ?? 'N/A',
-                mb_strimwidth($pr['title'] ?? 'No title', 0, 40, '...'),
-                $pr['user']['login'] ?? 'Unknown',
+                $pr->number ?? 'N/A',
+                mb_strimwidth($pr->title ?? 'No title', 0, 40, '...'),
+                $pr->user->login ?? 'Unknown',
                 "💬{$generalComments} 📝{$reviewComments}",
-                $pr['state'] ?? 'unknown',
-                $this->formatDate($pr['updated_at'] ?? date('c')),
+                $pr->state ?? 'unknown',
+                $this->formatDate($pr->updated_at ?? date('c')),
             ];
         }
 
