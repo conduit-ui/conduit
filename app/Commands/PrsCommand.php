@@ -85,11 +85,8 @@ class PrsCommand extends Command
         // Parse repo into owner/name
         [$owner, $repoName] = explode('/', $repo);
         
-        // Use pull requests summaries method
-        $searchResult = Github::pullRequests()->summaries($owner, $repoName, [
-            'state' => $state,
-            'per_page' => $this->option('limit'),
-        ]);
+        // Use pull requests recentDetails method to get comment counts
+        $searchResult = Github::pullRequests()->recentDetails($owner, $repoName, $limit, $state);
         
         // Convert Collection to array if needed
         if ($searchResult instanceof \Illuminate\Support\Collection) {
