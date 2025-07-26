@@ -4,9 +4,10 @@ namespace App\Services\GitHub\Concerns;
 
 use Illuminate\Support\Facades\Process;
 use LaravelZero\Framework\Commands\Command;
-use function Laravel\Prompts\text;
-use function Laravel\Prompts\select;
+
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\select;
+use function Laravel\Prompts\text;
 
 trait ManagesBranches
 {
@@ -17,13 +18,14 @@ trait ManagesBranches
     {
         try {
             $result = Process::run('git branch --show-current');
-            
+
             if ($result->failed()) {
                 return null;
             }
-            
+
             $branch = trim($result->output());
-            return !empty($branch) ? $branch : null;
+
+            return ! empty($branch) ? $branch : null;
         } catch (\Exception $e) {
             return null;
         }
@@ -36,18 +38,27 @@ trait ManagesBranches
     {
         try {
             $result = Process::run('git branch -r --format="%(refname:short)"');
-            
+
             if ($result->failed()) {
-                return ['main', 'master', 'develop']; // Common defaults
+                // Fallback for Git <2.13: parse remote branch list
+                $fallback = Process::run(
+                    'git branch -r | sed \'s|origin/||\' | grep -v HEAD'
+                );
+                if (! $fallback->failed()) {
+                    return collect(explode("\n", trim($fallback->output())))->all();
+                }
+
+                // Last resort: common defaults
+                return ['main', 'master', 'develop'];
             }
 
             $output = array_filter(explode("\n", trim($result->output())));
             $branches = [];
-            
+
             foreach ($output as $branch) {
                 // Clean up origin/ prefix and skip HEAD
                 $cleanBranch = preg_replace('/^origin\//', '', trim($branch));
-                if ($cleanBranch !== 'HEAD' && !empty($cleanBranch)) {
+                if ($cleanBranch !== 'HEAD' && ! empty($cleanBranch)) {
                     $branches[] = $cleanBranch;
                 }
             }
@@ -63,10 +74,10 @@ trait ManagesBranches
      */
     public function selectBranches(?Command $command): array
     {
-        if (!$command) {
+        if (! $command) {
             return [
                 'head' => $this->getCurrentBranch() ?? 'feature-branch',
-                'base' => 'main'
+                'base' => 'main',
             ];
         }
 
@@ -83,7 +94,6 @@ trait ManagesBranches
 
         // Base branch (target)
         $defaultBase = $this->detectDefaultBranch($availableBranches);
-        
         if (count($availableBranches) > 1) {
             $baseBranch = select(
                 label: 'Base branch (merge target)',
@@ -101,7 +111,7 @@ trait ManagesBranches
 
         return [
             'head' => $headBranch,
-            'base' => $baseBranch
+            'base' => $baseBranch,
         ];
     }
 
@@ -127,14 +137,13 @@ trait ManagesBranches
         foreach (['head', 'base'] as $type) {
             if (isset($branches[$type])) {
                 $branch = $branches[$type];
-                
                 if (strlen($branch) > 250) {
-                    $errors[] = ucfirst($type) . " branch name is too long (max 250 characters)";
+                    $errors[] = ucfirst($type).' branch name is too long (max 250 characters)';
                 }
 
                 // Basic branch name validation
-                if (!preg_match('/^[a-zA-Z0-9._\/-]+$/', $branch)) {
-                    $errors[] = ucfirst($type) . " branch name contains invalid characters";
+                if (! preg_match('/^[a-zA-Z0-9._\/-]+$/', $branch)) {
+                    $errors[] = ucfirst($type).' branch name contains invalid characters';
                 }
             }
         }
@@ -149,7 +158,6 @@ trait ManagesBranches
     {
         // Priority order for default branches
         $priorities = ['main', 'master', 'develop', 'dev'];
-        
         foreach ($priorities as $branch) {
             if (in_array($branch, $availableBranches)) {
                 return $branch;
@@ -165,7 +173,7 @@ trait ManagesBranches
      */
     public function verifyBranchSetup(?Command $command, array $branches): bool
     {
-        if (!$command) {
+        if (! $command) {
             return true;
         }
 
@@ -189,7 +197,7 @@ trait ManagesBranches
                 "Current branch is '{$currentBranch}' but PR head is '{$head}'. Switch branches?",
                 false
             );
-            
+
             if ($switch) {
                 $command->warn("⚠️ Please run: git checkout {$head}");
                 return false;
@@ -204,7 +212,7 @@ trait ManagesBranches
      */
     public function displayBranchSummary(?Command $command, array $branches): void
     {
-        if (!$command) {
+        if (! $command) {
             return;
         }
 

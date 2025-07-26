@@ -203,7 +203,9 @@ class VoiceCommand extends Command
     private function generateTraditionalNarration(NarrationContent $content, SpeechConfiguration $config): string
     {
         // Use traditional voice narrators for pre-built styles
-        return $this->voiceService->generateNarration($content, $config);
+        $this->voiceService->narrate($content, $config);
+
+        return 'Traditional narration completed'; // The narrate method speaks directly
     }
 
     private function displayPreview(string $narration): void

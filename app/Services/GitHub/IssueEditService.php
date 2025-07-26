@@ -33,11 +33,11 @@ class IssueEditService
     public function getIssue(string $repo, int $issueNumber): ?array
     {
         $this->initializeCache($repo);
-        
+
         $cacheKey = "issue_{$issueNumber}";
-        if (!isset($this->memoizedData[$cacheKey])) {
+        if (! isset($this->memoizedData[$cacheKey])) {
             [$owner, $repoName] = explode('/', $repo);
-            
+
             try {
                 $issue = Github::issues()->get($owner, $repoName, $issueNumber);
                 $this->memoizedData[$cacheKey] = $issue->toArray();
@@ -45,7 +45,7 @@ class IssueEditService
                 return null;
             }
         }
-        
+
         return $this->memoizedData[$cacheKey];
     }
 
@@ -59,30 +59,30 @@ class IssueEditService
         try {
             // Get current issue first
             $currentIssue = $this->getIssue($repo, $issueNumber);
-            if (!$currentIssue) {
+            if (! $currentIssue) {
                 return null;
             }
 
             // Validate changes
-            if (!$this->hasChanges($currentIssue, $changes)) {
+            if (! $this->hasChanges($currentIssue, $changes)) {
                 return $currentIssue; // No changes needed
             }
 
             // Prepare update data
             $updateData = $this->prepareUpdateData($repo, $currentIssue, $changes);
-            
+
             // Validate the update data
             $errors = $this->validateIssueData($updateData);
-            if (!empty($errors)) {
-                throw new \InvalidArgumentException('Validation failed: ' . implode(', ', $errors));
+            if (! empty($errors)) {
+                throw new \InvalidArgumentException('Validation failed: '.implode(', ', $errors));
             }
 
             // Update the issue
             $issue = Github::issues()->update($owner, $repoName, $issueNumber, $updateData['title'], $updateData['body']);
-            
+
             // Clear cache for this issue
             unset($this->memoizedData["issue_{$issueNumber}"]);
-            
+
             return $issue->toArray();
 
         } catch (\Exception $e) {
@@ -145,31 +145,31 @@ class IssueEditService
 
         // Handle label changes
         if (isset($changes['add_labels']) || isset($changes['remove_labels'])) {
-            $currentLabels = array_map(fn($label) => $label['name'], $currentIssue['labels']);
-            
+            $currentLabels = array_map(fn ($label) => $label['name'], $currentIssue['labels']);
+
             if (isset($changes['add_labels'])) {
                 $currentLabels = array_merge($currentLabels, $changes['add_labels']);
             }
-            
+
             if (isset($changes['remove_labels'])) {
                 $currentLabels = array_diff($currentLabels, $changes['remove_labels']);
             }
-            
+
             $updateData['labels'] = array_values(array_unique($currentLabels));
         }
 
         // Handle assignee changes
         if (isset($changes['add_assignees']) || isset($changes['remove_assignees'])) {
-            $currentAssignees = array_map(fn($assignee) => $assignee['login'], $currentIssue['assignees']);
-            
+            $currentAssignees = array_map(fn ($assignee) => $assignee['login'], $currentIssue['assignees']);
+
             if (isset($changes['add_assignees'])) {
                 $currentAssignees = array_merge($currentAssignees, $changes['add_assignees']);
             }
-            
+
             if (isset($changes['remove_assignees'])) {
                 $currentAssignees = array_diff($currentAssignees, $changes['remove_assignees']);
             }
-            
+
             $updateData['assignees'] = array_values(array_unique($currentAssignees));
         }
 
@@ -198,7 +198,7 @@ class IssueEditService
         }
 
         // Check for priority/type labels
-        $labels = array_map(fn($label) => strtolower($label['name']), $issue['labels']);
+        $labels = array_map(fn ($label) => strtolower($label['name']), $issue['labels']);
 
         if (in_array('bug', $labels)) {
             return '🐛';

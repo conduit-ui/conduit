@@ -6,8 +6,8 @@ use App\Commands\GitHub\Concerns\DetectsRepository;
 use App\Services\GitHub\PrAnalysisService;
 use App\Services\GithubAuthService;
 use LaravelZero\Framework\Commands\Command;
+
 use function Laravel\Prompts\text;
-use function Laravel\Prompts\select;
 
 class PrAnalysisCommand extends Command
 {
@@ -25,18 +25,19 @@ class PrAnalysisCommand extends Command
         PrAnalysisService $analysisService,
         GithubAuthService $authService
     ): int {
-        if (!$authService->getToken()) {
+        if (! $authService->getToken()) {
             $this->error('❌ GitHub authentication required. Run: conduit github:auth');
+
             return 1;
         }
 
         $repo = $this->option('repo') ?: $this->detectCurrentRepo();
-        if (!$repo) {
+        if (! $repo) {
             $repo = text('Repository (owner/repo):');
         }
 
         $prNumber = $this->argument('pr');
-        if (!$prNumber) {
+        if (! $prNumber) {
             $prNumber = (int) text('PR number to analyze:');
         }
 
@@ -55,35 +56,41 @@ class PrAnalysisCommand extends Command
 
         if (isset($analysis['error'])) {
             $this->error("❌ {$analysis['error']}");
+
             return 1;
         }
 
         if ($this->option('format') === 'json') {
             $this->line(json_encode($analysis, JSON_PRETTY_PRINT));
+
             return 0;
         }
 
         $this->displayInteractiveAnalysis($analysis);
+
         return 0;
     }
 
     private function showHealthScore(PrAnalysisService $service, string $repo, int $prNumber): int
     {
-        $this->line("🏥 <comment>Calculating PR health score...</comment>");
+        $this->line('🏥 <comment>Calculating PR health score...</comment>');
 
         $health = $service->getHealthScore($repo, $prNumber);
 
         if (isset($health['error'])) {
             $this->error("❌ {$health['error']}");
+
             return 1;
         }
 
         if ($this->option('format') === 'json') {
             $this->line(json_encode($health, JSON_PRETTY_PRINT));
+
             return 0;
         }
 
         $this->displayHealthScore($health);
+
         return 0;
     }
 
@@ -98,21 +105,21 @@ class PrAnalysisCommand extends Command
         $this->newLine();
         $this->line("📋 <info>PR #{$pr['number']}: {$pr['title']}</info>");
         $this->line("👤 Author: <comment>{$pr['author']}</comment>");
-        $this->line("📊 State: <comment>{$pr['state']}</comment>" . ($pr['draft'] ? ' <fg=yellow>(Draft)</>' : ''));
+        $this->line("📊 State: <comment>{$pr['state']}</comment>".($pr['draft'] ? ' <fg=yellow>(Draft)</>' : ''));
 
         // Merge Analysis
         $this->newLine();
         $this->line('🔀 <info>Merge Analysis</info>');
-        
+
         $mergeIcon = $merge['ready_to_merge'] ? '✅' : ($merge['has_conflicts'] ? '❌' : '⚠️');
         $this->line("{$mergeIcon} Status: <comment>{$merge['status_description']}</comment>");
-        
+
         if ($merge['mergeable'] !== null) {
-            $this->line("🎯 Mergeable: " . ($merge['mergeable'] ? '<fg=green>Yes</>' : '<fg=red>No</>'));
+            $this->line('🎯 Mergeable: '.($merge['mergeable'] ? '<fg=green>Yes</>' : '<fg=red>No</>'));
         }
-        
+
         if ($merge['can_rebase']) {
-            $this->line("🔄 Can Rebase: <fg=green>Yes</>");
+            $this->line('🔄 Can Rebase: <fg=green>Yes</>');
         }
 
         // Code Analysis
@@ -122,7 +129,7 @@ class PrAnalysisCommand extends Command
         $this->line("➕ Additions: <fg=green>{$code['additions']}</>");
         $this->line("➖ Deletions: <fg=red>{$code['deletions']}</>");
         $this->line("📊 Total Changes: <comment>{$code['total_changes']}</comment>");
-        $this->line("📏 Size: <comment>" . ucfirst($code['change_size']) . "</comment>");
+        $this->line('📏 Size: <comment>'.ucfirst($code['change_size']).'</comment>');
 
         // Discussion Analysis
         $this->newLine();
@@ -132,12 +139,12 @@ class PrAnalysisCommand extends Command
         $this->line("📝 Commits: <comment>{$discussion['commits']}</comment>");
 
         // Recommendations
-        if (!empty($analysis['recommendations'])) {
+        if (! empty($analysis['recommendations'])) {
             $this->newLine();
             $this->line('🎯 <info>Recommendations</info>');
-            
+
             foreach ($analysis['recommendations'] as $rec) {
-                $icon = match($rec['type']) {
+                $icon = match ($rec['type']) {
                     'critical' => '🚨',
                     'warning' => '⚠️',
                     'suggestion' => '💡',
@@ -145,8 +152,8 @@ class PrAnalysisCommand extends Command
                     'info' => 'ℹ️',
                     default => '•',
                 };
-                
-                $color = match($rec['type']) {
+
+                $color = match ($rec['type']) {
                     'critical' => 'red',
                     'warning' => 'yellow',
                     'suggestion' => 'blue',
@@ -154,7 +161,7 @@ class PrAnalysisCommand extends Command
                     'info' => 'cyan',
                     default => 'white',
                 };
-                
+
                 $this->line("{$icon} <fg={$color}>{$rec['message']}</>");
             }
         }
@@ -167,11 +174,11 @@ class PrAnalysisCommand extends Command
         $status = $health['status'];
 
         $this->newLine();
-        $this->line("🏥 <info>PR Health Report</info>");
+        $this->line('🏥 <info>PR Health Report</info>');
         $this->newLine();
-        
+
         // Health Score with colored output
-        $scoreColor = match($grade) {
+        $scoreColor = match ($grade) {
             'A' => 'green',
             'B' => 'green',
             'C' => 'yellow',
@@ -179,10 +186,10 @@ class PrAnalysisCommand extends Command
             'F' => 'red',
             default => 'white',
         };
-        
+
         $this->line("📊 Health Score: <fg={$scoreColor}>{$score}/100 (Grade: {$grade})</>");
-        $this->line("📈 Status: <fg={$scoreColor}>" . ucfirst(str_replace('_', ' ', $status)) . "</>");
-        
+        $this->line("📈 Status: <fg={$scoreColor}>".ucfirst(str_replace('_', ' ', $status)).'</>');
+
         $this->newLine();
         $this->displayInteractiveAnalysis($health['analysis']);
     }

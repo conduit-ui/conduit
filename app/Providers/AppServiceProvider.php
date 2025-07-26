@@ -8,6 +8,10 @@ use App\Commands\GitHub\IssueCloseCommand;
 use App\Commands\GitHub\IssueCreateCommand;
 use App\Commands\GitHub\IssueEditCommand;
 use App\Commands\GitHub\IssueViewCommand;
+use App\Commands\GitHub\PrAnalysisCommand;
+use App\Commands\GitHub\PrCommentsCommand;
+use App\Commands\GitHub\PrCreateCommand;
+use App\Commands\GitHub\PrStatusCommand;
 use App\Commands\IssuesCommand;
 use App\Commands\Know\Add;
 use App\Commands\Know\AutoCaptureCommand;
@@ -19,9 +23,6 @@ use App\Commands\Know\Optimize;
 use App\Commands\Know\Search;
 use App\Commands\Know\SetupCommand;
 use App\Commands\Know\Show;
-use App\Commands\GitHub\PrAnalysisCommand;
-use App\Commands\GitHub\PrCreateCommand;
-use App\Commands\GitHub\PrStatusCommand;
 use App\Commands\PrsCommand;
 use App\Commands\ReposCommand;
 use App\Commands\StatusCommand;
@@ -38,6 +39,8 @@ use App\Services\GithubAuthService;
 use App\Services\KnowledgeService;
 use App\Services\SecurePackageInstaller;
 use App\Services\ServiceProviderDetector;
+use App\Services\VoiceNarrationService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
 use JordanPartridge\GithubClient\Contracts\GithubConnectorInterface;
 use JordanPartridge\GithubClient\GithubConnector;
@@ -75,6 +78,7 @@ class AppServiceProvider extends ServiceProvider
                 PrCreateCommand::class,
                 PrAnalysisCommand::class,
                 PrStatusCommand::class,
+                PrCommentsCommand::class,
                 \App\Commands\PrAnalyzeCommand::class,
                 \App\Commands\GitHubClientGapAnalysisCommand::class,
                 \App\Commands\CodeRabbitStatusCommand::class,
@@ -126,5 +130,41 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ComponentInstallationService::class);
         $this->app->singleton(KnowledgeService::class);
         $this->app->singleton(PrAnalysisService::class);
+
+        // Register voice narration system
+        $this->registerVoiceNarrationSystem();
+    }
+
+    /**
+     * Register the voice narration system with dependency injection
+     */
+    private function registerVoiceNarrationSystem(): void
+    {
+        // Register narrator collection factory
+        $this->app->singleton('voice.narrators', function ($app) {
+            $narrators = collect();
+
+            // Register available narrators
+            if (class_exists('App\Narrators\DefaultNarrator')) {
+                $narrators->put('default', $app->make('App\Narrators\DefaultNarrator'));
+            }
+
+            if (class_exists('App\Narrators\ClaudeNarrator')) {
+                $narrators->put('claude', $app->make('App\Narrators\ClaudeNarrator'));
+            }
+
+            // Add more narrators as they're implemented
+            // $narrators->put('dramatic', $app->make('App\Narrators\DramaticNarrator'));
+            // $narrators->put('sarcastic', $app->make('App\Narrators\SarcasticNarrator'));
+
+            return $narrators;
+        });
+
+        // Register VoiceNarrationService with narrator collection
+        $this->app->singleton(VoiceNarrationService::class, function ($app) {
+            return new VoiceNarrationService(
+                $app->make('voice.narrators')
+            );
+        });
     }
 }

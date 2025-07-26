@@ -7,13 +7,15 @@ use App\Commands\GitHub\Concerns\OpensBrowser;
 use App\Services\GitHub\IssueCreateService;
 use App\Services\GithubAuthService;
 use LaravelZero\Framework\Commands\Command;
-use function Laravel\Prompts\text;
+
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\text;
 
 class IssueCreateCommand extends Command
 {
     use DetectsRepository;
     use OpensBrowser;
+
     protected $signature = 'issues:create 
                            {--repo= : Repository (owner/repo)}
                            {--title= : Issue title}
@@ -234,6 +236,4 @@ class IssueCreateCommand extends Command
         $this->line("🔗 <href={$issue->html_url}>{$issue->html_url}</>");
         $this->newLine();
     }
-
-
 }

@@ -12,10 +12,10 @@ it('has correct speech speed values', function () {
 it('can list all cases', function () {
     $cases = SpeechSpeed::cases();
     expect($cases)->toHaveCount(4);
-    expect(array_map(fn($case) => $case->value, $cases))->toBe([
+    expect(array_map(fn ($case) => $case->value, $cases))->toBe([
         'slow',
         'normal',
-        'fast',  
-        'blazing'
+        'fast',
+        'blazing',
     ]);
 });

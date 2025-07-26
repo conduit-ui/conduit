@@ -205,7 +205,7 @@ MARKDOWN;
     public function applyTemplateInteractively($command, string $templateType): array
     {
         $template = $this->getTemplate($templateType);
-        if (!$template) {
+        if (! $template) {
             return [];
         }
 
@@ -213,20 +213,20 @@ MARKDOWN;
             $command->line("<comment>📝 Using {$templateType} PR template</comment>");
             $command->newLine();
         }
-        
+
         // Get title with template prefix
         $title = text(
             label: 'PR title',
             placeholder: $template['title'],
             default: $template['title']
         );
-        
+
         // Show template and allow editing
         if ($command) {
             $command->line('<comment>Template body loaded. You can edit or use as-is:</comment>');
         }
         $body = $this->promptForMarkdown($command, 'PR body', $template['body']);
-        
+
         return [
             'title' => $title,
             'body' => $body,

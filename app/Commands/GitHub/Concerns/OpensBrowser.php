@@ -11,7 +11,6 @@ trait OpensBrowser
     {
         // Properly escape the URL to prevent command injection
         $escapedUrl = escapeshellarg($url);
-        
         $command = match (PHP_OS_FAMILY) {
             'Darwin' => "open {$escapedUrl}",
             'Windows' => "start {$escapedUrl}",
@@ -20,7 +19,7 @@ trait OpensBrowser
         };
 
         if ($command) {
-            exec($command . ' 2>/dev/null &');
+            exec($command.' 2>/dev/null &');
             $this->info('🌐 Opening in browser...');
         } else {
             $this->warn('⚠️ Could not detect browser command for your OS');

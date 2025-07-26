@@ -1,23 +1,20 @@
 <?php
 
-use App\Commands\GitHub\PrCreateCommand;
 use App\Services\GitHub\PrCreateService;
 use App\Services\GithubAuthService;
-use Illuminate\Support\Facades\Http;
-use JordanPartridge\GithubClient\Data\Pulls\PullRequestDetailDTO;
 use JordanPartridge\GithubClient\Data\Pulls\PullRequestDTOFactory;
-use JordanPartridge\GithubClient\Facades\Github;
 
 beforeEach(function () {
     $this->mockAuthService = Mockery::mock(GithubAuthService::class);
     $this->mockPrService = Mockery::mock(PrCreateService::class);
-    
+
     app()->instance(GithubAuthService::class, $this->mockAuthService);
     app()->instance(PrCreateService::class, $this->mockPrService);
 });
 
 // Helper function to create PR data for tests
-function createPrData(array $overrides = []): array {
+function createPrData(array $overrides = []): array
+{
     return array_merge([
         'id' => 1,
         'number' => 123,
@@ -108,7 +105,7 @@ it('requires authentication to create PR', function () {
         ->shouldReceive('isAuthenticated')
         ->once()
         ->andReturn(false);
-    
+
     $this->artisan('prs:create')
         ->expectsOutput('❌ Not authenticated with GitHub')
         ->expectsOutput('💡 Run: gh auth login')
@@ -120,36 +117,36 @@ it('creates PR successfully with all options', function () {
         ->shouldReceive('isAuthenticated')
         ->once()
         ->andReturn(true);
-    
+
     // Create a real DTO using the factory
     $prData = createPrData([
         'number' => 123,
         'title' => 'Test PR',
         'body' => 'Test description',
     ]);
-    
+
     $pr = PullRequestDTOFactory::createDetail($prData);
-    
+
     $this->mockPrService
         ->shouldReceive('createPullRequest')
         ->once()
         ->andReturn($pr);
-    
+
     $result = $this->artisan('prs:create', [
         '--repo' => 'owner/repo',
         '--title' => 'Test PR',
         '--body' => 'Test description',
         '--head' => 'feature/test',
         '--base' => 'main',
-        '--format' => 'json'
+        '--format' => 'json',
     ]);
-    
+
     // First just check it succeeded
     $result->assertExitCode(0);
-    
+
     // Get the actual output to debug
     $output = $this->app->make(\Symfony\Component\Console\Output\BufferedOutput::class);
-    
+
     // For now, let's just check for the number
     $result->expectsOutputToContain('123');
 });
@@ -159,19 +156,19 @@ it('handles PR creation failure', function () {
         ->shouldReceive('isAuthenticated')
         ->once()
         ->andReturn(true);
-    
+
     $this->mockPrService
         ->shouldReceive('createPullRequest')
         ->once()
         ->andReturn(null);
-    
+
     $this->artisan('prs:create', [
         '--repo' => 'owner/repo',
         '--title' => 'Failed PR',
         '--body' => 'This will fail',
         '--head' => 'feature/fail',
         '--base' => 'main',
-        '--format' => 'json'
+        '--format' => 'json',
     ])
         ->expectsOutput('❌ Failed to create pull request')
         ->assertExitCode(1);
@@ -182,7 +179,7 @@ it('creates PR with command options', function () {
         ->shouldReceive('isAuthenticated')
         ->once()
         ->andReturn(true);
-    
+
     // Create a real DTO using the factory
     $prData = createPrData([
         'number' => 456,
@@ -192,9 +189,9 @@ it('creates PR with command options', function () {
         'base' => ['ref' => 'develop'],
         'draft' => true,
     ]);
-    
+
     $pr = PullRequestDTOFactory::createDetail($prData);
-    
+
     $this->mockPrService
         ->shouldReceive('createPullRequest')
         ->once()
@@ -206,7 +203,7 @@ it('creates PR with command options', function () {
                    $data['draft'] === true;
         }))
         ->andReturn($pr);
-    
+
     $this->artisan('prs:create', [
         '--repo' => 'owner/repo',
         '--title' => 'Feature PR',
@@ -214,7 +211,7 @@ it('creates PR with command options', function () {
         '--head' => 'feature/new',
         '--base' => 'develop',
         '--draft' => true,
-        '--format' => 'json'
+        '--format' => 'json',
     ])
         ->expectsOutputToContain('456')
         ->assertExitCode(0);
@@ -225,9 +222,9 @@ it('uses PR template when specified', function () {
         ->shouldReceive('isAuthenticated')
         ->once()
         ->andReturn(true);
-    
+
     // When using JSON format, the template is not applied interactively
-    
+
     // Create a real DTO using the factory
     $prData = createPrData([
         'number' => 789,
@@ -236,14 +233,14 @@ it('uses PR template when specified', function () {
         'head' => ['ref' => 'feature/test'],
         'base' => ['ref' => 'main'],
     ]);
-    
+
     $pr = PullRequestDTOFactory::createDetail($prData);
-    
+
     $this->mockPrService
         ->shouldReceive('createPullRequest')
         ->once()
         ->andReturn($pr);
-    
+
     $this->artisan('prs:create', [
         '--repo' => 'owner/repo',
         '--template' => 'feature',

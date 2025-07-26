@@ -2,12 +2,13 @@
 
 namespace App\Contracts\GitHub;
 
+use Illuminate\Console\Command;
 interface ReviewerManagementInterface
 {
     /**
      * Interactive reviewer selection
      */
-    public function selectReviewers(?object $command, array $availableReviewers): array;
+    public function selectReviewers(?Command $command, array $availableReviewers): array;
 
     /**
      * Add reviewers to PR
@@ -22,7 +23,7 @@ interface ReviewerManagementInterface
     /**
      * Request review from specific users
      */
-    public function requestReviews(?object $command, string $repo, int $prNumber, array $reviewers): bool;
+    public function requestReviews(?Command $command, string $repo, int $prNumber, array $reviewers): bool;
 
     /**
      * Validate reviewer usernames

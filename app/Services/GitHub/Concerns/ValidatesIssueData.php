@@ -24,12 +24,12 @@ trait ValidatesIssueData
         }
 
         // Labels validation
-        if (isset($issueData['labels']) && !is_array($issueData['labels'])) {
+        if (isset($issueData['labels']) && ! is_array($issueData['labels'])) {
             $errors[] = 'Labels must be an array';
         }
 
         // Assignees validation
-        if (isset($issueData['assignees']) && !is_array($issueData['assignees'])) {
+        if (isset($issueData['assignees']) && ! is_array($issueData['assignees'])) {
             $errors[] = 'Assignees must be an array';
         }
 
@@ -57,7 +57,7 @@ trait ValidatesIssueData
         if (isset($issueData['labels']) && is_array($issueData['labels'])) {
             $sanitized['labels'] = array_filter(
                 array_map('trim', $issueData['labels']),
-                fn($label) => !empty($label)
+                fn ($label) => ! empty($label)
             );
         }
 
@@ -65,7 +65,7 @@ trait ValidatesIssueData
         if (isset($issueData['assignees']) && is_array($issueData['assignees'])) {
             $sanitized['assignees'] = array_filter(
                 array_map('trim', $issueData['assignees']),
-                fn($assignee) => !empty($assignee)
+                fn ($assignee) => ! empty($assignee)
             );
         }
 
@@ -106,18 +106,18 @@ trait ValidatesIssueData
         }
 
         // Check labels
-        if (isset($newData['add_labels']) && !empty($newData['add_labels'])) {
+        if (isset($newData['add_labels']) && ! empty($newData['add_labels'])) {
             return true;
         }
-        if (isset($newData['remove_labels']) && !empty($newData['remove_labels'])) {
+        if (isset($newData['remove_labels']) && ! empty($newData['remove_labels'])) {
             return true;
         }
 
         // Check assignees
-        if (isset($newData['add_assignees']) && !empty($newData['add_assignees'])) {
+        if (isset($newData['add_assignees']) && ! empty($newData['add_assignees'])) {
             return true;
         }
-        if (isset($newData['remove_assignees']) && !empty($newData['remove_assignees'])) {
+        if (isset($newData['remove_assignees']) && ! empty($newData['remove_assignees'])) {
             return true;
         }
 
@@ -131,8 +131,9 @@ trait ValidatesIssueData
     {
         return array_filter($data, function ($value) {
             if (is_array($value)) {
-                return !empty($value);
+                return ! empty($value);
             }
+
             return $value !== null && $value !== '';
         });
     }

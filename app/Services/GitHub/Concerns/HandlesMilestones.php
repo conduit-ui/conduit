@@ -21,14 +21,14 @@ trait HandlesMilestones
         $choices = [];
         foreach ($milestones as $index => $milestone) {
             $choices[$index] = $milestone['title'];
-            $dueDate = isset($milestone['due_on']) ? ' (due ' . date('M j', strtotime($milestone['due_on'])) . ')' : '';
+            $dueDate = isset($milestone['due_on']) ? ' (due '.date('M j', strtotime($milestone['due_on'])).')' : '';
             $command->line("  [{$index}] {$milestone['title']}{$dueDate}");
         }
 
         $command->newLine();
         $selected = $command->ask('🎯 Select milestone (number, or press Enter to skip)');
 
-        if (empty($selected) || !isset($choices[$selected])) {
+        if (empty($selected) || ! isset($choices[$selected])) {
             return null;
         }
 
@@ -41,24 +41,24 @@ trait HandlesMilestones
     public function interactiveMilestoneSelection(Command $command, string $repo, ?array $currentMilestone): ?string
     {
         $milestones = $this->getMilestones($repo);
-        
+
         $command->line('🎯 <comment>Available milestones:</comment>');
         $command->line('  [none] Remove milestone');
-        
+
         $choices = ['none' => 'none'];
         foreach ($milestones as $index => $milestone) {
             $choices[$index] = $milestone['title'];
             $current = $currentMilestone && $milestone['title'] === $currentMilestone['title'] ? ' (current)' : '';
-            $dueDate = isset($milestone['due_on']) ? ' (due ' . date('M j', strtotime($milestone['due_on'])) . ')' : '';
+            $dueDate = isset($milestone['due_on']) ? ' (due '.date('M j', strtotime($milestone['due_on'])).')' : '';
             $command->line("  [{$index}] {$milestone['title']}{$dueDate}{$current}");
         }
-        
+
         $selected = $command->ask('🎯 Select milestone (number/none, or Enter to skip)');
-        
+
         if ($selected === null || $selected === '') {
             return null;
         }
-        
+
         return $choices[$selected] ?? null;
     }
 
@@ -72,6 +72,7 @@ trait HandlesMilestones
                 return $milestone;
             }
         }
+
         return null;
     }
 
@@ -90,7 +91,7 @@ trait HandlesMilestones
 
         $milestones = $this->getMilestones($repo);
         $milestoneObj = $this->findMilestoneByNameOrNumber($milestones, $milestone);
-        
+
         return $milestoneObj ? $milestoneObj['number'] : null;
     }
 

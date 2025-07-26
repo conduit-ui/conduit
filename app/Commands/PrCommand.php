@@ -2,6 +2,7 @@
 
 namespace App\Commands;
 
+use App\Services\GitHub\PrCreateService;
 use App\Services\GithubAuthService;
 use JordanPartridge\GithubClient\Facades\Github;
 use LaravelZero\Framework\Commands\Command;
@@ -12,7 +13,7 @@ class PrCommand extends Command
 
     protected $description = 'Create a pull request from current branch';
 
-    public function handle(GithubAuthService $githubAuth): int
+    public function handle(GithubAuthService $githubAuth, PrCreateService $prCreateService): int
     {
         // Ensure we're authenticated
         if (! $githubAuth->isAuthenticated()) {
@@ -42,23 +43,33 @@ class PrCommand extends Command
             $this->info("🌿 Branch: {$gitContext['branch']} → {$gitContext['base']}");
             $this->newLine();
 
-            // Create the pull request
-            $pr = Github::pullRequests()->create(
-                owner: $gitContext['owner'],
-                repo: $gitContext['repo_name'],
-                title: $title,
-                head: $gitContext['branch'],
-                base: $gitContext['base'],
-                body: $this->generatePrBody($gitContext)
-            );
+            // Prepare PR data
+            $prData = [
+                'title' => $title,
+                'head' => $gitContext['branch'],
+                'base' => $gitContext['base'],
+                'body' => $this->generatePrBody($gitContext),
+            ];
 
-            $this->info('✅ Pull request created successfully!');
-            $this->info("🔗 {$pr['html_url']}");
+            // Create the pull request using service
+            $pr = $prCreateService->createPullRequest($gitContext['repo'], $prData);
 
-            return 0;
+            if ($pr) {
+                $this->info('✅ Pull request created successfully!');
+                $this->info("🔗 {$pr->html_url}");
+
+                return 0;
+            } else {
+                $this->error('❌ Failed to create PR: Unknown error');
+
+                return 1;
+            }
 
         } catch (\Exception $e) {
             $this->error("❌ Failed to create PR: {$e->getMessage()}");
+            if ($this->output->isVerbose()) {
+                $this->error('Debug: '.$e->getTraceAsString());
+            }
 
             return 1;
         }
@@ -148,7 +159,7 @@ class PrCommand extends Command
     private function getDefaultBranch(string $owner, string $repo): string
     {
         try {
-            $repoData = Github::repos()->get(\JordanPartridge\GithubClient\ValueObjects\Repo::from("{$owner}/{$repo}"));
+            $repoData = Github::repos()->get(\JordanPartridge\GithubClient\ValueObjects\Repo::fromFullName("{$owner}/{$repo}"));
 
             return $repoData->default_branch ?? 'main';
         } catch (\Exception $e) {

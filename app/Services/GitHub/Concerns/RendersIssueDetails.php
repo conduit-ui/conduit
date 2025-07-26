@@ -121,7 +121,6 @@ trait RendersIssueDetails
         return '';
     }
 
-
     /**
      * Create a visual separator
      */

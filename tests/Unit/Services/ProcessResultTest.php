@@ -8,7 +8,7 @@ it('creates process result with all properties', function () {
         output: 'Success output',
         errorOutput: ''
     );
-    
+
     expect($result->isSuccessful())->toBeTrue();
     expect($result->getOutput())->toBe('Success output');
     expect($result->getErrorOutput())->toBe('');
@@ -17,7 +17,7 @@ it('creates process result with all properties', function () {
 it('identifies successful result', function () {
     $success = new ProcessResult(true, 'output', '');
     expect($success->isSuccessful())->toBeTrue();
-    
+
     $failure = new ProcessResult(false, 'output', 'error');
     expect($failure->isSuccessful())->toBeFalse();
 });
@@ -25,7 +25,7 @@ it('identifies successful result', function () {
 it('identifies error state', function () {
     $success = new ProcessResult(true, 'output', '');
     expect($success->hasError())->toBeFalse();
-    
+
     $failure = new ProcessResult(false, 'output', 'error');
     expect($failure->hasError())->toBeTrue();
 });
