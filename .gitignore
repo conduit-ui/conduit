@@ -14,3 +14,7 @@ builds/
 build/
 .phpunit.cache/
 phpunit.xml
+
+# Components - Build your own? Publish them!
+# We don't track local components to encourage publishing to the ecosystem
+conduit-components/
