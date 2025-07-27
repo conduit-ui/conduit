@@ -93,6 +93,7 @@ class PrsCommand extends Command
                 return $this->convertToArray($pr);
             })->toArray();
         }
+
         return $searchResult;
     }
 
@@ -307,13 +308,14 @@ class PrsCommand extends Command
             '🔀 Check Merge Status',
             '💬 Manage Reviews',
             '🌐 Open in Browser',
-            '🔙 Back'
+            '🔙 Back',
         ];
         $action = $this->choice(
             'What would you like to do?',
             $actions,
             count($actions) - 1
         );
+
         return 0;
     }
 
@@ -538,6 +540,7 @@ class PrsCommand extends Command
             return date('M j', $timestamp);
         }
     }
+
     private function convertToArray($obj)
     {
         return json_decode(json_encode($obj), true);

@@ -182,11 +182,13 @@ trait ManagesBranches
 
         if (empty($head) || empty($base)) {
             $command->error('❌ Both head and base branches must be specified');
+
             return false;
         }
 
         if ($head === $base) {
             $command->error('❌ Head and base branches cannot be the same');
+
             return false;
         }
 
@@ -200,6 +202,7 @@ trait ManagesBranches
 
             if ($switch) {
                 $command->warn("⚠️ Please run: git checkout {$head}");
+
                 return false;
             }
         }
