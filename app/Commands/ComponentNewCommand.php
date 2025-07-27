@@ -207,33 +207,11 @@ JSON;
         $useStatements = implode("\n", array_map(fn($class) => "use {$class};", $commandClasses));
         $commandsList = implode(",\n                ", array_map(fn($class) => $class . '::class', $commandClasses));
 
-        $content = <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace};
-
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-{$useStatements}
-
-class ServiceProvider extends BaseServiceProvider
-{
-    public function register(): void
-    {
-        //
-    }
-
-    public function boot(): void
-    {
-        if (\$this->app->runningInConsole()) {
-            \$this->commands([
-                {$commandsList}
-            ]);
-        }
-    }
-}
-PHP;
+        $content = $this->getStub('service-provider', [
+            'namespace' => $namespace,
+            'useStatements' => $useStatements,
+            'commandsList' => $commandsList,
+        ]);
 
         file_put_contents($srcDir . '/ServiceProvider.php', $content);
     }
@@ -245,30 +223,12 @@ PHP;
 
         $className = Str::studly(str_replace([':', '-'], ['', ''], $commandName)) . 'Command';
         
-        $content = <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace}\\Commands;
-
-use Illuminate\Console\Command;
-
-class {$className} extends Command
-{
-    protected \$signature = '{$commandName}';
-
-    protected \$description = 'Sample command for {$componentName} component';
-
-    public function handle(): int
-    {
-        \$this->info('🚀 {$componentName} component is working!');
-        \$this->line('This is a sample command. Implement your logic here.');
-        
-        return 0;
-    }
-}
-PHP;
+        $content = $this->getStub('sample-command', [
+            'namespace' => $namespace,
+            'className' => $className,
+            'commandName' => $commandName,
+            'componentName' => $componentName,
+        ]);
 
         file_put_contents($commandsDir . "/{$className}.php", $content);
     }
@@ -276,98 +236,24 @@ PHP;
     protected function generateReadme(string $path, string $name, string $description, array $commands): void
     {
         $commandsList = implode("\n", array_map(fn($cmd) => "- `conduit {$cmd}`", $commands));
+        $firstCommand = $commands[0] ?? 'example';
         
-        $content = <<<MD
-# Conduit {$name}
-
-{$description}
-
-## Installation
-
-```bash
-# Via Conduit component system
-conduit components install {$name}
-
-# Via Composer (if published)
-composer require jordanpartridge/conduit-{$name}
-```
-
-## Commands
-
-{$commandsList}
-
-## Usage
-
-```bash
-# Example usage
-conduit {$commands[0]} --help
-```
-
-## Development
-
-```bash
-# Install dependencies
-composer install
-
-# Run tests
-./vendor/bin/pest
-
-# Code formatting
-./vendor/bin/pint
-
-# Static analysis
-./vendor/bin/phpstan analyze
-```
-
-## License
-
-MIT License. See [LICENSE](LICENSE) for details.
-MD;
+        $content = $this->getStub('readme', [
+            'name' => $name,
+            'description' => $description,
+            'commandsList' => $commandsList,
+            'firstCommand' => $firstCommand,
+        ]);
 
         file_put_contents($path . '/README.md', $content);
     }
 
     protected function generateClaudeMd(string $path, string $name, string $description): void
     {
-        $content = <<<MD
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with this Conduit component.
-
-## Component: {$name}
-
-{$description}
-
-## Development Commands
-
-```bash
-# Install dependencies
-composer install
-
-# Code quality and testing
-./vendor/bin/pint          # Laravel PHP formatter
-./vendor/bin/phpstan analyze   # Static analysis  
-./vendor/bin/pest          # Run tests (Pest framework)
-```
-
-## Architecture
-
-This is a Conduit component that follows the standard patterns:
-- **ServiceProvider**: Registers commands with Laravel/Conduit
-- **Commands/**: Contains CLI command implementations
-- **Tests/**: Pest-based test suite
-
-## Integration
-
-This component integrates with Conduit through:
-- Service provider auto-discovery
-- Command registration via Conduit's component system
-- Standard Laravel Zero command patterns
-
-## Configuration
-
-Add any configuration requirements here.
-MD;
+        $content = $this->getStub('claude', [
+            'name' => $name,
+            'description' => $description,
+        ]);
 
         file_put_contents($path . '/CLAUDE.md', $content);
     }
@@ -452,5 +338,25 @@ GITIGNORE;
         $this->line("6. Publish to GitHub + Packagist when ready");
         $this->newLine();
         $this->line("📖 Documentation: Update CLAUDE.md and README.md");
+    }
+
+    /**
+     * Get stub content with replacements
+     */
+    protected function getStub(string $stub, array $replacements = []): string
+    {
+        $stubPath = base_path("stubs/component/{$stub}.stub");
+        
+        if (!file_exists($stubPath)) {
+            throw new \InvalidArgumentException("Stub file not found: {$stubPath}");
+        }
+
+        $content = file_get_contents($stubPath);
+        
+        foreach ($replacements as $key => $value) {
+            $content = str_replace("{{{$key}}}", $value, $content);
+        }
+        
+        return $content;
     }
 }

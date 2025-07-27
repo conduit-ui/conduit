@@ -1,0 +1,44 @@
+# Conduit {{name}}
+
+{{description}}
+
+## Installation
+
+```bash
+# Via Conduit component system
+conduit components install {{name}}
+
+# Via Composer (if published)
+composer require jordanpartridge/conduit-{{name}}
+```
+
+## Commands
+
+{{commandsList}}
+
+## Usage
+
+```bash
+# Example usage
+conduit {{firstCommand}} --help
+```
+
+## Development
+
+```bash
+# Install dependencies
+composer install
+
+# Run tests
+./vendor/bin/pest
+
+# Code formatting
+./vendor/bin/pint
+
+# Static analysis
+./vendor/bin/phpstan analyze
+```
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.

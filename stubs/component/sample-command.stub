@@ -1,0 +1,22 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{namespace}}\Commands;
+
+use Illuminate\Console\Command;
+
+class {{className}} extends Command
+{
+    protected $signature = '{{commandName}}';
+
+    protected $description = 'Sample command for {{componentName}} component';
+
+    public function handle(): int
+    {
+        $this->info('🚀 {{componentName}} component is working!');
+        $this->line('This is a sample command. Implement your logic here.');
+        
+        return 0;
+    }
+}

@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{namespace}};
+
+use Illuminate\Support\ServiceProvider as BaseServiceProvider;
+{{useStatements}}
+
+class ServiceProvider extends BaseServiceProvider
+{
+    public function register(): void
+    {
+        //
+    }
+
+    public function boot(): void
+    {
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                {{commandsList}}
+            ]);
+        }
+    }
+}
