@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Commands\CodeRabbitSpeakCommand;
+use App\Commands\CodeRabbitStatusCommand;
 use App\Commands\GitHub\AuthCommand;
 use App\Commands\GitHub\IssueAssignCommand;
 use App\Commands\GitHub\IssueCloseCommand;
@@ -13,7 +15,9 @@ use App\Commands\GitHub\PrCommentsCommand;
 use App\Commands\GitHub\PrCreateCommand;
 use App\Commands\GitHub\PrStatusCommand;
 use App\Commands\GitHub\PrThreadsCommand;
+use App\Commands\GitHubClientGapAnalysisCommand;
 use App\Commands\IssuesCommand;
+use App\Commands\IssuesSpeakCommand;
 use App\Commands\Know\Add;
 use App\Commands\Know\AutoCaptureCommand;
 use App\Commands\Know\Context;
@@ -24,9 +28,12 @@ use App\Commands\Know\Optimize;
 use App\Commands\Know\Search;
 use App\Commands\Know\SetupCommand;
 use App\Commands\Know\Show;
+use App\Commands\PrAnalyzeCommand;
 use App\Commands\PrsCommand;
+use App\Commands\PrsSpeakCommand;
 use App\Commands\ReposCommand;
 use App\Commands\StatusCommand;
+use App\Commands\VoiceCommand;
 use App\Contracts\ComponentManagerInterface;
 use App\Contracts\ComponentStorageInterface;
 use App\Contracts\GitHub\PrCreateInterface;
@@ -82,13 +89,13 @@ class AppServiceProvider extends ServiceProvider
                 PrStatusCommand::class,
                 PrCommentsCommand::class,
                 PrThreadsCommand::class,
-                \App\Commands\PrAnalyzeCommand::class,
-                \App\Commands\GitHubClientGapAnalysisCommand::class,
-                \App\Commands\CodeRabbitStatusCommand::class,
-                \App\Commands\IssuesSpeakCommand::class,
-                \App\Commands\PrsSpeakCommand::class,
-                \App\Commands\CodeRabbitSpeakCommand::class,
-                \App\Commands\VoiceCommand::class,
+                PrAnalyzeCommand::class,
+                GitHubClientGapAnalysisCommand::class,
+                CodeRabbitStatusCommand::class,
+                IssuesSpeakCommand::class,
+                PrsSpeakCommand::class,
+                CodeRabbitSpeakCommand::class,
+                VoiceCommand::class,
             ]);
         }
     }
