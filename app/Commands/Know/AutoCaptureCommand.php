@@ -39,6 +39,7 @@ class AutoCaptureCommand extends Command
 
             if (! $gitContext['commit_sha']) {
                 $this->line('🔍 No recent commit found for auto-capture');
+
                 return 0;
             }
 
@@ -75,7 +76,7 @@ class AutoCaptureCommand extends Command
 
             // Handle tags for v2 schema
             $this->addTagsToEntry($id, ['auto-capture', 'git-commit']);
-            
+
             // Handle metadata for v2 schema
             $this->addMetadataToEntry($id, 'priority', 'low');
             $this->addMetadataToEntry($id, 'status', 'open');
@@ -120,7 +121,7 @@ class AutoCaptureCommand extends Command
 
             // Handle tags for v2 schema
             $this->addTagsToEntry($id, ['auto-capture', 'command-failure', 'debugging']);
-            
+
             // Handle metadata for v2 schema
             $this->addMetadataToEntry($id, 'priority', 'medium');
             $this->addMetadataToEntry($id, 'status', 'open');
@@ -283,6 +284,7 @@ class AutoCaptureCommand extends Command
                 DB::table('knowledge_entries')
                     ->where('id', $entryId)
                     ->update(['tags' => json_encode($tagNames)]);
+
                 return;
             }
 
@@ -294,8 +296,8 @@ class AutoCaptureCommand extends Command
 
                 // Get or create tag with race condition handling
                 $tag = DB::table('knowledge_tags')->where('name', $tagName)->first();
-                
-                if (!$tag) {
+
+                if (! $tag) {
                     try {
                         $tagId = DB::table('knowledge_tags')->insertGetId([
                             'name' => $tagName,
@@ -311,11 +313,11 @@ class AutoCaptureCommand extends Command
                 } else {
                     $tagId = $tag->id;
                 }
-                
+
                 if ($tagId) {
                     // Increment usage count
                     DB::table('knowledge_tags')->where('id', $tagId)->increment('usage_count');
-                    
+
                     // Link entry to tag (prevent duplicates)
                     DB::table('knowledge_entry_tags')->insertOrIgnore([
                         'entry_id' => $entryId,
@@ -341,6 +343,7 @@ class AutoCaptureCommand extends Command
                         ->where('id', $entryId)
                         ->update([$key => $value]);
                 }
+
                 return;
             }
 

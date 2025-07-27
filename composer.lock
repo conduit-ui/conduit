@@ -2208,16 +2208,16 @@
         },
         {
             "name": "jordanpartridge/github-client",
-            "version": "v2.8.0",
+            "version": "v2.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jordanpartridge/github-client.git",
-                "reference": "178124169a0679764c7c783e3ef37e0b7c939f5d"
+                "reference": "d0c36127aa4363d9f6f7a01b142c208e80b48c20"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jordanpartridge/github-client/zipball/178124169a0679764c7c783e3ef37e0b7c939f5d",
-                "reference": "178124169a0679764c7c783e3ef37e0b7c939f5d",
+                "url": "https://api.github.com/repos/jordanpartridge/github-client/zipball/d0c36127aa4363d9f6f7a01b142c208e80b48c20",
+                "reference": "d0c36127aa4363d9f6f7a01b142c208e80b48c20",
                 "shasum": ""
             },
             "require": {
@@ -2287,7 +2287,7 @@
             ],
             "support": {
                 "issues": "https://github.com/jordanpartridge/github-client/issues",
-                "source": "https://github.com/jordanpartridge/github-client/tree/v2.8.0"
+                "source": "https://github.com/jordanpartridge/github-client/tree/v2.9.0"
             },
             "funding": [
                 {
@@ -2295,7 +2295,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-07-21T13:53:47+00:00"
+            "time": "2025-07-26T06:14:31+00:00"
         },
         {
             "name": "jordanpartridge/github-zero",

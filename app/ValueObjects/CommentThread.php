@@ -18,8 +18,8 @@ class CommentThread
         public readonly Collection $comments,
         public readonly ?string $resolvedBy = null,
         public readonly ?Carbon $resolvedAt = null,
-        public readonly Carbon $createdAt = new Carbon(),
-        public readonly Carbon $updatedAt = new Carbon(),
+        public readonly Carbon $createdAt = new Carbon,
+        public readonly Carbon $updatedAt = new Carbon,
         public readonly array $metadata = []
     ) {}
 
@@ -27,7 +27,7 @@ class CommentThread
     {
         $firstComment = $comments->first();
         $lastComment = $comments->last();
-        
+
         return new self(
             id: $options['id'] ?? self::generateThreadId($comments),
             type: $options['type'] ?? self::detectThreadType($comments),
@@ -64,7 +64,7 @@ class CommentThread
     public function getLastActivity(): Carbon
     {
         return $this->comments
-            ->map(fn($comment) => Carbon::parse($comment['updated_at']))
+            ->map(fn ($comment) => Carbon::parse($comment['updated_at']))
             ->max() ?? $this->updatedAt;
     }
 
@@ -72,17 +72,17 @@ class CommentThread
     {
         $participantCount = $this->getParticipants()->count();
         $commentCount = $this->comments->count();
-        
-        $summary = "{$commentCount} comment" . ($commentCount !== 1 ? 's' : '');
-        $summary .= " from {$participantCount} participant" . ($participantCount !== 1 ? 's' : '');
-        
+
+        $summary = "{$commentCount} comment".($commentCount !== 1 ? 's' : '');
+        $summary .= " from {$participantCount} participant".($participantCount !== 1 ? 's' : '');
+
         if ($this->filePath) {
-            $summary .= " in " . basename($this->filePath);
+            $summary .= ' in '.basename($this->filePath);
             if ($this->lineNumber) {
                 $summary .= ":{$this->lineNumber}";
             }
         }
-        
+
         return $summary;
     }
 
@@ -108,30 +108,30 @@ class CommentThread
             $firstComment['path'] ?? null,
             $firstComment['line'] ?? null,
         ]));
-        
+
         return substr($hash, 0, 8);
     }
 
     private static function detectThreadType(Collection $comments): string
     {
         $firstComment = $comments->first();
-        
+
         // PR review comments have path and line
         if (isset($firstComment['path']) && isset($firstComment['line'])) {
             return 'review';
         }
-        
+
         // Check for suggestion keywords
         $body = strtolower($firstComment['body'] ?? '');
         if (str_contains($body, 'suggest') || str_contains($body, 'consider') || str_contains($body, 'recommendation')) {
             return 'suggestion';
         }
-        
+
         // Check for issue keywords
         if (str_contains($body, 'bug') || str_contains($body, 'error') || str_contains($body, 'problem')) {
             return 'issue';
         }
-        
+
         return 'general';
     }
 

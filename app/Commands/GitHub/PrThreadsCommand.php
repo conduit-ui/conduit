@@ -7,6 +7,7 @@ namespace App\Commands\GitHub;
 use App\Commands\GitHub\Concerns\DetectsRepository;
 use App\Services\GitHub\CommentThreadService;
 use App\ValueObjects\CommentThread;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 
@@ -30,9 +31,10 @@ class PrThreadsCommand extends Command
     {
         $prNumber = (int) $this->argument('number');
         $repo = $this->detectCurrentRepo($this->option('repo'));
-        
-        if (!$repo) {
+
+        if (! $repo) {
             $this->error('❌ Repository not specified and not in a git repository');
+
             return 1;
         }
 
@@ -61,6 +63,7 @@ class PrThreadsCommand extends Command
 
             if ($threads->isEmpty()) {
                 $this->info('📭 No comment threads found matching your criteria');
+
                 return 0;
             }
 
@@ -68,6 +71,7 @@ class PrThreadsCommand extends Command
 
         } catch (\Exception $e) {
             $this->error("❌ Failed to fetch threads: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -94,7 +98,7 @@ class PrThreadsCommand extends Command
         if ($summary['total'] > 0) {
             $this->newLine();
             $this->line('<fg=yellow>Thread Types:</>');
-            
+
             $typeData = [];
             foreach ($summary['by_type'] as $type => $count) {
                 if ($count > 0) {
@@ -104,10 +108,10 @@ class PrThreadsCommand extends Command
                         'issue' => '🐛',
                         default => '💬'
                     };
-                    $typeData[] = [$icon . ' ' . ucfirst($type), $count];
+                    $typeData[] = [$icon.' '.ucfirst($type), $count];
                 }
             }
-            
+
             if ($typeData) {
                 $this->table(['Type', 'Count'], $typeData);
             }
@@ -131,6 +135,7 @@ class PrThreadsCommand extends Command
 
         if ($format === 'json') {
             $this->line(json_encode($threads->toArray(), JSON_PRETTY_PRINT));
+
             return 0;
         }
 
@@ -195,7 +200,7 @@ class PrThreadsCommand extends Command
         };
 
         $this->line("<fg=bright-blue>{$index}.</> {$icon} <fg={$statusColor}>{$thread->getSummary()}</>");
-        
+
         if ($thread->filePath) {
             $location = $thread->filePath;
             if ($thread->lineNumber) {
@@ -206,9 +211,9 @@ class PrThreadsCommand extends Command
 
         $participants = $thread->getParticipants()->take(3)->implode(', ');
         if ($thread->getParticipants()->count() > 3) {
-            $participants .= ', +' . ($thread->getParticipants()->count() - 3) . ' more';
+            $participants .= ', +'.($thread->getParticipants()->count() - 3).' more';
         }
-        
+
         $this->line("   👥 <fg=gray>{$participants}</>");
         $this->line("   ⏰ <fg=gray>{$thread->getLastActivity()->diffForHumans()}</>");
     }
@@ -216,7 +221,7 @@ class PrThreadsCommand extends Command
     private function selectAndViewThread(Collection $threads): int
     {
         $options = $threads->map(function (CommentThread $thread, int $index) {
-            return ($index + 1) . ". {$thread->getStatusIcon()} {$thread->getSummary()}";
+            return ($index + 1).". {$thread->getStatusIcon()} {$thread->getSummary()}";
         })->toArray();
 
         $options[] = 'Back';
@@ -241,13 +246,13 @@ class PrThreadsCommand extends Command
     private function displayDetailedThread(CommentThread $thread): void
     {
         $this->newLine();
-        $this->line("🧵 <fg=cyan>Thread Details</>");
+        $this->line('🧵 <fg=cyan>Thread Details</>');
         $this->line(str_repeat('═', 50));
-        
+
         $this->line("<fg=yellow>ID:</> {$thread->id}");
-        $this->line("<fg=yellow>Type:</> " . ucfirst($thread->type));
-        $this->line("<fg=yellow>Status:</> {$thread->getStatusIcon()} " . ucfirst($thread->status));
-        
+        $this->line('<fg=yellow>Type:</> '.ucfirst($thread->type));
+        $this->line("<fg=yellow>Status:</> {$thread->getStatusIcon()} ".ucfirst($thread->status));
+
         if ($thread->filePath) {
             $location = $thread->filePath;
             if ($thread->lineNumber) {
@@ -255,8 +260,8 @@ class PrThreadsCommand extends Command
             }
             $this->line("<fg=yellow>Location:</> {$location}");
         }
-        
-        $this->line("<fg=yellow>Participants:</> " . $thread->getParticipants()->implode(', '));
+
+        $this->line('<fg=yellow>Participants:</> '.$thread->getParticipants()->implode(', '));
         $this->line("<fg=yellow>Created:</> {$thread->createdAt->diffForHumans()}");
         $this->line("<fg=yellow>Updated:</> {$thread->updatedAt->diffForHumans()}");
 
@@ -266,14 +271,14 @@ class PrThreadsCommand extends Command
 
         foreach ($thread->comments as $index => $comment) {
             $author = $comment['user']['login'] ?? 'Unknown';
-            $createdAt = \Carbon\Carbon::parse($comment['created_at'])->diffForHumans();
+            $createdAt = Carbon::parse($comment['created_at'])->diffForHumans();
             $body = $comment['body'] ?? '';
-            
+
             // Truncate long comments
             if (strlen($body) > 200) {
-                $body = substr($body, 0, 200) . '...';
+                $body = substr($body, 0, 200).'...';
             }
-            
+
             $this->newLine();
             $this->line("<fg=green>#{$comment['id']}</> <fg=bright-blue>@{$author}</> <fg=gray>({$createdAt})</>");
             $this->line($body);
