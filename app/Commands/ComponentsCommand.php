@@ -246,7 +246,6 @@ class ComponentsCommand extends Command
             }
 
             // Install using the service
-            $component = $availableComponents[$componentName];
             $this->info("Installing component '{$componentName}'...");
             $this->line("Package: {$component['full_name']}");
             $this->line("Description: {$component['description']}");

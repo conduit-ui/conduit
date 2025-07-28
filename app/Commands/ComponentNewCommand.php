@@ -133,7 +133,7 @@ class ComponentNewCommand extends Command implements PromptsForMissingInput
         // Generate all files
         $this->generateConduitManifest($componentPath, $name, $description, $commands, $organization);
         $this->generateComposerJson($componentPath, $packageName, $description, $namespace, $commands, $organization);
-        $this->generateServiceProvider($componentPath, $namespace, $className, $commands);
+        $this->generateServiceProvider($componentPath, $namespace, $commands);
         $this->generateReadme($componentPath, $name, $description, $commands, $organization);
         $this->generateClaudeMd($componentPath, $name, $description);
         $this->generateLicense($componentPath, $organization);
@@ -150,10 +150,10 @@ class ComponentNewCommand extends Command implements PromptsForMissingInput
 
         // Ask about GitHub setup
         if (confirm('Create GitHub repository and push initial commit?', default: true)) {
-            $this->setupGitHub($componentPath, $name, $packageName, $organization);
+            $this->setupGitHub($componentPath, $name, $organization);
         }
 
-        $this->displayNextSteps($name, $componentPath);
+        $this->displayNextSteps($componentPath);
 
         return 0;
     }
@@ -238,10 +238,10 @@ class ComponentNewCommand extends Command implements PromptsForMissingInput
         $namespace = $this->getCommandNamespace($name);
 
         $suggestions = [
-            "{$namespace}:init",
-            "{$namespace}:configure",
-            "{$namespace}:list",
-            "{$namespace}:status",
+            "init",
+            "configure",
+            "list",
+            "status",
         ];
 
         return multiselect(
@@ -333,7 +333,7 @@ class ComponentNewCommand extends Command implements PromptsForMissingInput
         file_put_contents($path.'/composer.json', $content);
     }
 
-    protected function generateServiceProvider(string $path, string $namespace, string $className, array $commands): void
+    protected function generateServiceProvider(string $path, string $namespace, array $commands): void
     {
         $srcDir = $path.'/src';
         mkdir($srcDir, 0755, true);
@@ -453,7 +453,7 @@ GITIGNORE;
         mkdir($path.'/config', 0755, true);
     }
 
-    protected function setupGitHub(string $path, string $name, string $packageName, string $organization): void
+    protected function setupGitHub(string $path, string $name, string $organization): void
     {
         $this->validatePath($path);
         $this->validateComponentName($name);
@@ -499,7 +499,7 @@ GITIGNORE;
         $this->setupPackagistPublishing($name, $organization);
     }
 
-    protected function displayNextSteps(string $name, string $path): void
+    protected function displayNextSteps(string $path): void
     {
         $this->newLine();
         $this->info('🎉 Next steps:');
@@ -901,7 +901,7 @@ GITIGNORE;
 
             if (str_contains($issue, 'ServiceProvider')) {
                 $this->info('🔧 Fixing ServiceProvider...');
-                $this->generateServiceProvider($componentPath, $namespace, $className, $commands);
+                $this->generateServiceProvider($componentPath, $namespace, $commands);
             }
 
             if (str_contains($issue, 'README')) {
