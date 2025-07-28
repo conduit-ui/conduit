@@ -41,10 +41,11 @@ class ComponentInstallationService
                 'commands' => $this->detector->detectCommands($serviceProviders),
             ];
 
-            $registrationSuccess = $this->registrar->registerComponent($componentName, $componentData);
-            if (! $registrationSuccess) {
+            try {
+                $this->registrar->registerComponent($componentName, $componentData);
+            } catch (\RuntimeException $e) {
                 return ComponentInstallationResult::failed(
-                    'Failed to register component in local registry',
+                    "Component registration failed: {$e->getMessage()}",
                     $installResult
                 );
             }

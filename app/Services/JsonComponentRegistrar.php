@@ -34,8 +34,13 @@ class JsonComponentRegistrar
             return $this->saveRegistry($registry);
         } catch (\Exception $e) {
             error_log("Failed to register component {$name}: ".$e->getMessage());
-
-            return false;
+            
+            // Re-throw for better error handling upstream
+            throw new \RuntimeException(
+                "Component registration failed for '{$name}': ".$e->getMessage(),
+                0,
+                $e
+            );
         }
     }
 

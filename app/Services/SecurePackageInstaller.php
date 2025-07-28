@@ -108,13 +108,8 @@ class SecurePackageInstaller implements PackageInstallerInterface
             // Combine all keywords
             $allKeywords = array_unique(array_merge($packageKeywords, $versionKeywords));
 
-            // Temporary development bypass for known good packages
-            $knownGoodPackages = [
-                'jordanpartridge/conduit-env-manager',
-                'jordanpartridge/github-zero',
-            ];
-
-            if (! in_array($requiredTopic, $allKeywords) && ! in_array($component['full_name'], $knownGoodPackages)) {
+            // All packages must have required topic - no hardcoded bypasses
+            if (! in_array($requiredTopic, $allKeywords)) {
                 throw new RuntimeException(
                     "Package '{$component['full_name']}' does not have required topic '{$requiredTopic}'. ".
                     'Only verified Conduit components can be installed. '.
