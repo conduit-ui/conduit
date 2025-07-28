@@ -27,6 +27,7 @@ use App\Commands\Know\Optimize;
 use App\Commands\Know\Search;
 use App\Commands\Know\SetupCommand;
 use App\Commands\Know\Show;
+use App\Commands\PrsCommand;
 use App\Commands\StatusCommand;
 use App\Commands\VoiceCommand;
 use App\Contracts\ComponentManagerInterface;
@@ -93,6 +94,7 @@ class AppServiceProvider extends ServiceProvider
                 \App\Commands\CodeRabbitSpeakCommand::class,
                 \App\Commands\VoiceCommand::class,
                 \App\Commands\ComponentConfigCommand::class,
+                PrsCommand::class,
             ]);
         }
     }
