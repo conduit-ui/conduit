@@ -14,6 +14,7 @@ use function Laravel\Prompts\error;
 use function Laravel\Prompts\info;
 use function Laravel\Prompts\search;
 use function Laravel\Prompts\table;
+use function Laravel\Prompts\text;
 
 class ReposCommand extends Command
 {
@@ -290,7 +291,7 @@ class ReposCommand extends Command
         }
 
         $defaultDir = './'.$repo->name;
-        $directory = $this->ask('Clone to directory', $defaultDir);
+        $directory = text('Clone to directory', default: $defaultDir);
 
         if (is_dir($directory)) {
             if (! confirm("Directory '{$directory}' exists. Continue?")) {

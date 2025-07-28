@@ -199,8 +199,25 @@ class ComponentsCommand extends Command
                 return Command::FAILURE;
             }
 
-            // Check if component exists in discovered components
-            if (! isset($availableComponents[$componentName])) {
+            // Smart component name resolution: try exact match first, then fuzzy match
+            $resolvedComponent = null;
+
+            if (isset($availableComponents[$componentName])) {
+                // Exact match found
+                $resolvedComponent = $availableComponents[$componentName];
+            } else {
+                // Try fuzzy matching: look for "conduit-{componentName}" in repo_name
+                foreach ($availableComponents as $name => $component) {
+                    $repoName = $component['repo_name'] ?? $component['name'] ?? '';
+                    if ($repoName === "conduit-{$componentName}") {
+                        $resolvedComponent = $component;
+                        $this->info("Resolved '{$componentName}' to '{$name}' component");
+                        break;
+                    }
+                }
+            }
+
+            if (! $resolvedComponent) {
                 $this->error("Component '{$componentName}' not found or already installed.");
                 $this->info('Available components:');
                 foreach (array_keys($availableComponents) as $name) {
@@ -210,9 +227,12 @@ class ComponentsCommand extends Command
                 return Command::FAILURE;
             }
 
+            // Use the resolved component
+            $componentName = $resolvedComponent['name'];
+            $component = $resolvedComponent;
+
             // Confirm installation
             if ($this->shouldBeInteractive($manager)) {
-                $component = $availableComponents[$componentName];
                 $confirmed = confirm(
                     label: "Install '{$componentName}' from {$component['full_name']}?",
                     default: true
@@ -226,7 +246,6 @@ class ComponentsCommand extends Command
             }
 
             // Install using the service
-            $component = $availableComponents[$componentName];
             $this->info("Installing component '{$componentName}'...");
             $this->line("Package: {$component['full_name']}");
             $this->line("Description: {$component['description']}");

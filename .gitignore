@@ -6,6 +6,8 @@
 .env
 .claude/
 /database/database.sqlite
+/config/components.php
+/config/components.json
 builds/
 *.phar
 
@@ -14,3 +16,22 @@ builds/
 build/
 .phpunit.cache/
 phpunit.xml
+
+# Laravel Storage & Cache
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/testing/*  
+/storage/framework/views/*
+/storage/logs/*
+/storage/app/public/*
+!/storage/framework/cache/.gitkeep
+!/storage/framework/sessions/.gitkeep
+!/storage/framework/testing/.gitkeep
+!/storage/framework/views/.gitkeep
+!/storage/logs/.gitkeep
+!/storage/app/.gitkeep
+!/storage/app/public/.gitkeep
+
+# Bootstrap Cache
+/bootstrap/cache/*
+!/bootstrap/cache/.gitkeep

@@ -7,6 +7,10 @@ use App\Services\GitHub\IssueEditService;
 use App\Services\GithubAuthService;
 use LaravelZero\Framework\Commands\Command;
 
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\select;
+use function Laravel\Prompts\text;
+
 class IssueEditCommand extends Command
 {
     use DetectsRepository;
@@ -91,7 +95,7 @@ class IssueEditCommand extends Command
         // Preview changes
         $this->showChangePreview($service, $currentIssue, $changes);
 
-        if (! $this->confirm('Apply these changes?', true)) {
+        if (! confirm('Apply these changes?', true)) {
             $this->info('❌ Edit cancelled');
 
             return 1;
@@ -217,37 +221,37 @@ class IssueEditCommand extends Command
         $this->newLine();
 
         // Title
-        $newTitle = $this->ask("📝 New title (current: {$currentIssue['title']})");
+        $newTitle = text("📝 New title (current: {$currentIssue['title']})");
         if ($newTitle && $newTitle !== $currentIssue['title']) {
             $changes['title'] = $newTitle;
         }
 
         // Body
-        if ($this->confirm('📄 Edit body with markdown editor?', false)) {
+        if (confirm('📄 Edit body with markdown editor?', false)) {
             $changes['body'] = $service->openEditor($currentIssue['body'] ?? '', $this);
         }
 
         // State
         $currentState = $currentIssue['state'];
-        $newState = $this->choice("📊 State (current: {$currentState})", ['open', 'closed', 'skip'], 2);
+        $newState = select(label: "📊 State (current: {$currentState})", options: ['open', 'closed', 'skip'], default: 'skip');
         if ($newState !== 'skip' && $newState !== $currentState) {
             $changes['state'] = $newState;
         }
 
         // Labels
-        if ($this->confirm('🏷️  Manage labels?', false)) {
+        if (confirm('🏷️  Manage labels?', false)) {
             $labelChanges = $service->interactiveLabelManagement($this, $repo, $currentIssue['labels']);
             $changes = array_merge($changes, $labelChanges);
         }
 
         // Assignees
-        if ($this->confirm('👥 Manage assignees?', false)) {
+        if (confirm('👥 Manage assignees?', false)) {
             $assigneeChanges = $service->interactiveAssigneeManagement($this, $repo, $currentIssue['assignees']);
             $changes = array_merge($changes, $assigneeChanges);
         }
 
         // Milestone
-        if ($this->confirm('🎯 Change milestone?', false)) {
+        if (confirm('🎯 Change milestone?', false)) {
             $milestoneChange = $service->interactiveMilestoneSelection($this, $repo, $currentIssue['milestone']);
             if ($milestoneChange !== null) {
                 $changes['milestone'] = $milestoneChange;

@@ -81,6 +81,13 @@ class ComponentManager implements ComponentManagerInterface
         return $this->storage->getInstalled();
     }
 
+    public function getComponent(string $name): ?array
+    {
+        $this->ensureStorageInitialized();
+
+        return $this->storage->getComponent($name);
+    }
+
     public function getRegistry(): array
     {
         // Registry is still from static config as it's read-only
@@ -155,8 +162,15 @@ class ComponentManager implements ComponentManagerInterface
                     return ! ($repo['archived'] ?? false) && ! ($repo['disabled'] ?? false);
                 })
                 ->map(function ($repo) {
+                    // Strip 'conduit-' prefix for user-friendly display
+                    $displayName = $repo['name'];
+                    if (str_starts_with($displayName, 'conduit-')) {
+                        $displayName = substr($displayName, 8); // Remove 'conduit-' prefix
+                    }
+
                     return [
-                        'name' => $repo['name'],
+                        'name' => $displayName,  // User-friendly name (e.g., "spotify")
+                        'repo_name' => $repo['name'], // Full repo name (e.g., "conduit-spotify")
                         'full_name' => $repo['full_name'],
                         'description' => $repo['description'] ?? 'No description available',
                         'url' => $repo['html_url'],
@@ -217,8 +231,16 @@ class ComponentManager implements ComponentManagerInterface
                     return ! ($repo['archived'] ?? false) && ! ($repo['disabled'] ?? false);
                 })
                 ->map(function ($repo) {
+                    // Strip 'conduit-' prefix for user-friendly display
+                    $repoName = $repo['name'] ?? 'Unknown';
+                    $displayName = $repoName;
+                    if (str_starts_with($displayName, 'conduit-')) {
+                        $displayName = substr($displayName, 8); // Remove 'conduit-' prefix
+                    }
+
                     return [
-                        'name' => $repo['name'] ?? 'Unknown',
+                        'name' => $displayName,  // User-friendly name (e.g., "spotify")
+                        'repo_name' => $repoName, // Full repo name (e.g., "conduit-spotify")
                         'full_name' => $repo['full_name'] ?? 'Unknown',
                         'description' => $repo['description'] ?? 'No description available',
                         'html_url' => $repo['html_url'] ?? '',
