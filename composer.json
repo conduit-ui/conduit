@@ -17,9 +17,7 @@
         "facebook/webdriver": "*",
         "guzzlehttp/guzzle": "^7.8",
         "illuminate/database": "^11.45",
-        "jordanpartridge/conduit-env-manager": "^1.0",
-        "jordanpartridge/conduit-spotify": "^1.0",
-        "jordanpartridge/spotify-client": "^1.2.0",
+        "jordanpartridge/github-client": "^2.9",
         "laravel-zero/framework": "^11.36.1",
         "nunomaduro/laravel-console-dusk": "^1.14",
         "symfony/process": "^6.0|^7.0"

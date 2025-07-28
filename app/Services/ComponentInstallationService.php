@@ -11,7 +11,7 @@ class ComponentInstallationService
         private SecurePackageInstaller $installer,
         private ComponentManager $manager,
         private ServiceProviderDetector $detector,
-        private AutoServiceProviderRegistrar $registrar
+        private JsonComponentRegistrar $registrar
     ) {}
 
     /**
@@ -33,15 +33,20 @@ class ComponentInstallationService
             // Step 2: Detect service providers
             $serviceProviders = $this->detector->detectServiceProviders($component['full_name']);
 
-            // Step 3: Auto-register service providers in config/app.php
-            if (! empty($serviceProviders)) {
-                $registrationSuccess = $this->registrar->registerServiceProviders($serviceProviders);
-                if (! $registrationSuccess) {
-                    return ComponentInstallationResult::failed(
-                        'Failed to register service providers in config/app.php',
-                        $installResult
-                    );
-                }
+            // Step 3: Register component in JSON registry
+            $componentData = [
+                'full_name' => $component['full_name'],
+                'description' => $component['description'] ?? "Conduit component for {$componentName} functionality",
+                'service_provider' => $serviceProviders[0] ?? null, // Use first service provider
+                'commands' => $this->detector->detectCommands($serviceProviders),
+            ];
+
+            $registrationSuccess = $this->registrar->registerComponent($componentName, $componentData);
+            if (! $registrationSuccess) {
+                return ComponentInstallationResult::failed(
+                    'Failed to register component in local registry',
+                    $installResult
+                );
             }
 
             // Step 4: Detect commands
@@ -91,14 +96,10 @@ class ComponentInstallationService
                 }
             }
 
-            // Step 2: Unregister service providers from config/app.php
-            if (isset($componentInfo['service_providers']) && ! empty($componentInfo['service_providers'])) {
-                foreach ($componentInfo['service_providers'] as $serviceProvider) {
-                    $this->registrar->unregisterServiceProvider($serviceProvider);
-                }
-            }
+            // Step 2: Unregister component from JSON registry
+            $this->registrar->unregisterComponent($componentName);
 
-            // Step 3: Unregister component from manager
+            // Step 3: Unregister component from manager (if still using old system)
             $this->manager->unregister($componentName);
 
             return true;

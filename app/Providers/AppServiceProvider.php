@@ -16,7 +16,6 @@ use App\Commands\GitHub\PrCreateCommand;
 use App\Commands\GitHub\PrStatusCommand;
 use App\Commands\GitHub\PrThreadsCommand;
 use App\Commands\GitHubClientGapAnalysisCommand;
-use App\Commands\IssuesCommand;
 use App\Commands\IssuesSpeakCommand;
 use App\Commands\Know\Add;
 use App\Commands\Know\AutoCaptureCommand;
@@ -28,17 +27,12 @@ use App\Commands\Know\Optimize;
 use App\Commands\Know\Search;
 use App\Commands\Know\SetupCommand;
 use App\Commands\Know\Show;
-use App\Commands\PrAnalyzeCommand;
-use App\Commands\PrsCommand;
-use App\Commands\PrsSpeakCommand;
-use App\Commands\ReposCommand;
 use App\Commands\StatusCommand;
 use App\Commands\VoiceCommand;
 use App\Contracts\ComponentManagerInterface;
 use App\Contracts\ComponentStorageInterface;
 use App\Contracts\GitHub\PrCreateInterface;
 use App\Contracts\PackageInstallerInterface;
-use App\Services\AutoServiceProviderRegistrar;
 use App\Services\ComponentInstallationService;
 use App\Services\ComponentManager;
 use App\Services\ComponentStorage;
@@ -46,11 +40,12 @@ use App\Services\GitHub\CommentThreadService;
 use App\Services\GitHub\PrAnalysisService;
 use App\Services\GitHub\PrCreateService;
 use App\Services\GithubAuthService;
+use App\Services\JsonComponentRegistrar;
 use App\Services\KnowledgeService;
 use App\Services\SecurePackageInstaller;
-use App\Services\ServiceProviderDetector;
 use App\Services\VoiceNarrationService;
 use Illuminate\Support\Collection;
+// GitHub client imports - only used if package is installed
 use Illuminate\Support\ServiceProvider;
 use JordanPartridge\GithubClient\Contracts\GithubConnectorInterface;
 use JordanPartridge\GithubClient\GithubConnector;
@@ -62,6 +57,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Test runtime service provider registration
+        $this->registerOptionalComponents();
+
         // Register knowledge commands
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -75,9 +73,6 @@ class AppServiceProvider extends ServiceProvider
                 SetupCommand::class,
                 AutoCaptureCommand::class,
                 Migrate::class,
-                PrsCommand::class,
-                ReposCommand::class,
-                IssuesCommand::class,
                 StatusCommand::class,
                 AuthCommand::class,
                 IssueViewCommand::class,
@@ -107,7 +102,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Register GitHub auth service with fallback FIRST
+        // GitHub services - register GitHub client services
         $this->app->singleton(GithubAuthService::class);
 
         // Set a default GitHub token to prevent errors during service provider registration
@@ -138,8 +133,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ComponentStorage::class);
         $this->app->singleton(ComponentManager::class);
         $this->app->singleton(SecurePackageInstaller::class);
-        $this->app->singleton(ServiceProviderDetector::class);
-        $this->app->singleton(AutoServiceProviderRegistrar::class);
+        $this->app->singleton(JsonComponentRegistrar::class);
         $this->app->singleton(ComponentInstallationService::class);
         $this->app->singleton(KnowledgeService::class);
         $this->app->singleton(PrAnalysisService::class);
@@ -180,5 +174,32 @@ class AppServiceProvider extends ServiceProvider
                 $app->make('voice.narrators')
             );
         });
+    }
+
+    /**
+     * Register optional components from local JSON registry
+     */
+    private function registerOptionalComponents(): void
+    {
+        $componentsFile = config_path('components.json');
+
+        if (! file_exists($componentsFile)) {
+            return;
+        }
+
+        try {
+            $components = json_decode(file_get_contents($componentsFile), true);
+
+            foreach ($components['registry'] ?? [] as $name => $config) {
+                if (($config['status'] ?? 'inactive') === 'active' &&
+                    isset($config['service_provider']) &&
+                    class_exists($config['service_provider'])) {
+
+                    $this->app->register($config['service_provider']);
+                }
+            }
+        } catch (\Exception $e) {
+            // Silently fail - optional components shouldn't break the app
+        }
     }
 }
