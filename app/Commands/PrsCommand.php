@@ -261,15 +261,21 @@ class PrsCommand extends Command
         $rows = [];
 
         foreach ($prs as $pr) {
-            $generalComments = $pr->comments ?? 0;
-            $reviewComments = $pr->review_comments ?? 0;
+            $generalComments = is_array($pr) ? ($pr['comments'] ?? 0) : ($pr->comments ?? 0);
+            $reviewComments = is_array($pr) ? ($pr['review_comments'] ?? 0) : ($pr->review_comments ?? 0);
+            $number = is_array($pr) ? ($pr['number'] ?? 'N/A') : ($pr->number ?? 'N/A');
+            $title = is_array($pr) ? ($pr['title'] ?? 'No title') : ($pr->title ?? 'No title');
+            $login = is_array($pr) ? ($pr['user']['login'] ?? 'Unknown') : ($pr->user->login ?? 'Unknown');
+            $state = is_array($pr) ? ($pr['state'] ?? 'unknown') : ($pr->state ?? 'unknown');
+            $updated = is_array($pr) ? ($pr['updated_at'] ?? date('c')) : ($pr->updated_at ?? date('c'));
+
             $rows[] = [
-                $pr->number ?? 'N/A',
-                mb_strimwidth($pr->title ?? 'No title', 0, 40, '...'),
-                $pr->user->login ?? 'Unknown',
+                $number,
+                mb_strimwidth($title, 0, 40, '...'),
+                $login,
                 "💬{$generalComments} 📝{$reviewComments}",
-                $pr->state ?? 'unknown',
-                $this->formatDate($pr->updated_at ?? date('c')),
+                $state,
+                $this->formatDate($updated),
             ];
         }
 
@@ -292,10 +298,10 @@ class PrsCommand extends Command
         }
         $options[] = '🔙 Back';
 
-        $selected = $this->choice(
+        $selected = select(
             'Select a pull request',
             $options,
-            count($options) - 1
+            $options[count($options) - 1]
         );
 
         if ($selected === '🔙 Back') {
@@ -310,10 +316,10 @@ class PrsCommand extends Command
             '🌐 Open in Browser',
             '🔙 Back',
         ];
-        $action = $this->choice(
-            'What would you like to do?',
-            $actions,
-            count($actions) - 1
+        $action = select(
+            label: 'What would you like to do?',
+            options: $actions,
+            default: $actions[count($actions) - 1]
         );
 
         return 0;

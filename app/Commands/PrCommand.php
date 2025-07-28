@@ -7,6 +7,8 @@ use App\Services\GithubAuthService;
 use JordanPartridge\GithubClient\Facades\Github;
 use LaravelZero\Framework\Commands\Command;
 
+use function Laravel\Prompts\text;
+
 class PrCommand extends Command
 {
     protected $signature = 'pr {title? : PR title}';
@@ -174,9 +176,9 @@ class PrCommand extends Command
         $suggestedTitle = $this->generateTitleFromCommits($gitContext['branch']);
 
         if ($suggestedTitle) {
-            $title = $this->ask('PR title', $suggestedTitle);
+            $title = text('PR title', default: $suggestedTitle);
         } else {
-            $title = $this->ask('PR title');
+            $title = text('PR title');
         }
 
         return $title;

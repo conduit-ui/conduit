@@ -7,8 +7,9 @@ return [
     'providers' => [
         0 => 'App\\Providers\\AppServiceProvider',
         1 => 'Illuminate\\Database\\DatabaseServiceProvider',
-        2 => 'JordanPartridge\\GitHubZero\\GitHubZeroServiceProvider',
-        3 => 'Conduit\\Spotify\\ServiceProvider', // Re-enabled for comparison
-        4 => 'App\\Providers\\SpotifyClientServiceProvider', // Laravel Zero compatible wrapper
+        2 => 'Conduit\\Spotify\\ServiceProvider',
+        3 => 'App\\Providers\\SpotifyClientServiceProvider',
+        4 => 'Jordanpartridge\\ConduitEnvmanager\\ServiceProvider',
+        5 => 'JordanPartridge\\ConduitSpotify\\ServiceProvider',
     ],
 ];

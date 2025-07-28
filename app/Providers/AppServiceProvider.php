@@ -38,6 +38,7 @@ use App\Contracts\ComponentManagerInterface;
 use App\Contracts\ComponentStorageInterface;
 use App\Contracts\GitHub\PrCreateInterface;
 use App\Contracts\PackageInstallerInterface;
+use App\Services\AutoServiceProviderRegistrar;
 use App\Services\ComponentInstallationService;
 use App\Services\ComponentManager;
 use App\Services\ComponentStorage;
@@ -89,13 +90,14 @@ class AppServiceProvider extends ServiceProvider
                 PrStatusCommand::class,
                 PrCommentsCommand::class,
                 PrThreadsCommand::class,
-                PrAnalyzeCommand::class,
-                GitHubClientGapAnalysisCommand::class,
-                CodeRabbitStatusCommand::class,
-                IssuesSpeakCommand::class,
-                PrsSpeakCommand::class,
-                CodeRabbitSpeakCommand::class,
-                VoiceCommand::class,
+                \App\Commands\PrAnalyzeCommand::class,
+                \App\Commands\GitHubClientGapAnalysisCommand::class,
+                \App\Commands\CodeRabbitStatusCommand::class,
+                \App\Commands\IssuesSpeakCommand::class,
+                \App\Commands\PrsSpeakCommand::class,
+                \App\Commands\CodeRabbitSpeakCommand::class,
+                \App\Commands\VoiceCommand::class,
+                \App\Commands\ComponentConfigCommand::class,
             ]);
         }
     }
@@ -137,6 +139,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ComponentManager::class);
         $this->app->singleton(SecurePackageInstaller::class);
         $this->app->singleton(ServiceProviderDetector::class);
+        $this->app->singleton(AutoServiceProviderRegistrar::class);
         $this->app->singleton(ComponentInstallationService::class);
         $this->app->singleton(KnowledgeService::class);
         $this->app->singleton(PrAnalysisService::class);

@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use LaravelZero\Framework\Commands\Command;
 
+use function Laravel\Prompts\confirm;
+
 class Migrate extends Command
 {
     protected $signature = 'know:migrate 
@@ -89,7 +91,7 @@ class Migrate extends Command
         $this->newLine();
 
         if (! $this->option('force')) {
-            if (! $this->confirm("Migrate {$entryCount} entries from v1 to v2 schema?", true)) {
+            if (! confirm("Migrate {$entryCount} entries from v1 to v2 schema?", true)) {
                 $this->info('❌ Migration cancelled');
 
                 return 0;

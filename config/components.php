@@ -29,4 +29,7 @@ return [
     'settings' => [
         'interactive_mode' => true,
     ],
+    'github_username' => 'jordanpartridge',
+    'php_namespace' => 'JordanPartridge',
+    'author_email' => 'jordan@partridge.rocks',
 ];

@@ -9,7 +9,7 @@
 conduit components install {{name}}
 
 # Via Composer (if published)
-composer require jordanpartridge/conduit-{{name}}
+composer require {{organization}}/conduit-{{name}}
 ```
 
 ## Commands

@@ -35,7 +35,7 @@ class ComponentMetadata
      */
     public static function fromManifestFile(string $path): self
     {
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             throw new InvalidArgumentException("Manifest file not found: {$path}");
         }
 
@@ -43,7 +43,7 @@ class ComponentMetadata
         $data = json_decode($content, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new InvalidArgumentException("Invalid JSON in manifest: " . json_last_error_msg());
+            throw new InvalidArgumentException('Invalid JSON in manifest: '.json_last_error_msg());
         }
 
         return self::fromArray($data);
@@ -56,7 +56,7 @@ class ComponentMetadata
     {
         $required = ['namespace', 'name', 'description', 'version', 'commands'];
         foreach ($required as $field) {
-            if (!isset($data[$field])) {
+            if (! isset($data[$field])) {
                 throw new InvalidArgumentException("Missing required field: {$field}");
             }
         }
@@ -83,7 +83,7 @@ class ComponentMetadata
     public function getFullCommands(): array
     {
         return array_map(
-            fn(string $command) => "{$this->namespace}:{$command}",
+            fn (string $command) => "{$this->namespace}:{$command}",
             $this->commands
         );
     }
@@ -102,8 +102,8 @@ class ComponentMetadata
     public function hasCommand(string $command): bool
     {
         // Support both namespaced and non-namespaced lookup
-        $normalizedCommand = str_starts_with($command, $this->namespace . ':') 
-            ? $command 
+        $normalizedCommand = str_starts_with($command, $this->namespace.':')
+            ? $command
             : "{$this->namespace}:{$command}";
 
         return in_array($normalizedCommand, $this->getFullCommands());
@@ -125,7 +125,7 @@ class ComponentMetadata
         return hash('sha256', json_encode([
             'namespace' => $this->namespace,
             'commands' => $this->commands,
-            'version' => $this->version
+            'version' => $this->version,
         ]));
     }
 
@@ -155,7 +155,7 @@ class ComponentMetadata
      */
     private function validateNamespace(string $namespace): void
     {
-        if (!preg_match('/^[a-z][a-z0-9-]*[a-z0-9]$/', $namespace)) {
+        if (! preg_match('/^[a-z][a-z0-9-]*[a-z0-9]$/', $namespace)) {
             throw new InvalidArgumentException(
                 "Invalid namespace format: {$namespace}. Must be lowercase with hyphens."
             );
@@ -174,11 +174,11 @@ class ComponentMetadata
     private function validateCommands(array $commands): void
     {
         if (empty($commands)) {
-            throw new InvalidArgumentException("Component must provide at least one command");
+            throw new InvalidArgumentException('Component must provide at least one command');
         }
 
         foreach ($commands as $command) {
-            if (!preg_match('/^[a-z][a-z0-9-]*(?::[a-z][a-z0-9-]*)*$/', $command)) {
+            if (! preg_match('/^[a-z][a-z0-9-]*(?::[a-z][a-z0-9-]*)*$/', $command)) {
                 throw new InvalidArgumentException(
                     "Invalid command format: {$command}. Must be lowercase with hyphens and optional colons."
                 );

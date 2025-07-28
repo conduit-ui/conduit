@@ -5,6 +5,8 @@ namespace App\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 
+use function Laravel\Prompts\confirm;
+
 class UserPreferencesCommand extends Command
 {
     protected $signature = 'preferences 
@@ -130,7 +132,7 @@ class UserPreferencesCommand extends Command
 
     private function resetPreferences(): int
     {
-        if (! $this->confirm('Are you sure you want to reset all preferences?')) {
+        if (! confirm('Are you sure you want to reset all preferences?')) {
             $this->info('Operation cancelled');
 
             return 0;

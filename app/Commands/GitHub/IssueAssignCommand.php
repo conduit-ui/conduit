@@ -6,6 +6,10 @@ use App\Services\GithubAuthService;
 use JordanPartridge\GithubClient\Facades\Github;
 use LaravelZero\Framework\Commands\Command;
 
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\select;
+use function Laravel\Prompts\text;
+
 class IssueAssignCommand extends Command
 {
     protected $signature = 'issues:assign 
@@ -94,7 +98,7 @@ class IssueAssignCommand extends Command
         // Preview changes
         $this->showAssignmentPreview($changes);
 
-        if (! $this->confirm('Apply these assignment changes?', true)) {
+        if (! confirm('Apply these assignment changes?', true)) {
             $this->info('❌ Assignment cancelled');
 
             return 1;
@@ -176,17 +180,21 @@ class IssueAssignCommand extends Command
         $this->line('5. No changes');
         $this->newLine();
 
-        $choice = $this->choice('What would you like to do?', [
-            '1' => 'Add assignees',
-            '2' => 'Remove assignees',
-            '3' => 'Clear all assignees',
-            '4' => 'Assign to me',
-            '5' => 'No changes',
-        ], '5');
+        $choice = select(
+            label: 'What would you like to do?',
+            options: [
+                '1' => 'Add assignees',
+                '2' => 'Remove assignees',
+                '3' => 'Clear all assignees',
+                '4' => 'Assign to me',
+                '5' => 'No changes',
+            ],
+            default: '5'
+        );
 
         switch ($choice) {
             case '1':
-                $newAssignee = $this->ask('👥 Username to assign');
+                $newAssignee = text('👥 Username to assign');
                 if ($newAssignee && ! in_array($newAssignee, $currentAssignees)) {
                     $currentAssignees[] = $newAssignee;
                 }
@@ -198,7 +206,7 @@ class IssueAssignCommand extends Command
 
                     return [];
                 }
-                $removeAssignee = $this->choice('👥 Select assignee to remove', $currentAssignees);
+                $removeAssignee = select(label: '👥 Select assignee to remove', options: $currentAssignees);
                 $currentAssignees = array_diff($currentAssignees, [$removeAssignee]);
                 break;
 
