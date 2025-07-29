@@ -80,7 +80,7 @@ class SyncComponentsCommand extends Command
     {
         $registryPaths = [
             config_path('components.json'),
-            $_SERVER['HOME'] . '/.conduit/config/components.json' ?? null,
+            ($_SERVER['HOME'] ?? null) ? $_SERVER['HOME'] . '/.conduit/config/components.json' : null,
             base_path('config/components.json'),
         ];
 
