@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c2a5dbcf5747f081624fa41c6197b984",
+    "content-hash": "2587c0d49c52228e5d975cdbb9b49c8e",
     "packages": [
         {
             "name": "brick/math",
@@ -2439,80 +2439,6 @@
             "time": "2025-05-20T20:20:02+00:00"
         },
         {
-            "name": "laravel/dusk",
-            "version": "v8.3.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/laravel/dusk.git",
-                "reference": "077d448cd993a08f97bfccf0ea3d6478b3908f7e"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/laravel/dusk/zipball/077d448cd993a08f97bfccf0ea3d6478b3908f7e",
-                "reference": "077d448cd993a08f97bfccf0ea3d6478b3908f7e",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "ext-zip": "*",
-                "guzzlehttp/guzzle": "^7.5",
-                "illuminate/console": "^10.0|^11.0|^12.0",
-                "illuminate/support": "^10.0|^11.0|^12.0",
-                "php": "^8.1",
-                "php-webdriver/webdriver": "^1.15.2",
-                "symfony/console": "^6.2|^7.0",
-                "symfony/finder": "^6.2|^7.0",
-                "symfony/process": "^6.2|^7.0",
-                "vlucas/phpdotenv": "^5.2"
-            },
-            "require-dev": {
-                "laravel/framework": "^10.0|^11.0|^12.0",
-                "mockery/mockery": "^1.6",
-                "orchestra/testbench-core": "^8.19|^9.0|^10.0",
-                "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^10.1|^11.0|^12.0.1",
-                "psy/psysh": "^0.11.12|^0.12",
-                "symfony/yaml": "^6.2|^7.0"
-            },
-            "suggest": {
-                "ext-pcntl": "Used to gracefully terminate Dusk when tests are running."
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Laravel\\Dusk\\DuskServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Laravel\\Dusk\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Taylor Otwell",
-                    "email": "taylor@laravel.com"
-                }
-            ],
-            "description": "Laravel Dusk provides simple end-to-end testing and browser automation.",
-            "keywords": [
-                "laravel",
-                "testing",
-                "webdriver"
-            ],
-            "support": {
-                "issues": "https://github.com/laravel/dusk/issues",
-                "source": "https://github.com/laravel/dusk/tree/v8.3.3"
-            },
-            "time": "2025-06-10T13:59:27+00:00"
-        },
-        {
             "name": "laravel/prompts",
             "version": "v0.3.6",
             "source": {
@@ -3025,84 +2951,6 @@
             "time": "2025-06-25T02:12:12+00:00"
         },
         {
-            "name": "nunomaduro/laravel-console-dusk",
-            "version": "v1.14.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/nunomaduro/laravel-console-dusk.git",
-                "reference": "23aac7f45d5f528c94f3cac72fe1002b0d4687b1"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/nunomaduro/laravel-console-dusk/zipball/23aac7f45d5f528c94f3cac72fe1002b0d4687b1",
-                "reference": "23aac7f45d5f528c94f3cac72fe1002b0d4687b1",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/console": "^11.4|^12.0",
-                "illuminate/support": "^11.4|^12.0",
-                "laravel/dusk": "^8.2",
-                "nunomaduro/laravel-console-task": "^1.9",
-                "php": "^8.2"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.21"
-            },
-            "suggest": {
-                "phpunit/phpunit": "Required to perform browser test assertions."
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "NunoMaduro\\LaravelConsoleDusk\\LaravelConsoleDuskServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "NunoMaduro\\LaravelConsoleDusk\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Nuno Maduro",
-                    "email": "enunomaduro@gmail.com"
-                }
-            ],
-            "description": "Laravel Console Dusk allows the usage of Laravel Dusk in Laravel/Laravel Zero artisan commands.",
-            "keywords": [
-                "Laravel Dusk",
-                "artisan",
-                "cli",
-                "command-line",
-                "console",
-                "laravel",
-                "laravel-zero",
-                "php",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/nunomaduro/laravel-console-dusk/issues",
-                "source": "https://github.com/nunomaduro/laravel-console-dusk"
-            },
-            "funding": [
-                {
-                    "url": "https://www.paypal.com/paypalme/enunomaduro",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/nunomaduro",
-                    "type": "github"
-                }
-            ],
-            "time": "2025-03-31T12:01:12+00:00"
-        },
-        {
             "name": "nunomaduro/laravel-console-summary",
             "version": "v1.13.0",
             "source": {
@@ -3382,72 +3230,6 @@
                 }
             ],
             "time": "2025-05-08T08:14:37+00:00"
-        },
-        {
-            "name": "php-webdriver/webdriver",
-            "version": "1.15.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/php-webdriver/php-webdriver.git",
-                "reference": "998e499b786805568deaf8cbf06f4044f05d91bf"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/php-webdriver/php-webdriver/zipball/998e499b786805568deaf8cbf06f4044f05d91bf",
-                "reference": "998e499b786805568deaf8cbf06f4044f05d91bf",
-                "shasum": ""
-            },
-            "require": {
-                "ext-curl": "*",
-                "ext-json": "*",
-                "ext-zip": "*",
-                "php": "^7.3 || ^8.0",
-                "symfony/polyfill-mbstring": "^1.12",
-                "symfony/process": "^5.0 || ^6.0 || ^7.0"
-            },
-            "replace": {
-                "facebook/webdriver": "*"
-            },
-            "require-dev": {
-                "ergebnis/composer-normalize": "^2.20.0",
-                "ondram/ci-detector": "^4.0",
-                "php-coveralls/php-coveralls": "^2.4",
-                "php-mock/php-mock-phpunit": "^2.0",
-                "php-parallel-lint/php-parallel-lint": "^1.2",
-                "phpunit/phpunit": "^9.3",
-                "squizlabs/php_codesniffer": "^3.5",
-                "symfony/var-dumper": "^5.0 || ^6.0 || ^7.0"
-            },
-            "suggest": {
-                "ext-SimpleXML": "For Firefox profile creation"
-            },
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "lib/Exception/TimeoutException.php"
-                ],
-                "psr-4": {
-                    "Facebook\\WebDriver\\": "lib/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A PHP client for Selenium WebDriver. Previously facebook/webdriver.",
-            "homepage": "https://github.com/php-webdriver/php-webdriver",
-            "keywords": [
-                "Chromedriver",
-                "geckodriver",
-                "php",
-                "selenium",
-                "webdriver"
-            ],
-            "support": {
-                "issues": "https://github.com/php-webdriver/php-webdriver/issues",
-                "source": "https://github.com/php-webdriver/php-webdriver/tree/1.15.2"
-            },
-            "time": "2024-11-21T15:12:59+00:00"
         },
         {
             "name": "phpoption/phpoption",
@@ -6365,93 +6147,6 @@
                 "source": "https://github.com/Jean85/pretty-package-versions/tree/2.1.1"
             },
             "time": "2025-03-19T14:43:43+00:00"
-        },
-        {
-            "name": "jordanpartridge/conduit-spotify",
-            "version": "v1.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/jordanpartridge/conduit-spotify.git",
-                "reference": "ce2c1b71d385db01f71f9f5e518894fe477b0bc2"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/jordanpartridge/conduit-spotify/zipball/ce2c1b71d385db01f71f9f5e518894fe477b0bc2",
-                "reference": "ce2c1b71d385db01f71f9f5e518894fe477b0bc2",
-                "shasum": ""
-            },
-            "require": {
-                "guzzlehttp/guzzle": "^7.0",
-                "illuminate/console": "^11.0",
-                "illuminate/support": "^11.0",
-                "laravel-zero/framework": "^11.0",
-                "php": "^8.2"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.18",
-                "orchestra/testbench": "^9.0",
-                "pestphp/pest": "^3.0",
-                "phpstan/phpstan": "^1.12"
-            },
-            "type": "library",
-            "extra": {
-                "conduit": {
-                    "commands": [
-                        "spotify:play",
-                        "spotify:pause",
-                        "spotify:skip",
-                        "spotify:next",
-                        "spotify:current",
-                        "spotify:volume",
-                        "spotify:search",
-                        "spotify:playlists",
-                        "spotify:queue",
-                        "spotify:focus",
-                        "spotify:devices",
-                        "spotify:login",
-                        "spotify:logout",
-                        "spotify:setup",
-                        "spotify:configure",
-                        "spotify:analytics"
-                    ],
-                    "component": true
-                },
-                "laravel": {
-                    "providers": [
-                        "JordanPartridge\\ConduitSpotify\\ServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "JordanPartridge\\ConduitSpotify\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Jordan Partridge",
-                    "email": "jordan@partridge.rocks"
-                }
-            ],
-            "description": "Spotify integration component for Conduit - Control music during development workflows",
-            "keywords": [
-                "cli",
-                "conduit",
-                "conduit-component",
-                "developer-tools",
-                "laravel-zero",
-                "music",
-                "spotify"
-            ],
-            "support": {
-                "issues": "https://github.com/jordanpartridge/conduit-spotify/issues",
-                "source": "https://github.com/jordanpartridge/conduit-spotify/tree/v1.1.0"
-            },
-            "time": "2025-07-29T01:59:46+00:00"
         },
         {
             "name": "laravel-zero/phar-updater",
