@@ -32,8 +32,20 @@ class InstallCommand extends Command
                 return 1;
             }
 
+            // First, discover the component
+            $availableComponents = $manager->discoverComponents();
+            
+            // Find the component in available list
+            $componentData = collect($availableComponents)->firstWhere('name', $component);
+            
+            if (!$componentData) {
+                $this->error("❌ Component '{$component}' not found");
+                $this->info("💡 Available components: " . collect($availableComponents)->pluck('name')->join(', '));
+                return 1;
+            }
+            
             // Perform installation
-            $result = $installer->install($component);
+            $result = $installer->installComponent($component, $componentData);
             
             if ($result->isSuccessful()) {
                 $this->info("✅ Successfully installed component: {$component}");
