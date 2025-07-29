@@ -53,7 +53,7 @@ class InstallCommand extends Command
                 return 0;
             } else {
                 $this->error("❌ Failed to install component: {$component}");
-                $this->error("💡 Error: " . $result->getErrorMessage());
+                $this->error("💡 Error: " . $result->getMessage());
                 return 1;
             }
 
