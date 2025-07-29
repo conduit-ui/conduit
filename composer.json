@@ -32,8 +32,12 @@
     },
     "repositories": [
         {
-            "type": "vcs",
+            "type": "vcs", 
             "url": "https://github.com/jordanpartridge/spotify-client"
+        },
+        {
+            "type": "path",
+            "url": "./conduit-components/env-manager"
         }
     ],
     "autoload": {
@@ -41,7 +45,8 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/",
-            "Conduit\\Spotify\\": "conduit-spotify/src/"
+            "Conduit\\Spotify\\": "conduit-spotify/src/",
+            "Jordanpartridge\\ConduitEnvmanager\\": "conduit-components/env-manager/src/"
         }
     },
     "autoload-dev": {

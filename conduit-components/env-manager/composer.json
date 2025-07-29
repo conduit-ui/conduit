@@ -1,0 +1,56 @@
+{
+    "name": "jordanpartridge/conduit-env-manager",
+    "description": "A Conduit component for env-manager functionality",
+    "type": "library",
+    "keywords": ["conduit", "laravel", "cli", "component", "conduit-component"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jordan Partridge",
+            "email": "jordan@partridge.rocks"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "laravel-zero/framework": "^11.0",
+        "illuminate/console": "^11.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.18",
+        "pestphp/pest": "^3.0",
+        "phpstan/phpstan": "^1.12"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jordanpartridge\\ConduitEnvmanager\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Jordanpartridge\\ConduitEnvmanager\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Jordanpartridge\\ConduitEnvmanager\\ServiceProvider"
+            ]
+        },
+        "conduit": {
+            "component": true,
+            "commands": [
+                "env:init",
+                "env:set", 
+                "env:get",
+                "env:backup"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}

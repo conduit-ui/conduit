@@ -1,0 +1,22 @@
+{
+    "namespace": "env-manager",
+    "name": "Env Manager",
+    "description": "A Conduit component for env-manager functionality",
+    "version": "1.0.0",
+    "commands": [
+        "env:init"
+    ],
+    "min_conduit_version": "2.0.0",
+    "dependencies": [],
+    "tags": [
+        "conduit",
+        "cli"
+    ],
+    "author": {
+        "name": "Jordan Partridge",
+        "email": "jordan@partridge.rocks"
+    },
+    "homepage": "https://github.com/jordanpartridge/conduit-env-manager",
+    "repository": "https://github.com/jordanpartridge/conduit-env-manager",
+    "license": "MIT"
+}
