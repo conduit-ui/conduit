@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0fa4e21b79c4b00927147df500446901",
+    "content-hash": "c2a5dbcf5747f081624fa41c6197b984",
     "packages": [
         {
             "name": "brick/math",
@@ -2102,6 +2102,76 @@
                 "source": "https://github.com/jolicode/php-os-helper/tree/v0.1.0"
             },
             "time": "2023-12-03T12:46:03+00:00"
+        },
+        {
+            "name": "jordanpartridge/conduit-env-manager",
+            "version": "v2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jordanpartridge/conduit-env-manager.git",
+                "reference": "f5d7dc25cd6462309a4c26d83e8b856bda885013"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jordanpartridge/conduit-env-manager/zipball/f5d7dc25cd6462309a4c26d83e8b856bda885013",
+                "reference": "f5d7dc25cd6462309a4c26d83e8b856bda885013",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/console": "^11.0",
+                "laravel-zero/framework": "^11.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.18",
+                "pestphp/pest": "^3.0",
+                "phpstan/phpstan": "^1.12"
+            },
+            "type": "library",
+            "extra": {
+                "conduit": {
+                    "commands": [
+                        "env:init",
+                        "env:set",
+                        "env:get",
+                        "env:backup"
+                    ],
+                    "component": true
+                },
+                "laravel": {
+                    "providers": [
+                        "Jordanpartridge\\ConduitEnvmanager\\ServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Jordanpartridge\\ConduitEnvmanager\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jordan Partridge",
+                    "email": "jordan@partridge.rocks"
+                }
+            ],
+            "description": "A Conduit component for env-manager functionality",
+            "keywords": [
+                "cli",
+                "component",
+                "conduit",
+                "conduit-component",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/jordanpartridge/conduit-env-manager/issues",
+                "source": "https://github.com/jordanpartridge/conduit-env-manager/tree/v2.0.0"
+            },
+            "time": "2025-07-29T00:52:54+00:00"
         },
         {
             "name": "jordanpartridge/github-client",
@@ -6295,6 +6365,93 @@
                 "source": "https://github.com/Jean85/pretty-package-versions/tree/2.1.1"
             },
             "time": "2025-03-19T14:43:43+00:00"
+        },
+        {
+            "name": "jordanpartridge/conduit-spotify",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jordanpartridge/conduit-spotify.git",
+                "reference": "ce2c1b71d385db01f71f9f5e518894fe477b0bc2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jordanpartridge/conduit-spotify/zipball/ce2c1b71d385db01f71f9f5e518894fe477b0bc2",
+                "reference": "ce2c1b71d385db01f71f9f5e518894fe477b0bc2",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.0",
+                "illuminate/console": "^11.0",
+                "illuminate/support": "^11.0",
+                "laravel-zero/framework": "^11.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.18",
+                "orchestra/testbench": "^9.0",
+                "pestphp/pest": "^3.0",
+                "phpstan/phpstan": "^1.12"
+            },
+            "type": "library",
+            "extra": {
+                "conduit": {
+                    "commands": [
+                        "spotify:play",
+                        "spotify:pause",
+                        "spotify:skip",
+                        "spotify:next",
+                        "spotify:current",
+                        "spotify:volume",
+                        "spotify:search",
+                        "spotify:playlists",
+                        "spotify:queue",
+                        "spotify:focus",
+                        "spotify:devices",
+                        "spotify:login",
+                        "spotify:logout",
+                        "spotify:setup",
+                        "spotify:configure",
+                        "spotify:analytics"
+                    ],
+                    "component": true
+                },
+                "laravel": {
+                    "providers": [
+                        "JordanPartridge\\ConduitSpotify\\ServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "JordanPartridge\\ConduitSpotify\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jordan Partridge",
+                    "email": "jordan@partridge.rocks"
+                }
+            ],
+            "description": "Spotify integration component for Conduit - Control music during development workflows",
+            "keywords": [
+                "cli",
+                "conduit",
+                "conduit-component",
+                "developer-tools",
+                "laravel-zero",
+                "music",
+                "spotify"
+            ],
+            "support": {
+                "issues": "https://github.com/jordanpartridge/conduit-spotify/issues",
+                "source": "https://github.com/jordanpartridge/conduit-spotify/tree/v1.1.0"
+            },
+            "time": "2025-07-29T01:59:46+00:00"
         },
         {
             "name": "laravel-zero/phar-updater",

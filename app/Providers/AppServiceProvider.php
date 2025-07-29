@@ -29,6 +29,8 @@ use App\Commands\Know\SetupCommand;
 use App\Commands\Know\Show;
 use App\Commands\PrsCommand;
 use App\Commands\StatusCommand;
+use App\Commands\System\CleanupCommand;
+use App\Commands\System\SyncComponentsCommand;
 use App\Commands\VoiceCommand;
 use App\Contracts\ComponentManagerInterface;
 use App\Contracts\ComponentStorageInterface;
@@ -104,6 +106,8 @@ class AppServiceProvider extends ServiceProvider
                 \App\Commands\VoiceCommand::class,
                 \App\Commands\ComponentConfigCommand::class,
                 \App\Commands\UpdateCommand::class,
+                \App\Commands\System\CleanupCommand::class,
+                \App\Commands\System\SyncComponentsCommand::class,
                 PrsCommand::class,
             ]);
         }

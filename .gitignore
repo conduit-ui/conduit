@@ -11,26 +11,53 @@
 builds/
 *.phar
 
+# Local component development
+/conduit-components/
+/projects/
+/test-env-demo/
+test-syntax.php
+
+# Debug and temporary files
+debug-global
+/storage/spotify-client/
+/storage/laravel-console-dusk/
+
+# Build artifacts
+conduit-v*.phar
+*.dusk.php
+
 # Testing & Coverage
 /coverage
 build/
 .phpunit.cache/
 phpunit.xml
 
-# Laravel Storage & Cache
+# Laravel Storage & Cache (comprehensive)
+# Perfect place for test scripts, debug files, and temp data - won't get committed!
+/storage/*
+!/storage/app/
+!/storage/framework/
+!/storage/logs/
+/storage/app/*
+!/storage/app/.gitkeep
+!/storage/app/public/
+/storage/app/public/*
+!/storage/app/public/.gitkeep
+/storage/framework/*
+!/storage/framework/cache/
+!/storage/framework/sessions/
+!/storage/framework/testing/
+!/storage/framework/views/
 /storage/framework/cache/*
 /storage/framework/sessions/*
-/storage/framework/testing/*  
+/storage/framework/testing/*
 /storage/framework/views/*
-/storage/logs/*
-/storage/app/public/*
 !/storage/framework/cache/.gitkeep
 !/storage/framework/sessions/.gitkeep
 !/storage/framework/testing/.gitkeep
 !/storage/framework/views/.gitkeep
+/storage/logs/*
 !/storage/logs/.gitkeep
-!/storage/app/.gitkeep
-!/storage/app/public/.gitkeep
 
 # Bootstrap Cache
 /bootstrap/cache/*
