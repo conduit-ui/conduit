@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Commands;
 
+use App\Concerns\DisplaysUpdateStatus;
 use App\Services\ComponentUpdateChecker;
 use App\Services\ComponentUpdateService;
 use LaravelZero\Framework\Commands\Command;
@@ -13,6 +14,8 @@ use function Laravel\Prompts\multiselect;
 
 class UpdateCommand extends Command
 {
+    use DisplaysUpdateStatus;
+
     protected $signature = 'update 
                             {component? : Specific component to update}
                             {--all : Update all components}
@@ -56,26 +59,7 @@ class UpdateCommand extends Command
             return Command::SUCCESS;
         }
 
-        $this->newLine();
-        $this->info('📦 Available updates:');
-        $this->newLine();
-
-        $rows = $updates->map(function ($update) {
-            $priority = match($update['priority']) {
-                'security' => '<fg=red>Security</>', 
-                'breaking' => '<fg=yellow>Breaking</>', 
-                default => 'Normal'
-            };
-
-            return [
-                'Component' => $update['name'],
-                'Current' => $update['current'],
-                'Latest' => $update['latest'], 
-                'Priority' => $priority,
-            ];
-        })->values()->toArray();
-
-        $this->table(['Component', 'Current', 'Latest', 'Priority'], $rows);
+        $this->displayUpdatesTable($updates);
 
         $this->newLine();
         $this->info('💡 Run "conduit update" to install updates interactively');

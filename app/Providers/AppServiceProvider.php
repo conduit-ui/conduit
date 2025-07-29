@@ -47,6 +47,10 @@ use App\Services\SecurePackageInstaller;
 use App\Services\ComponentUpdateChecker;
 use App\Services\ComponentUpdateService;
 use App\Services\VoiceNarrationService;
+use App\Actions\CheckComponentUpdates;
+use App\Actions\DetectUpdatePriority;
+use App\Actions\CacheUpdateResults;
+use App\Policies\UpdateCheckPolicy;
 use Illuminate\Support\Collection;
 // GitHub client imports - only used if package is installed
 use Illuminate\Support\ServiceProvider;
@@ -145,6 +149,13 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ComponentInstallationService::class);
         $this->app->singleton(ComponentUpdateChecker::class);
         $this->app->singleton(ComponentUpdateService::class);
+        
+        // Update system actions and policies
+        $this->app->singleton(CheckComponentUpdates::class);
+        $this->app->singleton(DetectUpdatePriority::class);
+        $this->app->singleton(CacheUpdateResults::class);
+        $this->app->singleton(UpdateCheckPolicy::class);
+        
         $this->app->singleton(KnowledgeService::class);
         $this->app->singleton(PrAnalysisService::class);
         $this->app->singleton(CommentThreadService::class);
