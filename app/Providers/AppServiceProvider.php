@@ -44,6 +44,8 @@ use App\Services\GithubAuthService;
 use App\Services\JsonComponentRegistrar;
 use App\Services\KnowledgeService;
 use App\Services\SecurePackageInstaller;
+use App\Services\ComponentUpdateChecker;
+use App\Services\ComponentUpdateService;
 use App\Services\VoiceNarrationService;
 use Illuminate\Support\Collection;
 // GitHub client imports - only used if package is installed
@@ -60,6 +62,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Test runtime service provider registration
         $this->registerOptionalComponents();
+
+        // Show component update status on startup
+        $this->checkForComponentUpdates();
 
         // Register knowledge commands
         if ($this->app->runningInConsole()) {
@@ -94,6 +99,7 @@ class AppServiceProvider extends ServiceProvider
                 \App\Commands\CodeRabbitSpeakCommand::class,
                 \App\Commands\VoiceCommand::class,
                 \App\Commands\ComponentConfigCommand::class,
+                \App\Commands\UpdateCommand::class,
                 PrsCommand::class,
             ]);
         }
@@ -137,6 +143,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SecurePackageInstaller::class);
         $this->app->singleton(JsonComponentRegistrar::class);
         $this->app->singleton(ComponentInstallationService::class);
+        $this->app->singleton(ComponentUpdateChecker::class);
+        $this->app->singleton(ComponentUpdateService::class);
         $this->app->singleton(KnowledgeService::class);
         $this->app->singleton(PrAnalysisService::class);
         $this->app->singleton(CommentThreadService::class);
@@ -202,6 +210,24 @@ class AppServiceProvider extends ServiceProvider
             }
         } catch (\Exception $e) {
             // Silently fail - optional components shouldn't break the app
+        }
+    }
+
+    /**
+     * Check for component updates on startup
+     */
+    private function checkForComponentUpdates(): void
+    {
+        // Only check during console commands, not tests
+        if (!$this->app->runningInConsole() || $this->app->runningUnitTests()) {
+            return;
+        }
+
+        try {
+            $checker = $this->app->make(ComponentUpdateChecker::class);
+            $checker->displayUpdateStatus();
+        } catch (\Exception $e) {
+            // Fail gracefully - never break commands
         }
     }
 }
