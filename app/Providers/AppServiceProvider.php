@@ -202,9 +202,22 @@ class AppServiceProvider extends ServiceProvider
      */
     private function registerOptionalComponents(): void
     {
-        $componentsFile = config_path('components.json');
+        // Try multiple possible component file locations
+        $possiblePaths = [
+            config_path('components.json'),  // Development
+            $_SERVER['HOME'] . '/.conduit/config/components.json',  // Global installation
+            base_path('config/components.json'),  // Fallback
+        ];
 
-        if (! file_exists($componentsFile)) {
+        $componentsFile = null;
+        foreach ($possiblePaths as $path) {
+            if (file_exists($path)) {
+                $componentsFile = $path;
+                break;
+            }
+        }
+
+        if (!$componentsFile) {
             return;
         }
 
