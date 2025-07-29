@@ -40,7 +40,8 @@ return [
     */
 
     'add' => [
-        //
+        App\Commands\InstallCommand::class,
+        App\Commands\UninstallCommand::class,
     ],
 
     /*
