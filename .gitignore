@@ -22,6 +22,28 @@ debug-global
 /storage/spotify-client/
 /storage/laravel-console-dusk/
 
+# Cache and temporary files
+/config/update-cache.json
+*.cache
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+*.backup
+*.orig
+*.swp
+*~
+
+# IDE and editor files (additional patterns)
+*.sublime-*
+.DS_Store
+Thumbs.db
+
+# OS generated files  
+.DS_Store?
+ehthumbs.db
+
 # Build artifacts
 conduit-v*.phar
 *.dusk.php
