@@ -10,20 +10,24 @@ Conduit is a Laravel Zero CLI application that serves as a personal developer AP
 
 ```bash
 # Install dependencies
-composer install
+composer install                             # Auto-syncs components via post-install hook
 
 # Use Conduit for development workflow
-php conduit components list                    # See installed development tools
-php conduit components discover               # Find new development components  
-php conduit components install github        # Install GitHub component for repo management
+php conduit components list                  # See installed development tools
+php conduit components discover             # Find new development components  
+php conduit components install github       # Install GitHub component for repo management
 
 # Core development tasks
-./vendor/bin/pest                            # Run tests
-./vendor/bin/pint                           # Code formatting
+./vendor/bin/pest                           # Run tests
+./vendor/bin/pint                          # Code formatting
+
+# Component management for clean releases
+php conduit system:cleanup --components     # Remove all components before commit
+php conduit system:sync-components          # Re-sync components after pull/install
 
 # Build and distribution
-php -d phar.readonly=off vendor/bin/box compile  # Build PHAR executable
-php conduit [command]                        # Run application locally
+php -d phar.readonly=off vendor/bin/box compile  # Build PHAR executable (always clean)
+php conduit [command]                       # Run application locally
 ```
 
 ## Conduit-Powered Development Workflow
@@ -93,3 +97,44 @@ Components in `conduit-components/` use:
 - `jordanpartridge/conduit-component`: Base component interface (planned)
 - `jordanpartridge/packagist-client`: Component discovery
 - `jordanpartridge/github-client`: GitHub integration foundation
+
+## Component Lifecycle Management
+
+### The Problem
+Components are runtime dependencies that get added to `composer.json` when installed. This creates challenges:
+- Developers install components locally for testing
+- `composer.json` gets committed with component dependencies  
+- Other developers pull the repo but components aren't properly registered
+- PHAR builds include unnecessary component code
+
+### The Solution
+Conduit implements automatic component lifecycle management:
+
+#### Post-Install Hook
+```bash
+# Runs automatically after composer install/update
+php conduit system:sync-components --silent
+```
+- Reads `config/components.json` registry
+- Re-registers any components with installed packages
+- Ensures service providers are properly loaded
+- Maintains component state across team members
+
+#### Pre-Commit Cleanup
+```bash  
+# Run before committing for clean releases
+php conduit system:cleanup --components
+```
+- Removes all installed components from `composer.json`
+- Clears component registry
+- Ensures PHAR builds are minimal
+- Prevents component dependencies in releases
+
+#### Development Workflow
+1. **Install components**: `conduit components install spotify`
+2. **Develop with components**: All commands available
+3. **Before commit**: `conduit system:cleanup --components` 
+4. **Commit clean code**: No component dependencies
+5. **After pull**: `composer install` auto-syncs components
+
+This ensures clean releases while preserving development flexibility.

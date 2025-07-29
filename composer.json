@@ -14,9 +14,9 @@
     "require": {
         "php": "^8.2.0",
         "chillerlan/php-qrcode": "^5.0",
-        "facebook/webdriver": "*",
         "guzzlehttp/guzzle": "^7.8",
         "illuminate/database": "^11.45",
+        "jordanpartridge/conduit-env-manager": "^2.0",
         "jordanpartridge/github-client": "^2.9",
         "laravel-zero/framework": "^11.36.1",
         "nunomaduro/laravel-console-dusk": "^1.14",
@@ -25,23 +25,15 @@
     "require-dev": {
         "fakerphp/faker": "^1.23",
         "laravel-zero/phar-updater": "^1.3",
-        "laravel/dusk": "*",
         "laravel/pint": "^1.18.3",
         "mockery/mockery": "^1.6.12",
         "pestphp/pest": "^3.7.1"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/jordanpartridge/spotify-client"
-        }
-    ],
     "autoload": {
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
-            "Database\\Seeders\\": "database/seeders/",
-            "Conduit\\Spotify\\": "conduit-spotify/src/"
+            "Database\\Seeders\\": "database/seeders/"
         }
     },
     "autoload-dev": {
@@ -58,6 +50,12 @@
         "test:coverage:html": [
             "@putenv XDEBUG_MODE=coverage",
             "./vendor/bin/pest --coverage-html=build/coverage"
+        ],
+        "post-install-cmd": [
+            "@php conduit system:sync-components --silent || true"
+        ],
+        "post-update-cmd": [
+            "@php conduit system:sync-components --silent || true"
         ]
     },
     "config": {
