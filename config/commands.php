@@ -42,6 +42,7 @@ return [
     'add' => [
         App\Commands\InstallCommand::class,
         App\Commands\UninstallCommand::class,
+        App\Commands\Component\CertifyCommand::class,
     ],
 
     /*
