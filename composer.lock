@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7e181eaa5ef364ec67183ca0d8de95d8",
+    "content-hash": "ede4bd7e9eb8cccd27465db2713ba020",
     "packages": [
         {
             "name": "brick/math",
@@ -2105,16 +2105,16 @@
         },
         {
             "name": "jordanpartridge/conduit-knowledge",
-            "version": "dev-master",
+            "version": "v2.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jordanpartridge/conduit-knowledge.git",
-                "reference": "257840bb6b4385cea1e1ffba07ae6ee04912b2e0"
+                "reference": "6cc90422f25eb642a77b5f7079118ce61c82ec2a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jordanpartridge/conduit-knowledge/zipball/257840bb6b4385cea1e1ffba07ae6ee04912b2e0",
-                "reference": "257840bb6b4385cea1e1ffba07ae6ee04912b2e0",
+                "url": "https://api.github.com/repos/jordanpartridge/conduit-knowledge/zipball/6cc90422f25eb642a77b5f7079118ce61c82ec2a",
+                "reference": "6cc90422f25eb642a77b5f7079118ce61c82ec2a",
                 "shasum": ""
             },
             "require": {
@@ -2129,7 +2129,6 @@
                 "pestphp/pest": "^3.0",
                 "phpstan/phpstan": "^1.12"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "conduit": {
@@ -2177,9 +2176,9 @@
             ],
             "support": {
                 "issues": "https://github.com/jordanpartridge/conduit-knowledge/issues",
-                "source": "https://github.com/jordanpartridge/conduit-knowledge/tree/v2.0.1"
+                "source": "https://github.com/jordanpartridge/conduit-knowledge/tree/v2.0.2"
             },
-            "time": "2025-07-31T05:12:01+00:00"
+            "time": "2025-07-31T05:33:04+00:00"
         },
         {
             "name": "jordanpartridge/github-client",
@@ -8689,9 +8688,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "jordanpartridge/conduit-knowledge": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

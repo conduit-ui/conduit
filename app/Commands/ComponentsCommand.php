@@ -25,10 +25,15 @@ class ComponentsCommand extends Command
                             {--non-interactive : Run in non-interactive mode}';
 
     protected $description = 'Manage Conduit components';
+    
+    protected $hidden = true; // Hide from help listings as this command is deprecated
 
     public function handle(ComponentManager $manager, ComponentInstallationService $installer): int
     {
         try {
+            // Show deprecation warning
+            $this->showDeprecationWarning();
+            
             $action = $this->argument('action');
 
             // If no action provided and interactive mode is enabled, show interactive menu
@@ -60,8 +65,8 @@ class ComponentsCommand extends Command
             return match ($action) {
                 'list' => $this->listInstalled($manager),
                 'discover' => $this->discoverComponents($manager),
-                'install' => $this->installComponent($manager, $installer),
-                'uninstall' => $this->uninstallComponent($manager, $installer),
+                'install' => $this->installComponentDeprecated($manager, $installer),
+                'uninstall' => $this->uninstallComponentDeprecated($manager, $installer),
             };
         } catch (\Exception $e) {
             $this->error('An error occurred: '.$e->getMessage());
@@ -149,10 +154,20 @@ class ComponentsCommand extends Command
         return Command::SUCCESS;
     }
 
-    protected function installComponent(ComponentManager $manager, ComponentInstallationService $installer): int
+    protected function installComponentDeprecated(ComponentManager $manager, ComponentInstallationService $installer): int
     {
+        // Show specific deprecation warning for install action
+        $this->warn('⚠️  DEPRECATED: "conduit components install" is deprecated.');
+        $this->line('💡 Use the new simplified command instead:');
+        $componentName = $this->argument('component');
+        if ($componentName) {
+            $this->line("   conduit install {$componentName}");
+        } else {
+            $this->line("   conduit install <component>");
+        }
+        $this->newLine();
+        
         try {
-            $componentName = $this->argument('component');
 
             // Discover available components
             $this->info('Discovering available components...');
@@ -289,10 +304,20 @@ class ComponentsCommand extends Command
         }
     }
 
-    protected function uninstallComponent(ComponentManager $manager, ComponentInstallationService $installer): int
+    protected function uninstallComponentDeprecated(ComponentManager $manager, ComponentInstallationService $installer): int
     {
+        // Show specific deprecation warning for uninstall action
+        $this->warn('⚠️  DEPRECATED: "conduit components uninstall" is deprecated.');
+        $this->line('💡 Use the new simplified command instead:');
+        $componentName = $this->argument('component');
+        if ($componentName) {
+            $this->line("   conduit uninstall {$componentName}");
+        } else {
+            $this->line("   conduit uninstall <component>");
+        }
+        $this->newLine();
+        
         try {
-            $componentName = $this->argument('component');
 
             if (! $componentName && $this->shouldBeInteractive($manager)) {
                 $installed = $manager->getInstalled();
@@ -398,5 +423,18 @@ class ComponentsCommand extends Command
         }
 
         $this->line('<fg=gray>   Toggle: conduit interactive enable|disable</>');
+    }
+
+    /**
+     * Show deprecation warning for the components command
+     */
+    private function showDeprecationWarning(): void
+    {
+        $this->warn('⚠️  DEPRECATED: The "conduit components" command is deprecated.');
+        $this->line('💡 Use the new simplified commands instead:');
+        $this->line('   • conduit install <component>   - Install a component');
+        $this->line('   • conduit uninstall <component> - Remove a component');
+        $this->line('   • composer global show          - List installed components');
+        $this->newLine();
     }
 }
