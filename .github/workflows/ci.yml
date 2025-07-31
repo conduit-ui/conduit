@@ -20,8 +20,8 @@ jobs:
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      - name: Initialize Storage
-        run: php conduit storage:init
+      - name: Run Migrations
+        run: php conduit migrate --force
 
       - name: Tests
         run: ./vendor/bin/pest --ci
