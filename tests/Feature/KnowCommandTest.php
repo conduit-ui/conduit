@@ -23,7 +23,7 @@ describe('Know Command Migration', function () {
 
     it('detects when knowledge component is already installed', function () {
         // NOTE: Process::fake() doesn't work in Laravel Zero - this test verifies real behavior
-        $this->artisan('know')
+        $this->artisan('know', ['--no-interaction' => true])
             ->expectsOutputToContain('conduit-knowledge component is already installed!')
             ->assertExitCode(1);
     });
