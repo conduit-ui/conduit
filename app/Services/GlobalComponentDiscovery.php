@@ -109,16 +109,10 @@ class GlobalComponentDiscovery
             throw new \RuntimeException("Invalid component path: {$componentPath}");
         }
 
-        // Load component's autoloader if it exists
-        $autoloadPath = $realPath.'/vendor/autoload.php';
-        if (file_exists($autoloadPath)) {
-            // Validate autoloader path
-            $realAutoloadPath = realpath($autoloadPath);
-            if (! $realAutoloadPath || ! str_starts_with($realAutoloadPath, $realPath)) {
-                throw new \RuntimeException("Invalid autoloader path for component: {$component['name']}");
-            }
-
-            require_once $realAutoloadPath;
+        // Load global Composer autoloader to ensure service provider classes are available
+        $globalAutoloader = $this->getHomeDirectory().'/.composer/vendor/autoload.php';
+        if (file_exists($globalAutoloader)) {
+            require_once $globalAutoloader;
         }
 
         // Register service providers

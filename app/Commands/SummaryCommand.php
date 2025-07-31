@@ -2,9 +2,13 @@
 
 namespace App\Commands;
 
-use App\Services\ComponentManager;
+use App\Services\ComponentService;
 use LaravelZero\Framework\Commands\Command;
 use Symfony\Component\Console\Helper\DescriptorHelper;
+
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\note;
+use function Laravel\Prompts\warning;
 
 /**
  * Enhanced summary command showing interactive mode status and contextual guidance
@@ -21,13 +25,13 @@ class SummaryCommand extends Command
 
     protected $description = 'List commands with enhanced status information';
 
-    public function handle(ComponentManager $manager): int
+    public function handle(ComponentService $componentService): int
     {
         // Show standard command list first
         $this->showCommandList();
 
         // Add enhanced status section
-        $this->showEnhancedStatus($manager);
+        $this->showEnhancedStatus($componentService);
 
         return Command::SUCCESS;
     }
@@ -47,56 +51,29 @@ class SummaryCommand extends Command
         );
     }
 
-    protected function showEnhancedStatus(ComponentManager $manager): void
+    protected function showEnhancedStatus(ComponentService $componentService): void
     {
-        $interactiveMode = $manager->getGlobalSetting('interactive_mode', true);
-        $installed = $manager->getInstalled();
-
-        $this->newLine();
-        $this->line('─────────────────────────────────────────────────────');
-
-        // Interactive Mode Status (prominent)
-        if ($interactiveMode) {
-            $this->line('🎛️  <fg=green;options=bold>Interactive Mode: ENABLED</> <fg=gray>(conduit interactive disable to change)</>');
-        } else {
-            $this->line('🤖 <fg=yellow;options=bold>Interactive Mode: DISABLED</> <fg=gray>(conduit interactive enable to change)</>');
-        }
-
-        $this->newLine();
+        $installed = $componentService->listInstalled();
 
         // Component Status
         if (empty($installed)) {
-            $this->line('📦 <fg=cyan;options=bold>Components:</> None installed');
-
-            if ($interactiveMode) {
-                $this->line('   💡 <fg=white>Quick start:</> conduit components <fg=gray>(interactive setup)</>');
-                $this->line('   🔍 <fg=white>Browse:</> conduit components discover');
-            } else {
-                $this->line('   🔍 <fg=white>Browse:</> conduit components discover');
-                $this->line('   📥 <fg=white>Install:</> conduit components install <name>');
-            }
+            warning('No components installed');
+            note('Get started:');
+            note('• Discover: conduit discover');
+            note('• Install: conduit install <name>');
         } else {
             $componentCount = count($installed);
-            $componentNames = implode(', ', array_keys($installed));
+            $componentNames = implode(', ', array_map(fn ($c) => $c['name'], $installed));
 
-            $this->line("📦 <fg=green;options=bold>Components:</> {$componentCount} installed <fg=gray>({$componentNames})</>");
-
-            if ($interactiveMode) {
-                $this->line('   🎛️  <fg=white>Manage:</> conduit components <fg=gray>(shows interactive menu)</>');
-            } else {
-                $this->line('   📋 <fg=white>List:</> conduit components list');
-                $this->line('   🔍 <fg=white>Discover:</> conduit components discover');
-            }
+            info("Components: {$componentCount} installed ({$componentNames})");
+            note('Available actions:');
+            note('• List: conduit list');
+            note('• Discover: conduit discover');
         }
 
         // Quick Tips
-        $this->newLine();
-        $this->line('<fg=gray>💡 Tips:</> Run any command with <fg=white>--help</> for detailed usage');
-
-        if ($interactiveMode) {
-            $this->line('<fg=gray>   •</> Most commands will prompt for missing information');
-        } else {
-            $this->line('<fg=gray>   •</> Specify all required arguments for automated execution');
-        }
+        note('Tips:');
+        note('• Run any command with --help for detailed usage');
+        note('• Components are now managed via global Composer packages');
     }
 }

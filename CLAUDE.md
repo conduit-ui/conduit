@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Conduit is a Laravel Zero CLI application that serves as a personal developer API gateway and MCP (Model Context Protocol) integration engine. It provides a microkernel architecture for integrating multiple developer tools through a component system.
+Conduit is a Laravel Zero CLI application that serves as a personal developer API gateway. It provides a microkernel architecture for integrating multiple developer tools through a discoverable component system.
 
 ## Development Commands (Conduit-First Approach)
 
@@ -15,7 +15,7 @@ composer install                             # Auto-syncs components via post-in
 # Use Conduit for development workflow
 php conduit components list                  # See installed development tools
 php conduit components discover             # Find new development components  
-php conduit components install github       # Install GitHub component for repo management
+php conduit install github                  # Install GitHub component for repo management
 
 # Core development tasks
 ./vendor/bin/pest                           # Run tests
@@ -35,7 +35,7 @@ php conduit [command]                       # Run application locally
 ### Component Management
 - **Components**: Modular functionality via `conduit components`
 - **Discovery**: Find new tools via GitHub topics and Packagist
-- **Installation**: Automated setup with `conduit components install`
+- **Installation**: Automated setup with `conduit install`
 - **Registry**: Curated vs community components
 
 ### Future Development Commands
@@ -78,13 +78,13 @@ Components in `conduit-components/` use:
 ### Development Philosophy
 - **Conduit builds Conduit**: Use Conduit itself for development tasks
 - **Component Discovery**: Automated finding and installation of functionality
-- **AI-ready**: MCP integration for AI tool collaboration  
+- **Extensible**: Component-based architecture for unlimited functionality  
 - **Laravel Zero Foundation**: Built on proven CLI framework patterns
 
 ### Planned Future Architecture
 - **Component-first Evolution**: Migrate toward discoverable component system
 - **Microkernel Vision**: Minimal core with modular functionality
-- **Enhanced MCP Integration**: Deeper AI agent collaboration features
+- **Enhanced Component Ecosystem**: Rich marketplace of developer tools
 
 ## Testing Strategy
 - **Unit Tests**: Individual component testing
@@ -131,7 +131,7 @@ php conduit system:cleanup --components
 - Prevents component dependencies in releases
 
 #### Development Workflow
-1. **Install components**: `conduit components install spotify`
+1. **Install components**: `conduit install spotify`
 2. **Develop with components**: All commands available
 3. **Before commit**: `conduit system:cleanup --components` 
 4. **Commit clean code**: No component dependencies

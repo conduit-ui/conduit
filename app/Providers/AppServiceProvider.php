@@ -38,34 +38,33 @@ class AppServiceProvider extends ServiceProvider
         // Load globally installed components
         $this->loadGlobalComponents();
 
-
         // Register core commands
         $this->commands([
-                StatusCommand::class,
-                AuthCommand::class,
-                IssueViewCommand::class,
-                IssueCreateCommand::class,
-                IssueEditCommand::class,
-                IssueCloseCommand::class,
-                IssueAssignCommand::class,
-                PrCreateCommand::class,
-                PrAnalysisCommand::class,
-                PrStatusCommand::class,
-                PrCommentsCommand::class,
-                PrThreadsCommand::class,
-                \App\Commands\PrAnalyzeCommand::class,
-                \App\Commands\GitHubClientGapAnalysisCommand::class,
-                \App\Commands\CodeRabbitStatusCommand::class,
-                \App\Commands\IssuesSpeakCommand::class,
-                \App\Commands\PrsSpeakCommand::class,
-                \App\Commands\CodeRabbitSpeakCommand::class,
-                \App\Commands\VoiceCommand::class,
-                \App\Commands\ComponentConfigCommand::class,
-                \App\Commands\UpdateCommand::class,
-                \App\Commands\System\CleanupCommand::class,
-                \App\Commands\System\SyncComponentsCommand::class,
-                PrsCommand::class,
-            ]);
+            StatusCommand::class,
+            AuthCommand::class,
+            IssueViewCommand::class,
+            IssueCreateCommand::class,
+            IssueEditCommand::class,
+            IssueCloseCommand::class,
+            IssueAssignCommand::class,
+            PrCreateCommand::class,
+            PrAnalysisCommand::class,
+            PrStatusCommand::class,
+            PrCommentsCommand::class,
+            PrThreadsCommand::class,
+            \App\Commands\PrAnalyzeCommand::class,
+            \App\Commands\GitHubClientGapAnalysisCommand::class,
+            \App\Commands\CodeRabbitStatusCommand::class,
+            \App\Commands\IssuesSpeakCommand::class,
+            \App\Commands\PrsSpeakCommand::class,
+            \App\Commands\CodeRabbitSpeakCommand::class,
+            \App\Commands\VoiceCommand::class,
+            \App\Commands\ComponentConfigCommand::class,
+            // \App\Commands\UpdateCommand::class, // Disabled - needs refactoring for new architecture
+            // \App\Commands\System\CleanupCommand::class, // Disabled - uses old ComponentManager
+            // \App\Commands\System\SyncComponentsCommand::class, // Disabled - uses old ComponentManager
+            PrsCommand::class,
+        ]);
     }
 
     /**
@@ -141,7 +140,6 @@ class AppServiceProvider extends ServiceProvider
             );
         });
     }
-
 
     /**
      * Register optional components from local JSON registry

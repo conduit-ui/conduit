@@ -6,6 +6,10 @@ use App\Services\ComponentService;
 use LaravelZero\Framework\Commands\Command;
 
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\error;
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\spin;
+use function Laravel\Prompts\warning;
 
 /**
  * Simple component installation command using composer global require
@@ -31,32 +35,34 @@ class InstallCommand extends Command
         try {
             // Handle legacy 'know' component migration
             if ($componentName === 'know') {
-                $this->warn('The "know" component has been renamed to "knowledge".');
-                $this->info('This migration will:');
-                $this->line('  • Install jordanpartridge/conduit-knowledge globally');
-                $this->line('  • Remove jordanpartridge/conduit-know if installed');
+                warning('The "know" component has been renamed to "knowledge".');
+                info('This migration will:');
+                info('  • Install jordanpartridge/conduit-knowledge globally');
+                info('  • Remove jordanpartridge/conduit-know if installed');
 
                 if (confirm('Continue with automatic migration to "knowledge"?', true)) {
-                    $result = $componentService->migrateLegacyComponent('know', 'knowledge');
+                    $result = spin(
+                        fn () => $componentService->migrateLegacyComponent('know', 'knowledge'),
+                        'Migrating from know to knowledge...'
+                    );
 
                     if ($result->isSuccessful()) {
-                        $this->info('✅ '.$result->getMessage());
-                        $this->newLine();
-                        $this->line('💡 Component commands should now be available.');
-                        $this->line("   Run 'conduit list' to see all available commands.");
+                        info('✅ '.$result->getMessage());
+                        info('💡 Component commands should now be available.');
+                        info("   Run 'conduit list' to see all available commands.");
 
                         return Command::SUCCESS;
                     } else {
-                        $this->error('❌ '.$result->getMessage());
+                        error('❌ '.$result->getMessage());
                         if ($result->getErrorOutput()) {
-                            $this->line('Error output:');
-                            $this->line($result->getErrorOutput());
+                            error('Error output:');
+                            error($result->getErrorOutput());
                         }
 
                         return Command::FAILURE;
                     }
                 } else {
-                    $this->info('Installation cancelled.');
+                    info('Installation cancelled.');
 
                     return Command::SUCCESS;
                 }
@@ -64,36 +70,34 @@ class InstallCommand extends Command
 
             // Use the service for installation
             $packageName = $componentService->resolvePackageName($componentName);
-            $this->info("Installing component: {$componentName}");
-            $this->line("Package: {$packageName}");
+
+            info("🔍 Installing component: {$componentName}");
 
             $options = [
                 'force' => $force,
                 'dev' => $dev,
             ];
 
-            $result = $componentService->install($componentName, $options);
+            $result = spin(
+                fn () => $componentService->install($componentName, $options),
+                "Installing {$packageName}..."
+            );
 
             if ($result->isSuccessful()) {
-                $this->info('✅ '.$result->getMessage());
-
-                // Show available commands hint
-                $this->newLine();
-                $this->line('💡 Component commands should now be available.');
-                $this->line("   Run 'conduit list' to see all available commands.");
+                info('✅ '.$result->getMessage());
+                info("🎯 Run 'conduit list' to see available commands");
 
                 return Command::SUCCESS;
             } else {
-                $this->error('❌ '.$result->getMessage());
+                error('❌ '.$result->getMessage());
                 if ($result->getErrorOutput()) {
-                    $this->line('Error output:');
-                    $this->line($result->getErrorOutput());
+                    error($result->getErrorOutput());
                 }
 
                 return Command::FAILURE;
             }
         } catch (\Exception $e) {
-            $this->error('❌ Installation failed: '.$e->getMessage());
+            error('❌ Installation failed: '.$e->getMessage());
 
             return Command::FAILURE;
         }

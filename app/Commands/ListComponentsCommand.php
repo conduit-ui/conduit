@@ -5,7 +5,11 @@ namespace App\Commands;
 use LaravelZero\Framework\Commands\Command;
 use Symfony\Component\Process\Process;
 
+use function Laravel\Prompts\error;
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\spin;
 use function Laravel\Prompts\table;
+use function Laravel\Prompts\warning;
 
 /**
  * Simple command to list globally installed Conduit components
@@ -24,24 +28,30 @@ class ListComponentsCommand extends Command
     {
         $showAll = $this->option('all');
 
-        $this->info('Checking globally installed packages...');
-
         // Get all globally installed packages
-        $process = new Process(['composer', 'global', 'show', '--format=json']);
-        $process->run();
+        $result = spin(function () {
+            $process = new Process(['composer', 'global', 'show', '--format=json']);
+            $process->setEnv(['HOME' => getenv('HOME')]);
+            $process->run();
 
-        if ($process->getExitCode() !== 0) {
-            $this->error('Failed to retrieve global packages.');
-            $this->line('Error: '.$process->getErrorOutput());
+            return [
+                'success' => $process->getExitCode() === 0,
+                'output' => $process->getOutput(),
+                'error' => $process->getErrorOutput(),
+            ];
+        }, 'Checking globally installed packages...');
+
+        if (! $result['success']) {
+            error('Failed to retrieve global packages.');
+            error($result['error']);
 
             return Command::FAILURE;
         }
 
-        $output = $process->getOutput();
-        $data = json_decode($output, true);
+        $data = json_decode($result['output'], true);
 
         if (! isset($data['installed'])) {
-            $this->warn('No global packages found.');
+            warning('No global packages found.');
 
             return Command::SUCCESS;
         }
@@ -57,12 +67,11 @@ class ListComponentsCommand extends Command
 
         if (empty($packages)) {
             if ($showAll) {
-                $this->info('No global packages are installed.');
+                info('No global packages are installed.');
             } else {
-                $this->info('No Conduit components are installed globally.');
-                $this->newLine();
-                $this->line('💡 Install components with: conduit install <component>');
-                $this->line('   Available components: knowledge, spotify, env-manager, github');
+                info('No Conduit components are installed globally.');
+                info('💡 Install components with: conduit install <component>');
+                info('   Available components: knowledge, spotify, env-manager, github');
             }
 
             return Command::SUCCESS;
@@ -86,15 +95,14 @@ class ListComponentsCommand extends Command
 
         $this->newLine();
         $title = $showAll ? 'All Global Packages' : 'Installed Conduit Components';
-        $this->line("<fg=green>{$title}</>");
-        $this->newLine();
+        info($title);
 
         table(['Component', 'Package', 'Version', 'Description'], $tableData);
 
         $this->newLine();
-        $this->line('💡 Manage components:');
-        $this->line('   • conduit install <component>   - Install a component');
-        $this->line('   • conduit uninstall <component> - Remove a component');
+        info('💡 Manage components:');
+        info('   • conduit install <component>   - Install a component');
+        info('   • conduit uninstall <component> - Remove a component');
 
         return Command::SUCCESS;
     }

@@ -2,7 +2,7 @@
 
 namespace App\Services\Traits;
 
-use Symfony\Component\Process\Process;
+use Illuminate\Support\Facades\Process;
 
 /**
  * Trait for component listing capabilities
@@ -11,14 +11,13 @@ trait ListsComponents
 {
     public function listInstalled(): array
     {
-        $process = new Process(['composer', 'global', 'show', '--format=json']);
-        $process->run();
+        $process = Process::run(['composer', 'global', 'show', '--format=json']);
 
-        if ($process->getExitCode() !== 0) {
+        if (! $process->successful()) {
             return [];
         }
 
-        $output = $process->getOutput();
+        $output = $process->output();
         $data = json_decode($output, true);
 
         if (! isset($data['installed'])) {

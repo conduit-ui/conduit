@@ -3,7 +3,6 @@
 namespace App\Services\Traits;
 
 use App\Services\ComponentResult;
-use Symfony\Component\Process\Process;
 
 /**
  * Trait for component installation capabilities
@@ -19,7 +18,8 @@ trait InstallsComponents
         // Check if already installed (unless forced)
         if (! $force && $this->isGloballyInstalled($packageName)) {
             return ComponentResult::failure(
-                "Component '{$componentName}' is already installed globally. Use --force to reinstall."
+                "Component '{$componentName}' is already installed",
+                '💡 Use --force to reinstall'
             );
         }
 
@@ -32,17 +32,34 @@ trait InstallsComponents
 
         if ($force) {
             // Remove first, then install
-            $removeProcess = new Process(['composer', 'global', 'remove', $packageName]);
-            $removeProcess->run();
+            $removeCommand = sprintf(
+                'cd %s && composer global remove %s 2>&1',
+                escapeshellarg(getenv('HOME')),
+                escapeshellarg($packageName)
+            );
+            exec($removeCommand);
             // Continue even if removal fails
         }
 
         // Install the package
-        $process = new Process(['composer'] + $composerArgs);
-        $process->setTimeout(300); // 5 minutes timeout
-        $process->run();
+        $command = 'composer '.implode(' ', $composerArgs);
 
-        if ($process->getExitCode() === 0) {
+        // Use shell execution to ensure it runs in the user's environment
+        $fullCommand = sprintf(
+            'cd %s && %s 2>&1',
+            escapeshellarg(getenv('HOME')),
+            $command
+        );
+
+        $output = [];
+        $exitCode = null;
+        exec($fullCommand, $output, $exitCode);
+
+        // Convert exec results to match Process behavior
+        $outputString = implode("\n", $output);
+        $success = $exitCode === 0;
+
+        if ($success) {
             return ComponentResult::success(
                 "Successfully installed '{$componentName}' component!",
                 ['component' => $componentName, 'package' => $packageName]
@@ -50,7 +67,7 @@ trait InstallsComponents
         } else {
             return ComponentResult::failure(
                 "Failed to install component '{$componentName}'.",
-                $process->getErrorOutput()
+                $outputString
             );
         }
     }

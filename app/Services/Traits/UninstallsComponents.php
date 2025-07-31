@@ -3,7 +3,6 @@
 namespace App\Services\Traits;
 
 use App\Services\ComponentResult;
-use Symfony\Component\Process\Process;
 
 /**
  * Trait for component uninstallation capabilities
@@ -17,16 +16,35 @@ trait UninstallsComponents
         // Check if component is installed
         if (! $this->isGloballyInstalled($packageName)) {
             return ComponentResult::failure(
-                "Component '{$componentName}' is not installed globally."
+                "Component '{$componentName}' is not installed"
             );
         }
 
         // Remove the package
-        $process = new Process(['composer', 'global', 'remove', $packageName]);
-        $process->setTimeout(300); // 5 minutes timeout
-        $process->run();
+        $command = sprintf(
+            'cd %s && composer global remove %s 2>&1',
+            escapeshellarg(getenv('HOME')),
+            escapeshellarg($packageName)
+        );
 
-        if ($process->getExitCode() === 0) {
+        // Use shell_exec for better compatibility
+        $output = shell_exec($command.'; echo "EXIT_CODE:$?"');
+
+        // Extract exit code from output
+        $lines = explode("\n", trim($output));
+        $lastLine = array_pop($lines);
+        $exitCode = 0;
+
+        if (strpos($lastLine, 'EXIT_CODE:') === 0) {
+            $exitCode = (int) substr($lastLine, 10);
+            $output = implode("\n", $lines);
+        } else {
+            // If we didn't get exit code, put the line back
+            $lines[] = $lastLine;
+            $output = implode("\n", $lines);
+        }
+
+        if ($exitCode === 0) {
             return ComponentResult::success(
                 "Successfully uninstalled '{$componentName}' component!",
                 ['component' => $componentName, 'package' => $packageName]
@@ -34,7 +52,7 @@ trait UninstallsComponents
         } else {
             return ComponentResult::failure(
                 "Failed to uninstall component '{$componentName}'.",
-                $process->getErrorOutput()
+                $output
             );
         }
     }

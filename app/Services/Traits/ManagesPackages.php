@@ -2,8 +2,6 @@
 
 namespace App\Services\Traits;
 
-use Symfony\Component\Process\Process;
-
 /**
  * Trait for common package management operations
  */
@@ -14,9 +12,16 @@ trait ManagesPackages
      */
     protected function isGloballyInstalled(string $packageName): bool
     {
-        $process = new Process(['composer', 'global', 'show', $packageName]);
-        $process->run();
+        $command = sprintf(
+            'cd %s && composer global show %s 2>&1',
+            escapeshellarg(getenv('HOME')),
+            escapeshellarg($packageName)
+        );
 
-        return $process->getExitCode() === 0;
+        $output = [];
+        $exitCode = null;
+        exec($command, $output, $exitCode);
+
+        return $exitCode === 0;
     }
 }
