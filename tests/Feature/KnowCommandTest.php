@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Process;
-
 describe('Know Command Migration', function () {
 
     it('shows migration message when no action specified', function () {
