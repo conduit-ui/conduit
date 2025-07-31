@@ -25,8 +25,10 @@ describe('Command Loading', function () {
     });
 
     it('can access know command without crashing', function () {
-        $this->artisan('know')
-            ->assertExitCode(1); // Expected to fail with migration message
+        // The know command should show migration message
+        // Exit code can vary depending on whether component is installed
+        $this->artisan('know', ['--no-interaction' => true])
+            ->expectsOutputToContain('built-in "know" commands have been removed');
     });
 
     it('know command shows migration message', function () {
