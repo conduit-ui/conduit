@@ -16,7 +16,6 @@
         "chillerlan/php-qrcode": "^5.0",
         "guzzlehttp/guzzle": "^7.8",
         "illuminate/database": "^11.45",
-        "jordanpartridge/conduit-knowledge": "^2.0",
         "jordanpartridge/github-client": "^2.9",
         "laravel-zero/framework": "^11.36.1",
         "symfony/process": "^6.0|^7.0"
