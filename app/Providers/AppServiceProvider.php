@@ -2,8 +2,9 @@
 
 namespace App\Providers;
 
-use App\Commands\CodeRabbitSpeakCommand;
-use App\Commands\CodeRabbitStatusCommand;
+use App\Actions\CacheUpdateResults;
+use App\Actions\CheckComponentUpdates;
+use App\Actions\DetectUpdatePriority;
 use App\Commands\GitHub\AuthCommand;
 use App\Commands\GitHub\IssueAssignCommand;
 use App\Commands\GitHub\IssueCloseCommand;
@@ -15,8 +16,6 @@ use App\Commands\GitHub\PrCommentsCommand;
 use App\Commands\GitHub\PrCreateCommand;
 use App\Commands\GitHub\PrStatusCommand;
 use App\Commands\GitHub\PrThreadsCommand;
-use App\Commands\GitHubClientGapAnalysisCommand;
-use App\Commands\IssuesSpeakCommand;
 use App\Commands\Know\Add;
 use App\Commands\Know\AutoCaptureCommand;
 use App\Commands\Know\Context;
@@ -29,16 +28,16 @@ use App\Commands\Know\SetupCommand;
 use App\Commands\Know\Show;
 use App\Commands\PrsCommand;
 use App\Commands\StatusCommand;
-use App\Commands\System\CleanupCommand;
-use App\Commands\System\SyncComponentsCommand;
-use App\Commands\VoiceCommand;
 use App\Contracts\ComponentManagerInterface;
 use App\Contracts\ComponentStorageInterface;
 use App\Contracts\GitHub\PrCreateInterface;
 use App\Contracts\PackageInstallerInterface;
+use App\Policies\UpdateCheckPolicy;
 use App\Services\ComponentInstallationService;
 use App\Services\ComponentManager;
 use App\Services\ComponentStorage;
+use App\Services\ComponentUpdateChecker;
+use App\Services\ComponentUpdateService;
 use App\Services\GitHub\CommentThreadService;
 use App\Services\GitHub\PrAnalysisService;
 use App\Services\GitHub\PrCreateService;
@@ -46,13 +45,7 @@ use App\Services\GithubAuthService;
 use App\Services\JsonComponentRegistrar;
 use App\Services\KnowledgeService;
 use App\Services\SecurePackageInstaller;
-use App\Services\ComponentUpdateChecker;
-use App\Services\ComponentUpdateService;
 use App\Services\VoiceNarrationService;
-use App\Actions\CheckComponentUpdates;
-use App\Actions\DetectUpdatePriority;
-use App\Actions\CacheUpdateResults;
-use App\Policies\UpdateCheckPolicy;
 use Illuminate\Support\Collection;
 // GitHub client imports - only used if package is installed
 use Illuminate\Support\ServiceProvider;
@@ -68,7 +61,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Test runtime service provider registration
         $this->registerOptionalComponents();
-        
+
         // Load globally installed components
         $this->loadGlobalComponents();
 
@@ -156,17 +149,17 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ComponentInstallationService::class);
         $this->app->singleton(ComponentUpdateChecker::class);
         $this->app->singleton(ComponentUpdateService::class);
-        
+
         // Update system actions and policies
         $this->app->singleton(CheckComponentUpdates::class);
         $this->app->singleton(DetectUpdatePriority::class);
         $this->app->singleton(CacheUpdateResults::class);
         $this->app->singleton(UpdateCheckPolicy::class);
-        
+
         $this->app->singleton(KnowledgeService::class);
         $this->app->singleton(PrAnalysisService::class);
         $this->app->singleton(CommentThreadService::class);
-        
+
         // Register global component discovery
         $this->app->singleton(\App\Services\GlobalComponentDiscovery::class);
 
@@ -215,7 +208,7 @@ class AppServiceProvider extends ServiceProvider
         // Try multiple possible component file locations
         $possiblePaths = [
             config_path('components.json'),  // Development
-            $_SERVER['HOME'] . '/.conduit/config/components.json',  // Global installation
+            $_SERVER['HOME'].'/.conduit/config/components.json',  // Global installation
             base_path('config/components.json'),  // Fallback
         ];
 
@@ -227,7 +220,7 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
-        if (!$componentsFile) {
+        if (! $componentsFile) {
             return;
         }
 
@@ -253,7 +246,7 @@ class AppServiceProvider extends ServiceProvider
     private function checkForComponentUpdates(): void
     {
         // Only check during console commands, not tests
-        if (!$this->app->runningInConsole() || $this->app->runningUnitTests()) {
+        if (! $this->app->runningInConsole() || $this->app->runningUnitTests()) {
             return;
         }
 
@@ -264,7 +257,7 @@ class AppServiceProvider extends ServiceProvider
             // Fail gracefully - never break commands
         }
     }
-    
+
     /**
      * Load globally installed Composer components
      */
@@ -273,11 +266,11 @@ class AppServiceProvider extends ServiceProvider
         try {
             $discovery = $this->app->make(\App\Services\GlobalComponentDiscovery::class);
             $components = $discovery->discover();
-            
+
             foreach ($components as $component) {
                 $discovery->loadComponent($component);
             }
-            
+
             // Log discovery info if in verbose mode
             if ($this->app->runningInConsole() && in_array('-v', $_SERVER['argv'] ?? [])) {
                 echo "Discovered {$components->count()} global components\n";
@@ -285,7 +278,7 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Exception $e) {
             // Fail gracefully - global components are optional
             if ($this->app->runningInConsole() && in_array('-v', $_SERVER['argv'] ?? [])) {
-                echo 'Failed to load global components: ' . $e->getMessage() . "\n";
+                echo 'Failed to load global components: '.$e->getMessage()."\n";
             }
         }
     }
