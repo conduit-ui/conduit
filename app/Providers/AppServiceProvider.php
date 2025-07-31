@@ -21,7 +21,6 @@ use App\Services\GitHub\CommentThreadService;
 use App\Services\GitHub\PrAnalysisService;
 use App\Services\GitHub\PrCreateService;
 use App\Services\GithubAuthService;
-use App\Services\KnowledgeMigrationService;
 use App\Services\VoiceNarrationService;
 use Illuminate\Support\Collection;
 // GitHub client imports - only used if package is installed
@@ -39,14 +38,9 @@ class AppServiceProvider extends ServiceProvider
         // Load globally installed components
         $this->loadGlobalComponents();
 
-        // Check for knowledge migration on every command
-        if ($this->app->runningInConsole() && ! $this->app->runningUnitTests()) {
-            $this->checkKnowledgeMigration();
-        }
 
         // Register core commands
-        if ($this->app->runningInConsole()) {
-            $this->commands([
+        $this->commands([
                 StatusCommand::class,
                 AuthCommand::class,
                 IssueViewCommand::class,
@@ -72,7 +66,6 @@ class AppServiceProvider extends ServiceProvider
                 \App\Commands\System\SyncComponentsCommand::class,
                 PrsCommand::class,
             ]);
-        }
     }
 
     /**
@@ -106,7 +99,6 @@ class AppServiceProvider extends ServiceProvider
 
         // Register core services
         $this->app->singleton(ComponentService::class);
-        $this->app->singleton(KnowledgeMigrationService::class);
         $this->app->singleton(PrAnalysisService::class);
         $this->app->singleton(CommentThreadService::class);
 
@@ -150,18 +142,6 @@ class AppServiceProvider extends ServiceProvider
         });
     }
 
-    /**
-     * Check for knowledge migration on every command
-     */
-    private function checkKnowledgeMigration(): void
-    {
-        try {
-            $migrationService = $this->app->make(KnowledgeMigrationService::class);
-            $migrationService->checkAndMigrate();
-        } catch (\Exception $e) {
-            // Fail gracefully - never break commands
-        }
-    }
 
     /**
      * Register optional components from local JSON registry
@@ -208,8 +188,8 @@ class AppServiceProvider extends ServiceProvider
      */
     private function checkForComponentUpdates(): void
     {
-        // Only check during console commands, not tests
-        if (! $this->app->runningInConsole() || $this->app->runningUnitTests()) {
+        // Only check during commands, not tests
+        if ($this->app->runningUnitTests()) {
             return;
         }
 
@@ -226,9 +206,6 @@ class AppServiceProvider extends ServiceProvider
      */
     private function loadGlobalComponents(): void
     {
-        if (! $this->app->runningInConsole()) {
-            return;
-        }
 
         $isVerbose = in_array('-v', $_SERVER['argv'] ?? []) || in_array('--verbose', $_SERVER['argv'] ?? []);
 
