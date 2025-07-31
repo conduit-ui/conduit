@@ -3,7 +3,6 @@
 namespace App\Commands;
 
 use LaravelZero\Framework\Commands\Command;
-use Symfony\Component\Process\Process;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\error;
@@ -86,12 +85,11 @@ class KnowFallbackCommand extends Command
         info('🔄 Installing conduit-knowledge component...');
 
         // Install globally using composer
-        $process = new Process(['composer', 'global', 'require', 'jordanpartridge/conduit-knowledge']);
-        $process->setTimeout(300);
-        $process->run();
+        $output = shell_exec('composer global require jordanpartridge/conduit-knowledge 2>&1');
+        $exitCode = $output === null ? 1 : 0;
 
-        if ($process->getExitCode() !== 0) {
-            $errorOutput = $process->getErrorOutput();
+        if ($exitCode !== 0 || str_contains($output ?? '', 'error')) {
+            $errorOutput = $output ?? 'Unknown error';
 
             // Handle GitHub authentication issues
             if (str_contains($errorOutput, 'Could not authenticate against github.com')) {
@@ -99,18 +97,15 @@ class KnowFallbackCommand extends Command
                 info('🔄 Attempting to refresh GitHub authentication...');
 
                 // Try to refresh GitHub auth
-                $authProcess = new Process(['gh', 'auth', 'refresh']);
-                $authProcess->run();
-
-                if ($authProcess->getExitCode() === 0) {
+                $authOutput = shell_exec('gh auth refresh 2>&1');
+                
+                if ($authOutput !== null && !str_contains($authOutput, 'error')) {
                     info('✅ GitHub authentication refreshed, retrying installation...');
 
                     // Retry the installation
-                    $retryProcess = new Process(['composer', 'global', 'require', 'jordanpartridge/conduit-knowledge']);
-                    $retryProcess->setTimeout(300);
-                    $retryProcess->run();
-
-                    if ($retryProcess->getExitCode() === 0) {
+                    $retryOutput = shell_exec('composer global require jordanpartridge/conduit-knowledge 2>&1');
+                    
+                    if ($retryOutput !== null && !str_contains($retryOutput, 'error')) {
                         info('✅ Successfully installed conduit-knowledge component after auth refresh!');
 
                         return $this->showSuccessMessage($action);
@@ -136,8 +131,13 @@ class KnowFallbackCommand extends Command
     {
         info('✅ Successfully installed conduit-knowledge component!');
 
+        // Check if data migration is needed
+        warning('⚠️  If you had data in the old know system, migrate it now:');
+        note('conduit knowledge:migrate-from-core');
+        note('');
+
         // Suggest running the new command
-        info('🎉 Migration complete! You can now run:');
+        info('🎉 After migration, you can use:');
         if ($action) {
             note("conduit knowledge {$action}");
         } else {
