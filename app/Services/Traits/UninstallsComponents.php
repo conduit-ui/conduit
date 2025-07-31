@@ -39,14 +39,4 @@ trait UninstallsComponents
         }
     }
 
-    /**
-     * Check if a package is installed globally
-     */
-    private function isGloballyInstalled(string $packageName): bool
-    {
-        $process = new Process(['composer', 'global', 'show', $packageName]);
-        $process->run();
-        
-        return $process->getExitCode() === 0;
-    }
 }

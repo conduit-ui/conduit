@@ -6,6 +6,7 @@ use App\Contracts\ComponentInterface;
 use App\Services\Traits\DiscoverComponents;
 use App\Services\Traits\InstallsComponents;
 use App\Services\Traits\ListsComponents;
+use App\Services\Traits\ManagesPackages;
 use App\Services\Traits\UninstallsComponents;
 
 /**
@@ -17,6 +18,7 @@ use App\Services\Traits\UninstallsComponents;
  */
 class ComponentService implements ComponentInterface
 {
+    use ManagesPackages;
     use InstallsComponents;
     use UninstallsComponents;
     use ListsComponents; 

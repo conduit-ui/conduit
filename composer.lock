@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e2f0ab588c8f9091b7675d243da25fbf",
+    "content-hash": "ede4bd7e9eb8cccd27465db2713ba020",
     "packages": [
         {
             "name": "brick/math",
@@ -2179,93 +2179,6 @@
                 "source": "https://github.com/jordanpartridge/conduit-knowledge/tree/v2.0.2"
             },
             "time": "2025-07-31T05:33:04+00:00"
-        },
-        {
-            "name": "jordanpartridge/conduit-spotify",
-            "version": "v2.13.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/jordanpartridge/conduit-spotify.git",
-                "reference": "b071a2ef9286e7604a28a795768a49d8093417ac"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/jordanpartridge/conduit-spotify/zipball/b071a2ef9286e7604a28a795768a49d8093417ac",
-                "reference": "b071a2ef9286e7604a28a795768a49d8093417ac",
-                "shasum": ""
-            },
-            "require": {
-                "guzzlehttp/guzzle": "^7.0",
-                "illuminate/console": "^11.0",
-                "illuminate/support": "^11.0",
-                "laravel-zero/framework": "^11.0",
-                "php": "^8.2"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.18",
-                "orchestra/testbench": "^9.0",
-                "pestphp/pest": "^3.0",
-                "phpstan/phpstan": "^1.12"
-            },
-            "type": "library",
-            "extra": {
-                "conduit": {
-                    "commands": [
-                        "spotify:play",
-                        "spotify:pause",
-                        "spotify:skip",
-                        "spotify:next",
-                        "spotify:current",
-                        "spotify:volume",
-                        "spotify:search",
-                        "spotify:playlists",
-                        "spotify:queue",
-                        "spotify:focus",
-                        "spotify:devices",
-                        "spotify:login",
-                        "spotify:logout",
-                        "spotify:setup",
-                        "spotify:configure",
-                        "spotify:analytics"
-                    ],
-                    "component": true
-                },
-                "laravel": {
-                    "providers": [
-                        "JordanPartridge\\ConduitSpotify\\ServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "JordanPartridge\\ConduitSpotify\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Jordan Partridge",
-                    "email": "jordan@partridge.rocks"
-                }
-            ],
-            "description": "Spotify integration component for Conduit - Control music during development workflows",
-            "keywords": [
-                "cli",
-                "conduit",
-                "conduit-component",
-                "developer-tools",
-                "laravel-zero",
-                "music",
-                "spotify"
-            ],
-            "support": {
-                "issues": "https://github.com/jordanpartridge/conduit-spotify/issues",
-                "source": "https://github.com/jordanpartridge/conduit-spotify/tree/v2.13.0"
-            },
-            "time": "2025-07-30T04:50:39+00:00"
         },
         {
             "name": "jordanpartridge/github-client",
