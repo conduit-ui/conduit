@@ -263,6 +263,12 @@ class AppServiceProvider extends ServiceProvider
      */
     private function loadGlobalComponents(): void
     {
+        if (! $this->app->runningInConsole()) {
+            return;
+        }
+
+        $isVerbose = in_array('-v', $_SERVER['argv'] ?? []) || in_array('--verbose', $_SERVER['argv'] ?? []);
+
         try {
             $discovery = $this->app->make(\App\Services\GlobalComponentDiscovery::class);
             $components = $discovery->discover();
@@ -271,14 +277,13 @@ class AppServiceProvider extends ServiceProvider
                 $discovery->loadComponent($component);
             }
 
-            // Log discovery info if in verbose mode
-            if ($this->app->runningInConsole() && in_array('-v', $_SERVER['argv'] ?? [])) {
-                echo "Discovered {$components->count()} global components\n";
+            if ($isVerbose && $components->count() > 0) {
+                $this->app->make('log')->info("Discovered {$components->count()} global components");
             }
         } catch (\Exception $e) {
             // Fail gracefully - global components are optional
-            if ($this->app->runningInConsole() && in_array('-v', $_SERVER['argv'] ?? [])) {
-                echo 'Failed to load global components: '.$e->getMessage()."\n";
+            if ($isVerbose) {
+                $this->app->make('log')->warning('Failed to load global components: '.$e->getMessage());
             }
         }
     }
