@@ -68,6 +68,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Test runtime service provider registration
         $this->registerOptionalComponents();
+        
+        // Load globally installed components
+        $this->loadGlobalComponents();
 
         // Show component update status on startup
         $this->checkForComponentUpdates();
@@ -163,6 +166,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(KnowledgeService::class);
         $this->app->singleton(PrAnalysisService::class);
         $this->app->singleton(CommentThreadService::class);
+        
+        // Register global component discovery
+        $this->app->singleton(\App\Services\GlobalComponentDiscovery::class);
 
         // Register voice narration system
         $this->registerVoiceNarrationSystem();
@@ -256,6 +262,31 @@ class AppServiceProvider extends ServiceProvider
             $checker->displayUpdateStatus();
         } catch (\Exception $e) {
             // Fail gracefully - never break commands
+        }
+    }
+    
+    /**
+     * Load globally installed Composer components
+     */
+    private function loadGlobalComponents(): void
+    {
+        try {
+            $discovery = $this->app->make(\App\Services\GlobalComponentDiscovery::class);
+            $components = $discovery->discover();
+            
+            foreach ($components as $component) {
+                $discovery->loadComponent($component);
+            }
+            
+            // Log discovery info if in verbose mode
+            if ($this->app->runningInConsole() && in_array('-v', $_SERVER['argv'] ?? [])) {
+                echo "Discovered {$components->count()} global components\n";
+            }
+        } catch (\Exception $e) {
+            // Fail gracefully - global components are optional
+            if ($this->app->runningInConsole() && in_array('-v', $_SERVER['argv'] ?? [])) {
+                echo 'Failed to load global components: ' . $e->getMessage() . "\n";
+            }
         }
     }
 }
