@@ -14,7 +14,7 @@ describe('Know Command Migration', function () {
     });
 
     it('shows migration message with action specified', function () {
-        $this->artisan('know', ['action' => 'add'])
+        $this->artisan('know', ['action' => 'add', '--no-interaction' => true])
             ->expectsOutputToContain('built-in "know" commands have been removed')
             ->expectsOutputToContain('You tried to run: conduit know add')
             ->expectsOutputToContain('New equivalent: conduit knowledge add')
