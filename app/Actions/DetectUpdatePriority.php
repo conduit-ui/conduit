@@ -17,17 +17,17 @@ class DetectUpdatePriority
         $body = strtolower($releaseData['body'] ?? '');
         $name = strtolower($releaseData['name'] ?? '');
         $tagName = strtolower($releaseData['tag_name'] ?? '');
-        
+
         // Check for security indicators
         if ($this->hasSecurityIndicators($body, $name)) {
             return 'security';
         }
-        
+
         // Check for breaking changes
         if ($this->hasBreakingChanges($body, $name, $tagName)) {
             return 'breaking';
         }
-        
+
         return 'normal';
     }
 
@@ -38,7 +38,7 @@ class DetectUpdatePriority
     {
         $securityKeywords = [
             'security', 'vulnerability', 'cve-', 'exploit', 'patch',
-            'critical', 'urgent', 'hotfix', 'security fix'
+            'critical', 'urgent', 'hotfix', 'security fix',
         ];
 
         foreach ($securityKeywords as $keyword) {
@@ -57,7 +57,7 @@ class DetectUpdatePriority
     {
         $breakingKeywords = [
             'breaking', 'breaking change', 'incompatible', 'major version',
-            'migration required', 'api change', 'removed'
+            'migration required', 'api change', 'removed',
         ];
 
         // Check for major version bump (e.g., v1.x.x -> v2.x.x)

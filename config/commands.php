@@ -90,8 +90,7 @@ return [
         Illuminate\Database\Console\Seeds\SeedCommand::class,
         Illuminate\Database\Console\WipeCommand::class,
 
-        // Internal commands (auto-handled)
-        App\Commands\StorageInitCommand::class,
+        // Internal commands (auto-handled) - removed obsolete storage commands
     ],
 
     /*

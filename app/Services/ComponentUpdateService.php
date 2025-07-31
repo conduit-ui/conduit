@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Process;
 class ComponentUpdateService
 {
     private ComponentInstallationService $installer;
+
     private JsonComponentRegistrar $registrar;
 
     public function __construct(
@@ -28,8 +29,8 @@ class ComponentUpdateService
     public function updateComponent(string $name, ?string $version = null): bool
     {
         $component = $this->registrar->getRegisteredComponents()[$name] ?? null;
-        
-        if (!$component) {
+
+        if (! $component) {
             throw new \InvalidArgumentException("Component '{$name}' not found");
         }
 
@@ -41,14 +42,15 @@ class ComponentUpdateService
             ->run([
                 'composer',
                 'update',
-                $package . $constraint,
+                $package.$constraint,
                 '--no-interaction',
-                '--prefer-dist'
+                '--prefer-dist',
             ]);
 
         if ($result->successful()) {
             // Update registry with new version info
             $this->updateComponentVersion($name, $version);
+
             return true;
         }
 
@@ -66,10 +68,11 @@ class ComponentUpdateService
 
         foreach ($updates as $update) {
             $name = $update['name'];
-            
+
             // Skip breaking changes in auto mode
             if ($autoOnly && $update['priority'] === 'breaking') {
                 $results[$name] = 'skipped_breaking';
+
                 continue;
             }
 
@@ -77,7 +80,7 @@ class ComponentUpdateService
                 $success = $this->updateComponent($name, $update['latest']);
                 $results[$name] = $success ? 'updated' : 'failed';
             } catch (\Exception $e) {
-                $results[$name] = 'error: ' . $e->getMessage();
+                $results[$name] = 'error: '.$e->getMessage();
             }
         }
 
@@ -90,6 +93,7 @@ class ComponentUpdateService
     public function dryRun(): array
     {
         $checker = app(ComponentUpdateChecker::class);
+
         return $checker->quickCheck()->toArray();
     }
 

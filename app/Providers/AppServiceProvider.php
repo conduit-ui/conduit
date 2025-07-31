@@ -2,9 +2,6 @@
 
 namespace App\Providers;
 
-use App\Actions\CacheUpdateResults;
-use App\Actions\CheckComponentUpdates;
-use App\Actions\DetectUpdatePriority;
 use App\Commands\GitHub\AuthCommand;
 use App\Commands\GitHub\IssueAssignCommand;
 use App\Commands\GitHub\IssueCloseCommand;
@@ -16,35 +13,14 @@ use App\Commands\GitHub\PrCommentsCommand;
 use App\Commands\GitHub\PrCreateCommand;
 use App\Commands\GitHub\PrStatusCommand;
 use App\Commands\GitHub\PrThreadsCommand;
-use App\Commands\Know\Add;
-use App\Commands\Know\AutoCaptureCommand;
-use App\Commands\Know\Context;
-use App\Commands\Know\Forget;
-use App\Commands\Know\ListCommand as KnowList;
-use App\Commands\Know\Migrate;
-use App\Commands\Know\Optimize;
-use App\Commands\Know\Search;
-use App\Commands\Know\SetupCommand;
-use App\Commands\Know\Show;
 use App\Commands\PrsCommand;
 use App\Commands\StatusCommand;
-use App\Contracts\ComponentManagerInterface;
-use App\Contracts\ComponentStorageInterface;
 use App\Contracts\GitHub\PrCreateInterface;
-use App\Contracts\PackageInstallerInterface;
-use App\Policies\UpdateCheckPolicy;
-use App\Services\ComponentInstallationService;
-use App\Services\ComponentManager;
-use App\Services\ComponentStorage;
-use App\Services\ComponentUpdateChecker;
-use App\Services\ComponentUpdateService;
+use App\Services\ComponentService;
 use App\Services\GitHub\CommentThreadService;
 use App\Services\GitHub\PrAnalysisService;
 use App\Services\GitHub\PrCreateService;
 use App\Services\GithubAuthService;
-use App\Services\JsonComponentRegistrar;
-use App\Services\KnowledgeService;
-use App\Services\SecurePackageInstaller;
 use App\Services\VoiceNarrationService;
 use Illuminate\Support\Collection;
 // GitHub client imports - only used if package is installed
@@ -59,54 +35,36 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Test runtime service provider registration
-        $this->registerOptionalComponents();
-
         // Load globally installed components
         $this->loadGlobalComponents();
 
-        // Show component update status on startup
-        $this->checkForComponentUpdates();
-
-        // Register knowledge commands
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                Add::class,
-                Search::class,
-                KnowList::class,
-                Show::class,
-                Forget::class,
-                Context::class,
-                Optimize::class,
-                SetupCommand::class,
-                AutoCaptureCommand::class,
-                Migrate::class,
-                StatusCommand::class,
-                AuthCommand::class,
-                IssueViewCommand::class,
-                IssueCreateCommand::class,
-                IssueEditCommand::class,
-                IssueCloseCommand::class,
-                IssueAssignCommand::class,
-                PrCreateCommand::class,
-                PrAnalysisCommand::class,
-                PrStatusCommand::class,
-                PrCommentsCommand::class,
-                PrThreadsCommand::class,
-                \App\Commands\PrAnalyzeCommand::class,
-                \App\Commands\GitHubClientGapAnalysisCommand::class,
-                \App\Commands\CodeRabbitStatusCommand::class,
-                \App\Commands\IssuesSpeakCommand::class,
-                \App\Commands\PrsSpeakCommand::class,
-                \App\Commands\CodeRabbitSpeakCommand::class,
-                \App\Commands\VoiceCommand::class,
-                \App\Commands\ComponentConfigCommand::class,
-                \App\Commands\UpdateCommand::class,
-                \App\Commands\System\CleanupCommand::class,
-                \App\Commands\System\SyncComponentsCommand::class,
-                PrsCommand::class,
-            ]);
-        }
+        // Register core commands
+        $this->commands([
+            StatusCommand::class,
+            AuthCommand::class,
+            IssueViewCommand::class,
+            IssueCreateCommand::class,
+            IssueEditCommand::class,
+            IssueCloseCommand::class,
+            IssueAssignCommand::class,
+            PrCreateCommand::class,
+            PrAnalysisCommand::class,
+            PrStatusCommand::class,
+            PrCommentsCommand::class,
+            PrThreadsCommand::class,
+            \App\Commands\PrAnalyzeCommand::class,
+            \App\Commands\GitHubClientGapAnalysisCommand::class,
+            \App\Commands\CodeRabbitStatusCommand::class,
+            \App\Commands\IssuesSpeakCommand::class,
+            \App\Commands\PrsSpeakCommand::class,
+            \App\Commands\CodeRabbitSpeakCommand::class,
+            \App\Commands\VoiceCommand::class,
+            \App\Commands\ComponentConfigCommand::class,
+            // \App\Commands\UpdateCommand::class, // Disabled - needs refactoring for new architecture
+            // \App\Commands\System\CleanupCommand::class, // Disabled - uses old ComponentManager
+            // \App\Commands\System\SyncComponentsCommand::class, // Disabled - uses old ComponentManager
+            PrsCommand::class,
+        ]);
     }
 
     /**
@@ -136,27 +94,10 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Bind interfaces to implementations
-        $this->app->singleton(ComponentStorageInterface::class, ComponentStorage::class);
-        $this->app->singleton(ComponentManagerInterface::class, ComponentManager::class);
-        $this->app->singleton(PackageInstallerInterface::class, SecurePackageInstaller::class);
         $this->app->singleton(PrCreateInterface::class, PrCreateService::class);
 
-        // Register concrete services
-        $this->app->singleton(ComponentStorage::class);
-        $this->app->singleton(ComponentManager::class);
-        $this->app->singleton(SecurePackageInstaller::class);
-        $this->app->singleton(JsonComponentRegistrar::class);
-        $this->app->singleton(ComponentInstallationService::class);
-        $this->app->singleton(ComponentUpdateChecker::class);
-        $this->app->singleton(ComponentUpdateService::class);
-
-        // Update system actions and policies
-        $this->app->singleton(CheckComponentUpdates::class);
-        $this->app->singleton(DetectUpdatePriority::class);
-        $this->app->singleton(CacheUpdateResults::class);
-        $this->app->singleton(UpdateCheckPolicy::class);
-
-        $this->app->singleton(KnowledgeService::class);
+        // Register core services
+        $this->app->singleton(ComponentService::class);
         $this->app->singleton(PrAnalysisService::class);
         $this->app->singleton(CommentThreadService::class);
 
@@ -245,8 +186,8 @@ class AppServiceProvider extends ServiceProvider
      */
     private function checkForComponentUpdates(): void
     {
-        // Only check during console commands, not tests
-        if (! $this->app->runningInConsole() || $this->app->runningUnitTests()) {
+        // Only check during commands, not tests
+        if ($this->app->runningUnitTests()) {
             return;
         }
 
@@ -263,9 +204,6 @@ class AppServiceProvider extends ServiceProvider
      */
     private function loadGlobalComponents(): void
     {
-        if (! $this->app->runningInConsole()) {
-            return;
-        }
 
         $isVerbose = in_array('-v', $_SERVER['argv'] ?? []) || in_array('--verbose', $_SERVER['argv'] ?? []);
 

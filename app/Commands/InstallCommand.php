@@ -2,64 +2,104 @@
 
 namespace App\Commands;
 
-use App\Services\ComponentInstallationService;
-use App\Services\ComponentManager;
+use App\Services\ComponentService;
 use LaravelZero\Framework\Commands\Command;
 
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\error;
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\spin;
+use function Laravel\Prompts\warning;
+
 /**
- * Streamlined component installation command
+ * Simple component installation command using composer global require
+ *
+ * Replaces the complex ComponentsCommand install functionality with
+ * direct composer global operations for cleaner architecture.
  */
 class InstallCommand extends Command
 {
     protected $signature = 'install 
-                            {component : Component name or package to install}
-                            {--force : Force reinstallation if already installed}';
+                            {component : Component name (e.g. knowledge, spotify)} 
+                            {--force : Force reinstallation if already installed}
+                            {--dev : Install development version}';
 
-    protected $description = 'Install a Conduit component';
+    protected $description = 'Install a Conduit component using composer global require';
 
-    public function handle(ComponentManager $manager, ComponentInstallationService $installer): int
+    public function handle(ComponentService $componentService): int
     {
-        $component = $this->argument('component');
+        $componentName = $this->argument('component');
         $force = $this->option('force');
+        $dev = $this->option('dev');
 
         try {
-            $this->info("🔍 Installing component: {$component}");
-            
-            // Check if already installed (unless force)
-            if (!$force && $manager->isInstalled($component)) {
-                $this->warn("⚠️  Component '{$component}' is already installed");
-                $this->info("💡 Use --force to reinstall");
-                return 1;
+            // Handle legacy 'know' component migration
+            if ($componentName === 'know') {
+                warning('The "know" component has been renamed to "knowledge".');
+                info('This migration will:');
+                info('  • Install jordanpartridge/conduit-knowledge globally');
+                info('  • Remove jordanpartridge/conduit-know if installed');
+
+                if (confirm('Continue with automatic migration to "knowledge"?', true)) {
+                    $result = spin(
+                        fn () => $componentService->migrateLegacyComponent('know', 'knowledge'),
+                        'Migrating from know to knowledge...'
+                    );
+
+                    if ($result->isSuccessful()) {
+                        info('✅ '.$result->getMessage());
+                        info('💡 Component commands should now be available.');
+                        info("   Run 'conduit list' to see all available commands.");
+
+                        return Command::SUCCESS;
+                    } else {
+                        error('❌ '.$result->getMessage());
+                        if ($result->getErrorOutput()) {
+                            error('Error output:');
+                            error($result->getErrorOutput());
+                        }
+
+                        return Command::FAILURE;
+                    }
+                } else {
+                    info('Installation cancelled.');
+
+                    return Command::SUCCESS;
+                }
             }
 
-            // First, discover the component
-            $availableComponents = $manager->discoverComponents();
-            
-            // Find the component in available list
-            $componentData = collect($availableComponents)->firstWhere('name', $component);
-            
-            if (!$componentData) {
-                $this->error("❌ Component '{$component}' not found");
-                $this->info("💡 Available components: " . collect($availableComponents)->pluck('name')->join(', '));
-                return 1;
-            }
-            
-            // Perform installation
-            $result = $installer->installComponent($component, $componentData);
-            
+            // Use the service for installation
+            $packageName = $componentService->resolvePackageName($componentName);
+
+            info("🔍 Installing component: {$componentName}");
+
+            $options = [
+                'force' => $force,
+                'dev' => $dev,
+            ];
+
+            $result = spin(
+                fn () => $componentService->install($componentName, $options),
+                "Installing {$packageName}..."
+            );
+
             if ($result->isSuccessful()) {
-                $this->info("✅ Successfully installed component: {$component}");
-                $this->info("🎯 Run 'conduit list' to see available commands");
-                return 0;
-            } else {
-                $this->error("❌ Failed to install component: {$component}");
-                $this->error("💡 Error: " . $result->getMessage());
-                return 1;
-            }
+                info('✅ '.$result->getMessage());
+                info("🎯 Run 'conduit list' to see available commands");
 
+                return Command::SUCCESS;
+            } else {
+                error('❌ '.$result->getMessage());
+                if ($result->getErrorOutput()) {
+                    error($result->getErrorOutput());
+                }
+
+                return Command::FAILURE;
+            }
         } catch (\Exception $e) {
-            $this->error("❌ Installation failed: " . $e->getMessage());
-            return 1;
+            error('❌ Installation failed: '.$e->getMessage());
+
+            return Command::FAILURE;
         }
     }
 }

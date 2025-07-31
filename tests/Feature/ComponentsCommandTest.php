@@ -1,5 +1,5 @@
 <?php
 
 it('lists components', function () {
-    $this->artisan('components list')->assertExitCode(0);
+    $this->artisan('list:components')->assertExitCode(0);
 });

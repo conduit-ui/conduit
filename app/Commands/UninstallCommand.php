@@ -2,66 +2,71 @@
 
 namespace App\Commands;
 
-use App\Services\ComponentManager;
-use App\Services\SecurePackageInstaller;
+use App\Services\ComponentService;
 use LaravelZero\Framework\Commands\Command;
 
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\error;
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\spin;
+use function Laravel\Prompts\warning;
+
 /**
- * Streamlined component removal command
+ * Simple component uninstallation command using composer global remove
+ *
+ * Replaces the complex ComponentsCommand uninstall functionality with
+ * direct composer global operations for cleaner architecture.
  */
 class UninstallCommand extends Command
 {
     protected $signature = 'uninstall 
-                            {component : Component name to uninstall}
+                            {component : Component name to uninstall (e.g. knowledge, spotify)}
                             {--force : Skip confirmation prompts}';
 
-    protected $description = 'Uninstall a Conduit component';
+    protected $description = 'Uninstall a Conduit component using composer global remove';
 
-    public function handle(ComponentManager $manager, SecurePackageInstaller $installer): int
+    public function handle(ComponentService $componentService): int
     {
-        $component = $this->argument('component');
+        $componentName = $this->argument('component');
         $force = $this->option('force');
 
-        try {
-            // Check if component is installed
-            if (!$manager->isInstalled($component)) {
-                $this->warn("⚠️  Component '{$component}' is not installed");
-                return 1;
+        // Check if component is installed
+        if (! $componentService->isInstalled($componentName)) {
+            warning("⚠️  Component '{$componentName}' is not installed");
+
+            return Command::SUCCESS;
+        }
+
+        // Confirm removal unless forced
+        if (! $force) {
+            $packageName = $componentService->resolvePackageName($componentName);
+            $confirmed = confirm("Remove component '{$componentName}' ({$packageName})?", false);
+            if (! $confirmed) {
+                info('🚫 Uninstallation cancelled');
+
+                return Command::SUCCESS;
+            }
+        }
+
+        // Remove the package
+        info("🗑️  Uninstalling component: {$componentName}");
+
+        $result = spin(
+            fn () => $componentService->uninstall($componentName),
+            "Removing {$componentName}..."
+        );
+
+        if ($result->isSuccessful()) {
+            info('✅ '.$result->getMessage());
+
+            return Command::SUCCESS;
+        } else {
+            error('❌ '.$result->getMessage());
+            if ($result->getErrorOutput()) {
+                error($result->getErrorOutput());
             }
 
-            // Get component info
-            $componentInfo = $manager->getComponent($component);
-            $package = $componentInfo['package'] ?? $component;
-
-            // Confirm removal unless forced
-            if (!$force) {
-                $confirmed = $this->confirm("Remove component '{$component}' ({$package})?", false);
-                if (!$confirmed) {
-                    $this->info("🚫 Uninstallation cancelled");
-                    return 0;
-                }
-            }
-
-            $this->info("🗑️  Uninstalling component: {$component}");
-
-            // Remove from composer
-            $result = $installer->remove($package);
-            
-            if ($result->isSuccessful()) {
-                // Remove from component registry
-                $manager->unregister($component);
-                
-                $this->info("✅ Successfully uninstalled component: {$component}");
-                return 0;
-            } else {
-                $this->error("❌ Failed to uninstall component: {$component}");
-                $this->error("💡 Error: " . $result->getErrorOutput());
-                return 1;
-            }
-
-        } catch (\Exception $e) {
-            $this->error("❌ Uninstallation failed: " . $e->getMessage());
-            return 1;
+            return Command::FAILURE;
         }
     }
 }

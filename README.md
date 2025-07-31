@@ -1,12 +1,12 @@
 # 🚀 Conduit v2.0.0
 
-> Your personal developer API & MCP integration engine - AI-ready GitHub CLI and beyond
+> Your personal developer API gateway - Extensible GitHub CLI with component-based architecture
 
 [![Latest Version](https://img.shields.io/packagist/v/conduit-ui/conduit.svg?style=flat-square)](https://packagist.org/packages/conduit-ui/conduit)
 [![Total Downloads](https://img.shields.io/packagist/dt/conduit-ui/conduit.svg?style=flat-square)](https://packagist.org/packages/conduit-ui/conduit)
 [![License](https://img.shields.io/packagist/l/conduit-ui/conduit.svg?style=flat-square)](https://packagist.org/packages/conduit-ui/conduit)
 
-Conduit is a **modular, extensible CLI platform** built with Laravel Zero that transforms your development workflow. Starting with powerful GitHub integration, it features a revolutionary component system that makes adding new tools as simple as running `conduit install:service`.
+Conduit is a **modular, extensible CLI platform** built with Laravel Zero that transforms your development workflow. Starting with powerful GitHub integration, it features a revolutionary component system that makes adding new tools as simple as running `conduit install <component>`.
 
 ## ✨ What's New in v2.0.0
 
@@ -106,8 +106,8 @@ conduit spotify:generate-playlists
 conduit spotify:focus --device=Desktop
 
 # Manage components
-conduit components discover
-conduit components install github
+conduit discover
+conduit install github
 ```
 
 ## 🧩 Component Architecture
@@ -119,15 +119,15 @@ Conduit's component system provides modular functionality:
 conduit components discover
 
 # Install components
-conduit components install github
-conduit components install spotify
+conduit install github
+conduit install spotify
 
 # List installed components
-conduit components list
+conduit list:components
 
-# Component management
-conduit components activate github
-conduit components deactivate spotify
+# Component management  
+conduit install github
+conduit uninstall spotify
 ```
 
 ### Available Components
@@ -176,7 +176,7 @@ Conduit is built from the ground up for AI integration:
 - **Structured commands**: Perfect for AI tool integration
 - **Rich metadata**: Commands expose detailed help and options  
 - **Context-aware**: Smart defaults based on project detection
-- **MCP Protocol ready**: Foundation for Model Context Protocol servers
+- **Component ready**: Foundation for extensible developer tools
 - **Shared intelligence**: Personal knowledge base across installations
 - **Semantic search**: Advanced similarity detection for knowledge discovery
 
@@ -225,11 +225,10 @@ conduit spotify:focus --device=Desktop
 ### Component System
 ```bash
 # Discovery and management
-conduit components discover
-conduit components list
-conduit components install github
-conduit components activate spotify
-conduit components deactivate github
+conduit discover
+conduit list:components
+conduit install github
+conduit uninstall spotify
 ```
 
 ### System Management
@@ -271,7 +270,7 @@ This project is built with Laravel Zero and uses the `jordanpartridge/github-cli
 - **Microkernel design**: Core framework with modular components
 - **Component system**: Discoverable, installable functionality modules
 - **Knowledge graph**: Advanced relationship modeling for insights
-- **AI-ready**: Built for Model Context Protocol integration
+- **Developer-focused**: Built for seamless development workflow integration
 
 ## License
 

@@ -238,10 +238,10 @@ class ComponentNewCommand extends Command implements PromptsForMissingInput
         $namespace = $this->getCommandNamespace($name);
 
         $suggestions = [
-            "init",
-            "configure",
-            "list",
-            "status",
+            'init',
+            'configure',
+            'list',
+            'status',
         ];
 
         return multiselect(

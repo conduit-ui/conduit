@@ -32,7 +32,9 @@ class CheckComponentUpdates
             // Create parallel promises for all components
             foreach ($components as $name => $config) {
                 $package = $config['package'] ?? null;
-                if (!$package) continue;
+                if (! $package) {
+                    continue;
+                }
 
                 $promises[$name] = $this->httpClient->getAsync(
                     "https://api.github.com/repos/{$package}/releases/latest"
@@ -60,7 +62,7 @@ class CheckComponentUpdates
             }
         } catch (\Exception $e) {
             // Fail gracefully - never break commands
-            error_log("Component update check failed: " . $e->getMessage());
+            error_log('Component update check failed: '.$e->getMessage());
         }
 
         return $updates;
@@ -74,7 +76,7 @@ class CheckComponentUpdates
         // Remove 'v' prefix for comparison
         $current = ltrim($current, 'v');
         $latest = ltrim($latest, 'v');
-        
+
         return version_compare($current, $latest, '<');
     }
 }

@@ -28,7 +28,7 @@ class CacheUpdateResults
             'last_check' => Carbon::now()->toISOString(),
             'updates' => $updates->toArray(),
         ];
-        
+
         file_put_contents($this->cacheFile, json_encode($cache, JSON_PRETTY_PRINT));
     }
 
@@ -37,11 +37,12 @@ class CacheUpdateResults
      */
     public function load(): array
     {
-        if (!file_exists($this->cacheFile)) {
+        if (! file_exists($this->cacheFile)) {
             return [];
         }
-        
+
         $content = file_get_contents($this->cacheFile);
+
         return json_decode($content, true) ?: [];
     }
 
@@ -52,14 +53,14 @@ class CacheUpdateResults
     {
         $cache = $this->load();
         $lastCheck = $cache['last_check'] ?? null;
-        
-        if (!$lastCheck) {
+
+        if (! $lastCheck) {
             return true;
         }
-        
+
         $interval = config('conduit.update_check.interval', '6h');
         $expiry = Carbon::parse($lastCheck)->add($this->parseInterval($interval));
-        
+
         return Carbon::now()->isAfter($expiry);
     }
 
@@ -73,6 +74,7 @@ class CacheUpdateResults
         }
 
         $cache = $this->load();
+
         return collect($cache['updates'] ?? []);
     }
 
@@ -85,14 +87,14 @@ class CacheUpdateResults
         if (preg_match('/^(\d+)([hd])$/', $interval, $matches)) {
             $value = (int) $matches[1];
             $unit = $matches[2];
-            
-            return match($unit) {
+
+            return match ($unit) {
                 'h' => \DateInterval::createFromDateString("{$value} hours"),
                 'd' => \DateInterval::createFromDateString("{$value} days"),
                 default => \DateInterval::createFromDateString('6 hours')
             };
         }
-        
+
         return \DateInterval::createFromDateString('6 hours');
     }
 }

@@ -16,22 +16,23 @@ class SyncComponentsCommand extends Command
     protected $description = 'Sync component registry with installed packages (post-install hook)';
 
     public function handle(
-        ComponentManager $componentManager, 
+        ComponentManager $componentManager,
         JsonComponentRegistrar $registrar,
         ServiceProviderDetector $detector
     ): int {
-        if (!$this->option('silent')) {
+        if (! $this->option('silent')) {
             $this->info('🔄 Syncing component registry with installed packages...');
         }
 
         try {
             // Read the component registry
             $components = $this->getComponentRegistry();
-            
+
             if (empty($components)) {
-                if (!$this->option('silent')) {
+                if (! $this->option('silent')) {
                     $this->info('✅ No components registered - nothing to sync');
                 }
+
                 return 0;
             }
 
@@ -41,17 +42,17 @@ class SyncComponentsCommand extends Command
 
             foreach ($components as $name => $config) {
                 $result = $this->syncComponent($name, $config, $registrar, $detector);
-                
+
                 switch ($result['status']) {
                     case 'synced':
                         $synced++;
-                        if (!$this->option('silent')) {
+                        if (! $this->option('silent')) {
                             $this->line("   ✅ Synced {$name}");
                         }
                         break;
                     case 'skipped':
                         $skipped++;
-                        if (!$this->option('silent')) {
+                        if (! $this->option('silent')) {
                             $this->line("   ⏭️  Skipped {$name} - {$result['reason']}");
                         }
                         break;
@@ -62,7 +63,7 @@ class SyncComponentsCommand extends Command
                 }
             }
 
-            if (!$this->option('silent')) {
+            if (! $this->option('silent')) {
                 $this->newLine();
                 $this->info("📊 Sync complete: {$synced} synced, {$skipped} skipped, {$errors} errors");
                 $this->info('🎯 Components are ready for use!');
@@ -71,7 +72,8 @@ class SyncComponentsCommand extends Command
             return $errors > 0 ? 1 : 0;
 
         } catch (\Exception $e) {
-            $this->error("❌ Component sync failed: " . $e->getMessage());
+            $this->error('❌ Component sync failed: '.$e->getMessage());
+
             return 1;
         }
     }
@@ -80,13 +82,14 @@ class SyncComponentsCommand extends Command
     {
         $registryPaths = [
             config_path('components.json'),
-            ($_SERVER['HOME'] ?? null) ? $_SERVER['HOME'] . '/.conduit/config/components.json' : null,
+            ($_SERVER['HOME'] ?? null) ? $_SERVER['HOME'].'/.conduit/config/components.json' : null,
             base_path('config/components.json'),
         ];
 
         foreach ($registryPaths as $path) {
             if ($path && file_exists($path)) {
                 $content = json_decode(file_get_contents($path), true);
+
                 return $content['registry'] ?? [];
             }
         }
@@ -95,19 +98,19 @@ class SyncComponentsCommand extends Command
     }
 
     private function syncComponent(
-        string $name, 
-        array $config, 
+        string $name,
+        array $config,
         JsonComponentRegistrar $registrar,
         ServiceProviderDetector $detector
     ): array {
         $package = $config['package'] ?? null;
-        
-        if (!$package) {
+
+        if (! $package) {
             return ['status' => 'error', 'reason' => 'No package name in registry'];
         }
 
         // Check if package is actually installed
-        if (!$this->isPackageInstalled($package)) {
+        if (! $this->isPackageInstalled($package)) {
             return ['status' => 'skipped', 'reason' => 'Package not installed in vendor/'];
         }
 
@@ -118,7 +121,7 @@ class SyncComponentsCommand extends Command
 
         // Check if service provider class exists
         $serviceProvider = $config['service_provider'];
-        if (!class_exists($serviceProvider)) {
+        if (! class_exists($serviceProvider)) {
             return $this->reRegisterComponent($name, $package, $config, $registrar, $detector);
         }
 
@@ -128,12 +131,13 @@ class SyncComponentsCommand extends Command
     private function isPackageInstalled(string $package): bool
     {
         $vendorPath = base_path("vendor/{$package}");
+
         return is_dir($vendorPath);
     }
 
     private function reRegisterComponent(
         string $name,
-        string $package, 
+        string $package,
         array $config,
         JsonComponentRegistrar $registrar,
         ServiceProviderDetector $detector
@@ -141,7 +145,7 @@ class SyncComponentsCommand extends Command
         try {
             // Detect service providers for this package
             $serviceProviders = $detector->detectServiceProviders($package);
-            
+
             if (empty($serviceProviders)) {
                 return ['status' => 'error', 'reason' => 'No service providers found'];
             }
@@ -156,7 +160,7 @@ class SyncComponentsCommand extends Command
             ]);
 
             $registrar->registerComponent($name, $updatedConfig);
-            
+
             return ['status' => 'synced', 'reason' => 'Service provider registered'];
 
         } catch (\Exception $e) {

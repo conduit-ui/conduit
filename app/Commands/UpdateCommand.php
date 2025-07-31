@@ -9,7 +9,6 @@ use App\Services\ComponentUpdateChecker;
 use App\Services\ComponentUpdateService;
 use LaravelZero\Framework\Commands\Command;
 
-use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\multiselect;
 
 class UpdateCommand extends Command
@@ -56,6 +55,7 @@ class UpdateCommand extends Command
 
         if ($updates->isEmpty()) {
             $this->info('✅ All components are up to date!');
+
             return Command::SUCCESS;
         }
 
@@ -74,16 +74,19 @@ class UpdateCommand extends Command
 
         try {
             $success = $updater->updateComponent($name);
-            
+
             if ($success) {
                 $this->info("✅ Successfully updated {$name}");
+
                 return Command::SUCCESS;
             } else {
                 $this->error("❌ Failed to update {$name}");
+
                 return Command::FAILURE;
             }
         } catch (\Exception $e) {
             $this->error("❌ Error updating {$name}: {$e->getMessage()}");
+
             return Command::FAILURE;
         }
     }
@@ -92,10 +95,10 @@ class UpdateCommand extends Command
     {
         $this->info('🔄 Updating all components...');
 
-        $results = $updater->updateAll(!$this->option('force'));
+        $results = $updater->updateAll(! $this->option('force'));
 
         foreach ($results as $component => $result) {
-            match($result) {
+            match ($result) {
                 'updated' => $this->info("✅ Updated {$component}"),
                 'skipped_breaking' => $this->warn("⚠️  Skipped {$component} (breaking changes - use --force)"),
                 'failed' => $this->error("❌ Failed to update {$component}"),
@@ -103,7 +106,7 @@ class UpdateCommand extends Command
             };
         }
 
-        $updated = collect($results)->filter(fn($r) => $r === 'updated')->count();
+        $updated = collect($results)->filter(fn ($r) => $r === 'updated')->count();
         $total = count($results);
 
         $this->newLine();
@@ -113,13 +116,14 @@ class UpdateCommand extends Command
     }
 
     private function interactiveUpdate(
-        ComponentUpdateChecker $checker, 
+        ComponentUpdateChecker $checker,
         ComponentUpdateService $updater
     ): int {
         $updates = $checker->quickCheck();
 
         if ($updates->isEmpty()) {
             $this->info('✅ All components are up to date!');
+
             return Command::SUCCESS;
         }
 
@@ -129,8 +133,9 @@ class UpdateCommand extends Command
         $options = $updates->mapWithKeys(function ($update) {
             $priority = $update['priority'] === 'security' ? ' (security)' : '';
             $breaking = $update['priority'] === 'breaking' ? ' (breaking changes)' : '';
-            
+
             $label = "{$update['name']} {$update['current']} → {$update['latest']}{$priority}{$breaking}";
+
             return [$update['name'] => $label];
         })->toArray();
 
@@ -142,6 +147,7 @@ class UpdateCommand extends Command
 
         if (empty($selected)) {
             $this->info('No components selected for update');
+
             return Command::SUCCESS;
         }
 
@@ -152,7 +158,7 @@ class UpdateCommand extends Command
             try {
                 $this->line("Updating {$component}...");
                 $success = $updater->updateComponent($component);
-                
+
                 if ($success) {
                     $this->info("✅ {$component} updated successfully");
                 } else {

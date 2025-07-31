@@ -1,7 +1,7 @@
 {
     "name": "conduit-ui/conduit",
-    "description": "Your personal developer API & MCP integration engine - AI-ready GitHub CLI and beyond",
-    "keywords": ["github", "cli", "mcp", "ai", "laravel-zero", "developer-tools", "integration"],
+    "description": "Your personal developer API gateway - Extensible GitHub CLI with component-based architecture",
+    "keywords": ["github", "cli", "laravel-zero", "developer-tools", "component-system", "api-gateway"],
     "homepage": "https://github.com/conduit-ui/conduit",
     "type": "project",
     "license": "MIT",
@@ -16,7 +16,6 @@
         "chillerlan/php-qrcode": "^5.0",
         "guzzlehttp/guzzle": "^7.8",
         "illuminate/database": "^11.45",
-        "jordanpartridge/conduit-knowledge": "dev-master",
         "jordanpartridge/github-client": "^2.9",
         "laravel-zero/framework": "^11.36.1",
         "symfony/process": "^6.0|^7.0"
