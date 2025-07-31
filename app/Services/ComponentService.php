@@ -25,15 +25,10 @@ class ComponentService implements ComponentInterface
     use DiscoverComponents;
 
     /**
-     * Known component mappings
+     * Legacy component mappings (only for migration support)
      */
-    private array $knownComponents = [
-        'knowledge' => 'jordanpartridge/conduit-knowledge',
-        'know' => 'jordanpartridge/conduit-know', // Legacy support
-        'spotify' => 'jordanpartridge/conduit-spotify',
-        'env-manager' => 'jordanpartridge/conduit-env-manager',
-        'docker' => 'jordanpartridge/conduit-docker',
-        'github' => 'jordanpartridge/conduit-github',
+    private array $legacyMappings = [
+        'know' => 'jordanpartridge/conduit-know', // Legacy 'know' component
     ];
 
     public function isInstalled(string $componentName): bool
@@ -57,8 +52,18 @@ class ComponentService implements ComponentInterface
 
     public function resolvePackageName(string $componentName): string
     {
-        // Return known mapping or assume jordanpartridge/conduit-{name} pattern
-        return $this->knownComponents[$componentName] ?? "jordanpartridge/conduit-{$componentName}";
+        // Handle legacy mappings for migration support
+        if (isset($this->legacyMappings[$componentName])) {
+            return $this->legacyMappings[$componentName];
+        }
+
+        // If it looks like a full package name (vendor/package), use as-is
+        if (str_contains($componentName, '/')) {
+            return $componentName;
+        }
+
+        // Default to jordanpartridge/conduit-{name} pattern
+        return "jordanpartridge/conduit-{$componentName}";
     }
 
     /**
