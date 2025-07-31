@@ -32,7 +32,7 @@ describe('Command Loading', function () {
     });
 
     it('know command shows migration message', function () {
-        $this->artisan('know')
+        $this->artisan('know', ['--no-interaction' => true])
             ->expectsOutputToContain('built-in "know" commands have been removed')
             ->expectsOutputToContain('improved knowledge system is now available')
             ->assertExitCode(1);
