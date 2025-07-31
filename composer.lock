@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c94737f74544add3c718fd70e4b5a1bb",
+    "content-hash": "7e181eaa5ef364ec67183ca0d8de95d8",
     "packages": [
         {
             "name": "brick/math",
@@ -2104,107 +2104,45 @@
             "time": "2023-12-03T12:46:03+00:00"
         },
         {
-            "name": "jordanpartridge/conduit-env-manager",
-            "version": "v2.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/jordanpartridge/conduit-env-manager.git",
-                "reference": "f5d7dc25cd6462309a4c26d83e8b856bda885013"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/jordanpartridge/conduit-env-manager/zipball/f5d7dc25cd6462309a4c26d83e8b856bda885013",
-                "reference": "f5d7dc25cd6462309a4c26d83e8b856bda885013",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/console": "^11.0",
-                "laravel-zero/framework": "^11.0",
-                "php": "^8.2"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.18",
-                "pestphp/pest": "^3.0",
-                "phpstan/phpstan": "^1.12"
-            },
-            "type": "library",
-            "extra": {
-                "conduit": {
-                    "commands": [
-                        "env:init",
-                        "env:set",
-                        "env:get",
-                        "env:backup"
-                    ],
-                    "component": true
-                },
-                "laravel": {
-                    "providers": [
-                        "Jordanpartridge\\ConduitEnvmanager\\ServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Jordanpartridge\\ConduitEnvmanager\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Jordan Partridge",
-                    "email": "jordan@partridge.rocks"
-                }
-            ],
-            "description": "A Conduit component for env-manager functionality",
-            "keywords": [
-                "cli",
-                "component",
-                "conduit",
-                "conduit-component",
-                "laravel"
-            ],
-            "support": {
-                "issues": "https://github.com/jordanpartridge/conduit-env-manager/issues",
-                "source": "https://github.com/jordanpartridge/conduit-env-manager/tree/v2.0.0"
-            },
-            "time": "2025-07-29T00:52:54+00:00"
-        },
-        {
             "name": "jordanpartridge/conduit-knowledge",
-            "version": "v1.0.0",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jordanpartridge/conduit-knowledge.git",
-                "reference": "6139f9222ba9cf0eba32a0bdb9c0bef9c92c08fe"
+                "reference": "257840bb6b4385cea1e1ffba07ae6ee04912b2e0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jordanpartridge/conduit-knowledge/zipball/6139f9222ba9cf0eba32a0bdb9c0bef9c92c08fe",
-                "reference": "6139f9222ba9cf0eba32a0bdb9c0bef9c92c08fe",
+                "url": "https://api.github.com/repos/jordanpartridge/conduit-knowledge/zipball/257840bb6b4385cea1e1ffba07ae6ee04912b2e0",
+                "reference": "257840bb6b4385cea1e1ffba07ae6ee04912b2e0",
                 "shasum": ""
             },
             "require": {
                 "illuminate/console": "^11.0",
+                "illuminate/database": "^11.0",
                 "laravel-zero/framework": "^11.0",
-                "php": "^8.2"
+                "php": "^8.2",
+                "symfony/process": "^6.0|^7.0"
             },
             "require-dev": {
                 "laravel/pint": "^1.18",
                 "pestphp/pest": "^3.0",
                 "phpstan/phpstan": "^1.12"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "conduit": {
                     "commands": [
-                        "init",
-                        "status",
-                        "configure",
-                        "list"
+                        "knowledge:add",
+                        "knowledge:search",
+                        "knowledge:list",
+                        "knowledge:show",
+                        "knowledge:forget",
+                        "knowledge:migrate",
+                        "knowledge:export",
+                        "knowledge:import",
+                        "knowledge:analyze"
                     ],
                     "component": true
                 },
@@ -2239,9 +2177,9 @@
             ],
             "support": {
                 "issues": "https://github.com/jordanpartridge/conduit-knowledge/issues",
-                "source": "https://github.com/jordanpartridge/conduit-knowledge/tree/v1.0.0"
+                "source": "https://github.com/jordanpartridge/conduit-knowledge/tree/v2.0.1"
             },
-            "time": "2025-07-31T02:26:16+00:00"
+            "time": "2025-07-31T05:12:01+00:00"
         },
         {
             "name": "jordanpartridge/github-client",
@@ -8751,12 +8689,14 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "jordanpartridge/conduit-knowledge": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2.0"
     },
-    "platform-dev": [],
-    "plugin-api-version": "2.2.0"
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
 }
