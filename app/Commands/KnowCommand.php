@@ -20,7 +20,7 @@ class KnowCommand extends Command
     public function handle(): int
     {
         $action = $this->argument('action');
-        
+
         $this->warn('⚠️  The built-in "know" commands have been removed.');
         $this->info('🚀 An improved knowledge system is now available as a component!');
         $this->newLine();

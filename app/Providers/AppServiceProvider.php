@@ -2,9 +2,6 @@
 
 namespace App\Providers;
 
-use App\Actions\CacheUpdateResults;
-use App\Actions\CheckComponentUpdates;
-use App\Actions\DetectUpdatePriority;
 use App\Commands\GitHub\AuthCommand;
 use App\Commands\GitHub\IssueAssignCommand;
 use App\Commands\GitHub\IssueCloseCommand;
@@ -25,7 +22,6 @@ use App\Services\GitHub\PrAnalysisService;
 use App\Services\GitHub\PrCreateService;
 use App\Services\GithubAuthService;
 use App\Services\KnowledgeMigrationService;
-use App\Services\SecurePackageInstaller;
 use App\Services\VoiceNarrationService;
 use Illuminate\Support\Collection;
 // GitHub client imports - only used if package is installed
@@ -44,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
         $this->loadGlobalComponents();
 
         // Check for knowledge migration on every command
-        if ($this->app->runningInConsole() && !$this->app->runningUnitTests()) {
+        if ($this->app->runningInConsole() && ! $this->app->runningUnitTests()) {
             $this->checkKnowledgeMigration();
         }
 

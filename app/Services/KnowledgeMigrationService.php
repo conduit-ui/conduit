@@ -2,15 +2,13 @@
 
 namespace App\Services;
 
-use App\Services\ComponentService;
-use Illuminate\Support\Facades\DB;
-
 /**
  * Service to handle automatic migration from built-in knowledge to component
  */
 class KnowledgeMigrationService
 {
     private ComponentService $componentService;
+
     private bool $migrationCompleted = false;
 
     public function __construct(ComponentService $componentService)
@@ -31,12 +29,14 @@ class KnowledgeMigrationService
         // Skip if already have new component
         if ($this->componentService->isInstalled('knowledge')) {
             $this->migrationCompleted = true;
+
             return;
         }
 
         // Check if old knowledge data exists
-        if (!$this->hasOldKnowledgeData()) {
+        if (! $this->hasOldKnowledgeData()) {
             $this->migrationCompleted = true;
+
             return;
         }
 
@@ -54,7 +54,7 @@ class KnowledgeMigrationService
             // Check common database locations
             $databases = [
                 storage_path('conduit.sqlite'),
-                $_SERVER['HOME'] . '/.conduit/conduit.sqlite',
+                $_SERVER['HOME'].'/.conduit/conduit.sqlite',
                 base_path('conduit.sqlite'),
             ];
 
@@ -63,7 +63,7 @@ class KnowledgeMigrationService
                     // Check if database contains knowledge tables
                     $pdo = new \PDO("sqlite:$dbPath");
                     $result = $pdo->query("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%knowledge%' OR name LIKE '%entries%'");
-                    
+
                     if ($result && $result->fetch()) {
                         return true;
                     }

@@ -38,16 +38,18 @@ class MigrateKnowledgeCommand extends Command
         if ($componentService->isInstalled('knowledge')) {
             $this->info('✅ The conduit-knowledge component is already installed!');
             $this->line('   Run <fg=white>conduit knowledge --help</> to see available commands.');
+
             return Command::SUCCESS;
         }
 
         // Offer to install
         $force = $this->option('force');
-        if (!$force) {
+        if (! $force) {
             $install = confirm('Would you like to install the new conduit-knowledge component now?', true);
-            if (!$install) {
+            if (! $install) {
                 $this->info('Migration cancelled. You can install it later with:');
                 $this->line('   <fg=white>conduit install knowledge</>');
+
                 return Command::SUCCESS;
             }
         }
@@ -57,7 +59,7 @@ class MigrateKnowledgeCommand extends Command
         $result = $componentService->install('knowledge');
 
         if ($result->isSuccessful()) {
-            $this->info('✅ ' . $result->getMessage());
+            $this->info('✅ '.$result->getMessage());
             $this->newLine();
             $this->info('🎉 Migration complete! Knowledge commands are now available:');
             $this->line('   • <fg=white>conduit knowledge add</> - Add knowledge entries');
@@ -66,10 +68,10 @@ class MigrateKnowledgeCommand extends Command
             $this->line('   • <fg=white>conduit knowledge show</> - Show entry details');
             $this->newLine();
             $this->line('💡 Run <fg=white>conduit knowledge --help</> for all available commands.');
-            
+
             return Command::SUCCESS;
         } else {
-            $this->error('❌ ' . $result->getMessage());
+            $this->error('❌ '.$result->getMessage());
             if ($result->getErrorOutput()) {
                 $this->line('Error details:');
                 $this->line($result->getErrorOutput());
@@ -77,7 +79,7 @@ class MigrateKnowledgeCommand extends Command
             $this->newLine();
             $this->line('You can try installing manually with:');
             $this->line('   <fg=white>conduit install knowledge</>');
-            
+
             return Command::FAILURE;
         }
     }
