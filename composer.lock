@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2587c0d49c52228e5d975cdbb9b49c8e",
+    "content-hash": "c94737f74544add3c718fd70e4b5a1bb",
     "packages": [
         {
             "name": "brick/math",
@@ -2172,6 +2172,76 @@
                 "source": "https://github.com/jordanpartridge/conduit-env-manager/tree/v2.0.0"
             },
             "time": "2025-07-29T00:52:54+00:00"
+        },
+        {
+            "name": "jordanpartridge/conduit-knowledge",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jordanpartridge/conduit-knowledge.git",
+                "reference": "6139f9222ba9cf0eba32a0bdb9c0bef9c92c08fe"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jordanpartridge/conduit-knowledge/zipball/6139f9222ba9cf0eba32a0bdb9c0bef9c92c08fe",
+                "reference": "6139f9222ba9cf0eba32a0bdb9c0bef9c92c08fe",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/console": "^11.0",
+                "laravel-zero/framework": "^11.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.18",
+                "pestphp/pest": "^3.0",
+                "phpstan/phpstan": "^1.12"
+            },
+            "type": "library",
+            "extra": {
+                "conduit": {
+                    "commands": [
+                        "init",
+                        "status",
+                        "configure",
+                        "list"
+                    ],
+                    "component": true
+                },
+                "laravel": {
+                    "providers": [
+                        "Jordanpartridge\\ConduitKnowledge\\ServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Jordanpartridge\\ConduitKnowledge\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jordan Partridge",
+                    "email": "jordan@partridge.rocks"
+                }
+            ],
+            "description": "A Conduit component for knowledge functionality",
+            "keywords": [
+                "cli",
+                "component",
+                "conduit",
+                "conduit-component",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/jordanpartridge/conduit-knowledge/issues",
+                "source": "https://github.com/jordanpartridge/conduit-knowledge/tree/v1.0.0"
+            },
+            "time": "2025-07-31T02:26:16+00:00"
         },
         {
             "name": "jordanpartridge/github-client",
@@ -8681,12 +8751,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2.0"
     },
-    "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "platform-dev": [],
+    "plugin-api-version": "2.2.0"
 }
