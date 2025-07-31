@@ -21,7 +21,7 @@ trait ListsComponents
         $output = $process->getOutput();
         $data = json_decode($output, true);
 
-        if (!isset($data['installed'])) {
+        if (! isset($data['installed'])) {
             return [];
         }
 

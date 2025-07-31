@@ -4,11 +4,12 @@ namespace App\Commands;
 
 use LaravelZero\Framework\Commands\Command;
 use Symfony\Component\Process\Process;
+
 use function Laravel\Prompts\confirm;
 
 /**
  * Simple component uninstallation command using composer global remove
- * 
+ *
  * Replaces the complex ComponentsCommand uninstall functionality with
  * direct composer global operations for cleaner architecture.
  */
@@ -32,27 +33,29 @@ class UninstallCommand extends Command
         $this->line("Package: {$packageName}");
 
         // Check if component is installed
-        if (!$this->isGloballyInstalled($packageName)) {
+        if (! $this->isGloballyInstalled($packageName)) {
             $this->warn("Component '{$componentName}' is not installed globally.");
             $this->line("Run 'composer global show' to see installed packages.");
+
             return Command::SUCCESS; // Not an error, just not installed
         }
 
         // Confirm removal unless forced
-        if (!$force) {
+        if (! $force) {
             $confirmed = confirm("Remove component '{$componentName}' ({$packageName})?", false);
-            if (!$confirmed) {
-                $this->info("Uninstallation cancelled.");
+            if (! $confirmed) {
+                $this->info('Uninstallation cancelled.');
+
                 return Command::SUCCESS;
             }
         }
 
         // Remove the package
         $this->info("Running: composer global remove {$packageName}");
-        
+
         $process = new Process(['composer', 'global', 'remove', $packageName]);
         $process->setTimeout(300); // 5 minutes timeout
-        
+
         $exitCode = $process->run(function ($type, $buffer) {
             // Stream output in real-time
             $this->getOutput()->write($buffer);
@@ -60,18 +63,18 @@ class UninstallCommand extends Command
 
         if ($exitCode === 0) {
             $this->info("✅ Successfully uninstalled '{$componentName}' component!");
-            
+
             // Show cleanup hint
             $this->newLine();
-            $this->line("💡 Component commands are no longer available.");
+            $this->line('💡 Component commands are no longer available.');
             $this->line("   Run 'conduit list' to see remaining commands.");
-            
+
             return Command::SUCCESS;
         } else {
             $this->error("❌ Failed to uninstall component '{$componentName}'.");
-            $this->line("Error output:");
+            $this->line('Error output:');
             $this->line($process->getErrorOutput());
-            
+
             return Command::FAILURE;
         }
     }
@@ -101,7 +104,7 @@ class UninstallCommand extends Command
     {
         $process = new Process(['composer', 'global', 'show', $packageName]);
         $process->run();
-        
+
         return $process->getExitCode() === 0;
     }
 }

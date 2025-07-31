@@ -15,7 +15,7 @@ trait UninstallsComponents
         $packageName = $this->resolvePackageName($componentName);
 
         // Check if component is installed
-        if (!$this->isGloballyInstalled($packageName)) {
+        if (! $this->isGloballyInstalled($packageName)) {
             return ComponentResult::failure(
                 "Component '{$componentName}' is not installed globally."
             );
@@ -38,5 +38,4 @@ trait UninstallsComponents
             );
         }
     }
-
 }

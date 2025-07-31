@@ -25,7 +25,7 @@ class ComponentsCommand extends Command
                             {--non-interactive : Run in non-interactive mode}';
 
     protected $description = 'Manage Conduit components';
-    
+
     protected $hidden = true; // Hide from help listings as this command is deprecated
 
     public function handle(ComponentManager $manager, ComponentInstallationService $installer): int
@@ -33,7 +33,7 @@ class ComponentsCommand extends Command
         try {
             // Show deprecation warning
             $this->showDeprecationWarning();
-            
+
             $action = $this->argument('action');
 
             // If no action provided and interactive mode is enabled, show interactive menu
@@ -163,10 +163,10 @@ class ComponentsCommand extends Command
         if ($componentName) {
             $this->line("   conduit install {$componentName}");
         } else {
-            $this->line("   conduit install <component>");
+            $this->line('   conduit install <component>');
         }
         $this->newLine();
-        
+
         try {
 
             // Discover available components
@@ -313,10 +313,10 @@ class ComponentsCommand extends Command
         if ($componentName) {
             $this->line("   conduit uninstall {$componentName}");
         } else {
-            $this->line("   conduit uninstall <component>");
+            $this->line('   conduit uninstall <component>');
         }
         $this->newLine();
-        
+
         try {
 
             if (! $componentName && $this->shouldBeInteractive($manager)) {

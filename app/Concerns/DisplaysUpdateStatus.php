@@ -20,18 +20,19 @@ trait DisplaysUpdateStatus
             if ($this->isVerbose()) {
                 echo "✅ All components up to date\n";
             }
+
             return;
         }
 
-        echo "📦 " . $updates->count() . " component update(s) available:\n";
-        
+        echo '📦 '.$updates->count()." component update(s) available:\n";
+
         foreach ($updates as $update) {
             $priority = $this->formatPriority($update['priority'] ?? 'normal');
             echo "  • {$update['name']} {$update['current']} → {$update['latest']}{$priority}\n";
         }
-        
+
         echo "\n💡 Run 'conduit update' to install updates\n";
-        echo str_repeat('─', 50) . "\n";
+        echo str_repeat('─', 50)."\n";
     }
 
     /**
@@ -41,22 +42,23 @@ trait DisplaysUpdateStatus
     {
         if ($updates->isEmpty()) {
             echo "✅ All components are up to date!\n";
+
             return;
         }
 
         echo "📦 Available updates:\n\n";
 
         $rows = $updates->map(function ($update) {
-            $priority = match($update['priority'] ?? 'normal') {
-                'security' => '<fg=red>Security</>', 
-                'breaking' => '<fg=yellow>Breaking</>', 
+            $priority = match ($update['priority'] ?? 'normal') {
+                'security' => '<fg=red>Security</>',
+                'breaking' => '<fg=yellow>Breaking</>',
                 default => 'Normal'
             };
 
             return [
                 'Component' => $update['name'],
                 'Current' => $update['current'],
-                'Latest' => $update['latest'], 
+                'Latest' => $update['latest'],
                 'Priority' => $priority,
             ];
         })->values()->toArray();
@@ -83,7 +85,7 @@ trait DisplaysUpdateStatus
      */
     private function formatPriority(string $priority): string
     {
-        return match($priority) {
+        return match ($priority) {
             'security' => ' (security)',
             'breaking' => ' (breaking changes)',
             default => ''

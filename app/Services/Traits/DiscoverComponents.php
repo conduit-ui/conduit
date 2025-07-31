@@ -37,13 +37,13 @@ trait DiscoverComponents
 
             $data = json_decode($response->getBody()->getContents(), true);
 
-            if (!isset($data['items'])) {
+            if (! isset($data['items'])) {
                 return [];
             }
 
             return collect($data['items'])
                 ->filter(function ($repo) {
-                    return !($repo['archived'] ?? false) && !($repo['disabled'] ?? false);
+                    return ! ($repo['archived'] ?? false) && ! ($repo['disabled'] ?? false);
                 })
                 ->map(function ($repo) {
                     $displayName = $repo['name'];
@@ -66,7 +66,8 @@ trait DiscoverComponents
                 ->toArray();
 
         } catch (\Exception $e) {
-            error_log('Component discovery error: ' . $e->getMessage());
+            error_log('Component discovery error: '.$e->getMessage());
+
             return [];
         }
     }
@@ -74,7 +75,7 @@ trait DiscoverComponents
     public function search(string $query): array
     {
         $discovered = $this->discover();
-        
+
         return array_filter($discovered, function ($component) use ($query) {
             return str_contains(strtolower($component['name']), strtolower($query)) ||
                    str_contains(strtolower($component['description']), strtolower($query));

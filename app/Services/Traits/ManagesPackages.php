@@ -16,7 +16,7 @@ trait ManagesPackages
     {
         $process = new Process(['composer', 'global', 'show', $packageName]);
         $process->run();
-        
+
         return $process->getExitCode() === 0;
     }
 }

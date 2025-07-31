@@ -4,11 +4,12 @@ namespace App\Commands;
 
 use LaravelZero\Framework\Commands\Command;
 use Symfony\Component\Process\Process;
+
 use function Laravel\Prompts\table;
 
 /**
  * Simple command to list globally installed Conduit components
- * 
+ *
  * Replaces the complex component discovery system with direct
  * composer global show operations.
  */
@@ -31,22 +32,24 @@ class ListComponentsCommand extends Command
 
         if ($process->getExitCode() !== 0) {
             $this->error('Failed to retrieve global packages.');
-            $this->line('Error: ' . $process->getErrorOutput());
+            $this->line('Error: '.$process->getErrorOutput());
+
             return Command::FAILURE;
         }
 
         $output = $process->getOutput();
         $data = json_decode($output, true);
 
-        if (!isset($data['installed'])) {
+        if (! isset($data['installed'])) {
             $this->warn('No global packages found.');
+
             return Command::SUCCESS;
         }
 
         $packages = $data['installed'];
 
         // Filter for Conduit components unless --all is specified
-        if (!$showAll) {
+        if (! $showAll) {
             $packages = array_filter($packages, function ($package) {
                 return str_starts_with($package['name'], 'jordanpartridge/conduit-');
             });
@@ -61,6 +64,7 @@ class ListComponentsCommand extends Command
                 $this->line('💡 Install components with: conduit install <component>');
                 $this->line('   Available components: knowledge, spotify, env-manager, github');
             }
+
             return Command::SUCCESS;
         }
 
@@ -68,7 +72,7 @@ class ListComponentsCommand extends Command
         $tableData = [];
         foreach ($packages as $package) {
             $componentName = $this->extractComponentName($package['name']);
-            
+
             $tableData[] = [
                 'Component' => $componentName,
                 'Package' => $package['name'],
@@ -78,7 +82,7 @@ class ListComponentsCommand extends Command
         }
 
         // Sort by component name
-        usort($tableData, fn($a, $b) => strcmp($a['Component'], $b['Component']));
+        usort($tableData, fn ($a, $b) => strcmp($a['Component'], $b['Component']));
 
         $this->newLine();
         $title = $showAll ? 'All Global Packages' : 'Installed Conduit Components';
@@ -88,9 +92,9 @@ class ListComponentsCommand extends Command
         table(['Component', 'Package', 'Version', 'Description'], $tableData);
 
         $this->newLine();
-        $this->line("💡 Manage components:");
-        $this->line("   • conduit install <component>   - Install a component");
-        $this->line("   • conduit uninstall <component> - Remove a component");
+        $this->line('💡 Manage components:');
+        $this->line('   • conduit install <component>   - Install a component');
+        $this->line('   • conduit uninstall <component> - Remove a component');
 
         return Command::SUCCESS;
     }

@@ -19,9 +19,13 @@ class ComponentUpdateChecker
     use DisplaysUpdateStatus;
 
     private JsonComponentRegistrar $registrar;
+
     private UpdateCheckPolicy $policy;
+
     private CheckComponentUpdates $checker;
+
     private DetectUpdatePriority $priorityDetector;
+
     private CacheUpdateResults $cache;
 
     public function __construct(
@@ -43,7 +47,7 @@ class ComponentUpdateChecker
      */
     public function shouldCheck(): bool
     {
-        return $this->policy->shouldCheck() 
+        return $this->policy->shouldCheck()
             && $this->policy->isUpdateCheckEnabled()
             && $this->cache->isExpired();
     }
@@ -54,7 +58,7 @@ class ComponentUpdateChecker
     public function quickCheck(): Collection
     {
         // Try cache first
-        if (!$this->cache->isExpired()) {
+        if (! $this->cache->isExpired()) {
             return $this->cache->getCachedUpdates();
         }
 
@@ -65,6 +69,7 @@ class ComponentUpdateChecker
         $updates = $updates->map(function ($update) {
             $update['priority'] = $this->priorityDetector->execute($update['release_data']);
             unset($update['release_data']); // Clean up raw data
+
             return $update;
         });
 
@@ -79,7 +84,7 @@ class ComponentUpdateChecker
      */
     public function displayUpdateStatus(): void
     {
-        if (!$this->shouldCheck()) {
+        if (! $this->shouldCheck()) {
             return;
         }
 

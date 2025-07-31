@@ -18,9 +18,10 @@ class CleanupCommand extends Command
     public function handle(ComponentManager $componentManager, SecurePackageInstaller $installer): int
     {
         // Only allow in development environment
-        if (config('app.env') !== 'development' && !$this->option('dev-only')) {
+        if (config('app.env') !== 'development' && ! $this->option('dev-only')) {
             $this->error('❌ This command is only available in development environments');
             $this->info('💡 This prevents accidental cleanup in production');
+
             return 1;
         }
 
@@ -32,17 +33,19 @@ class CleanupCommand extends Command
         }
 
         $this->info('✨ No cleanup actions selected');
+
         return 0;
     }
 
     private function cleanupComponents(ComponentManager $componentManager, SecurePackageInstaller $installer): int
     {
         $this->info('🔍 Scanning installed components...');
-        
+
         $components = $componentManager->getInstalled();
-        
+
         if (empty($components)) {
             $this->info('✅ No components installed - already clean!');
+
             return 0;
         }
 
@@ -54,8 +57,9 @@ class CleanupCommand extends Command
         }
         $this->newLine();
 
-        if (!$this->option('force') && !$this->confirm('Remove all these components?', false)) {
+        if (! $this->option('force') && ! $this->confirm('Remove all these components?', false)) {
             $this->info('🚫 Component cleanup cancelled');
+
             return 0;
         }
 
@@ -67,39 +71,40 @@ class CleanupCommand extends Command
 
         foreach ($components as $name => $config) {
             $package = $config['package'] ?? null;
-            
-            if (!$package) {
+
+            if (! $package) {
                 $this->warn("⚠️  Skipping {$name} - no package name found");
+
                 continue;
             }
 
             $this->line("   Removing {$name}...");
-            
+
             try {
                 // Remove from composer.json
                 $result = $installer->remove($package);
-                
+
                 if ($result->isSuccessful()) {
                     // Remove from component registry
                     $componentManager->unregister($name);
                     $this->info("   ✅ Removed {$name}");
                     $removed++;
                 } else {
-                    $this->error("   ❌ Failed to remove {$name}: " . $result->getErrorOutput());
+                    $this->error("   ❌ Failed to remove {$name}: ".$result->getErrorOutput());
                     $failed++;
                 }
             } catch (\Exception $e) {
-                $this->error("   ❌ Error removing {$name}: " . $e->getMessage());
+                $this->error("   ❌ Error removing {$name}: ".$e->getMessage());
                 $failed++;
             }
         }
 
         $this->newLine();
-        
+
         if ($removed > 0) {
             $this->info("✅ Successfully removed {$removed} component(s)");
         }
-        
+
         if ($failed > 0) {
             $this->warn("⚠️  Failed to remove {$failed} component(s)");
         }
@@ -107,7 +112,7 @@ class CleanupCommand extends Command
         // Final verification
         $this->info('🔍 Verifying cleanup...');
         $remainingComponents = $componentManager->getInstalled();
-        
+
         if (empty($remainingComponents)) {
             $this->info('🎉 All components removed - codebase is clean for commit!');
             $this->newLine();

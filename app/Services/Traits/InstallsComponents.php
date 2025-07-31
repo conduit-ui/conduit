@@ -17,7 +17,7 @@ trait InstallsComponents
         $dev = $options['dev'] ?? false;
 
         // Check if already installed (unless forced)
-        if (!$force && $this->isGloballyInstalled($packageName)) {
+        if (! $force && $this->isGloballyInstalled($packageName)) {
             return ComponentResult::failure(
                 "Component '{$componentName}' is already installed globally. Use --force to reinstall."
             );
@@ -25,7 +25,7 @@ trait InstallsComponents
 
         // Build composer command
         $composerArgs = ['global', 'require', $packageName];
-        
+
         if ($dev) {
             $composerArgs[] = '--dev';
         }
@@ -59,5 +59,4 @@ trait InstallsComponents
     {
         return $this->install($componentName, array_merge($options, ['force' => true]));
     }
-
 }

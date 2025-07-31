@@ -5,7 +5,7 @@ namespace App\Contracts;
 /**
  * Core interface for Conduit component management
  */
-interface ComponentInterface extends InstallsComponents, UninstallsComponents, ListsComponents, DiscoverComponents
+interface ComponentInterface extends DiscoverComponents, InstallsComponents, ListsComponents, UninstallsComponents
 {
     /**
      * Check if a component is installed

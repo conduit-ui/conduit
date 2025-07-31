@@ -23,9 +23,9 @@ class UpdateCheckPolicy
      */
     public function shouldCheck(): bool
     {
-        return $this->isConsoleEnvironment() 
-            && !$this->isAutomationMode()
-            && !$this->isTestEnvironment()
+        return $this->isConsoleEnvironment()
+            && ! $this->isAutomationMode()
+            && ! $this->isTestEnvironment()
             && $this->hasComponents();
     }
 
@@ -67,7 +67,7 @@ class UpdateCheckPolicy
      */
     private function hasComponents(): bool
     {
-        return !empty($this->registrar->getRegisteredComponents());
+        return ! empty($this->registrar->getRegisteredComponents());
     }
 
     /**

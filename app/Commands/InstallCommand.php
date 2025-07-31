@@ -4,11 +4,12 @@ namespace App\Commands;
 
 use App\Services\ComponentService;
 use LaravelZero\Framework\Commands\Command;
+
 use function Laravel\Prompts\confirm;
 
 /**
  * Simple component installation command using composer global require
- * 
+ *
  * Replaces the complex ComponentsCommand install functionality with
  * direct composer global operations for cleaner architecture.
  */
@@ -34,26 +35,29 @@ class InstallCommand extends Command
                 $this->info('This migration will:');
                 $this->line('  • Install jordanpartridge/conduit-knowledge globally');
                 $this->line('  • Remove jordanpartridge/conduit-know if installed');
-                
+
                 if (confirm('Continue with automatic migration to "knowledge"?', true)) {
                     $result = $componentService->migrateLegacyComponent('know', 'knowledge');
-                    
+
                     if ($result->isSuccessful()) {
-                        $this->info("✅ " . $result->getMessage());
+                        $this->info('✅ '.$result->getMessage());
                         $this->newLine();
-                        $this->line("💡 Component commands should now be available.");
+                        $this->line('💡 Component commands should now be available.');
                         $this->line("   Run 'conduit list' to see all available commands.");
+
                         return Command::SUCCESS;
                     } else {
-                        $this->error("❌ " . $result->getMessage());
+                        $this->error('❌ '.$result->getMessage());
                         if ($result->getErrorOutput()) {
-                            $this->line("Error output:");
+                            $this->line('Error output:');
                             $this->line($result->getErrorOutput());
                         }
+
                         return Command::FAILURE;
                     }
                 } else {
                     $this->info('Installation cancelled.');
+
                     return Command::SUCCESS;
                 }
             }
@@ -71,27 +75,27 @@ class InstallCommand extends Command
             $result = $componentService->install($componentName, $options);
 
             if ($result->isSuccessful()) {
-                $this->info("✅ " . $result->getMessage());
-                
+                $this->info('✅ '.$result->getMessage());
+
                 // Show available commands hint
                 $this->newLine();
-                $this->line("💡 Component commands should now be available.");
+                $this->line('💡 Component commands should now be available.');
                 $this->line("   Run 'conduit list' to see all available commands.");
-                
+
                 return Command::SUCCESS;
             } else {
-                $this->error("❌ " . $result->getMessage());
+                $this->error('❌ '.$result->getMessage());
                 if ($result->getErrorOutput()) {
-                    $this->line("Error output:");
+                    $this->line('Error output:');
                     $this->line($result->getErrorOutput());
                 }
-                
+
                 return Command::FAILURE;
             }
         } catch (\Exception $e) {
-            $this->error("❌ Installation failed: " . $e->getMessage());
+            $this->error('❌ Installation failed: '.$e->getMessage());
+
             return Command::FAILURE;
         }
     }
-
 }

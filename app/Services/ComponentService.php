@@ -11,18 +11,18 @@ use App\Services\Traits\UninstallsComponents;
 
 /**
  * Composite service for Conduit component management
- * 
+ *
  * This service composes multiple traits to provide a complete
  * component management solution while maintaining clean separation
  * of concerns through interfaces.
  */
 class ComponentService implements ComponentInterface
 {
-    use ManagesPackages;
-    use InstallsComponents;
-    use UninstallsComponents;
-    use ListsComponents; 
     use DiscoverComponents;
+    use InstallsComponents;
+    use ListsComponents;
+    use ManagesPackages;
+    use UninstallsComponents;
 
     /**
      * Legacy component mappings (only for migration support)
@@ -34,13 +34,14 @@ class ComponentService implements ComponentInterface
     public function isInstalled(string $componentName): bool
     {
         $packageName = $this->resolvePackageName($componentName);
+
         return $this->isGloballyInstalled($packageName);
     }
 
     public function getComponentInfo(string $componentName): ?array
     {
         $installed = $this->listInstalled();
-        
+
         foreach ($installed as $component) {
             if ($component['name'] === $componentName) {
                 return $component;
@@ -72,15 +73,15 @@ class ComponentService implements ComponentInterface
     public function migrateLegacyComponent(string $legacyName, string $newName): ComponentResult
     {
         $legacyPackage = $this->resolvePackageName($legacyName);
-        
+
         // Only migrate if legacy component is installed
         if ($this->isGloballyInstalled($legacyPackage)) {
             // Remove legacy component
             $removeResult = $this->uninstall($legacyName);
-            
-            if (!$removeResult->isSuccessful()) {
+
+            if (! $removeResult->isSuccessful()) {
                 return ComponentResult::failure(
-                    "Failed to remove legacy component '{$legacyName}': " . $removeResult->getMessage()
+                    "Failed to remove legacy component '{$legacyName}': ".$removeResult->getMessage()
                 );
             }
         }
