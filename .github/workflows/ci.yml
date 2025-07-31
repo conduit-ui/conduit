@@ -20,6 +20,12 @@ jobs:
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
+      - name: Create Database Directory
+        run: mkdir -p ~/.conduit
+
+      - name: Create Database File
+        run: touch ~/.conduit/conduit.sqlite
+
       - name: Run Migrations
         run: php conduit migrate --force
 
