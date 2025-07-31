@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Process;
 describe('Know Command Migration', function () {
 
     it('shows migration message when no action specified', function () {
-        $this->artisan('know')
+        $this->artisan('know', ['--no-interaction' => true])
             ->expectsOutputToContain('built-in "know" commands have been removed')
             ->expectsOutputToContain('improved knowledge system is now available')
             ->expectsOutputToContain('You tried to run: conduit know')
