@@ -1,0 +1,87 @@
+<?php
+
+namespace App\Commands;
+
+use App\Services\StandaloneComponentDiscovery;
+use LaravelZero\Framework\Commands\Command;
+use Symfony\Component\Process\Process;
+
+class ComponentDelegationCommand extends Command
+{
+    protected $signature = 'component:delegate {component} {command} {--args=*}';
+    
+    protected $description = 'Delegate commands to standalone components';
+
+    public function handle(StandaloneComponentDiscovery $discovery): int
+    {
+        $componentName = $this->argument('component');
+        $commandName = $this->argument('command');
+        $args = $this->option('args') ?? [];
+
+        // Check if component exists
+        $component = $discovery->getComponent($componentName);
+        
+        if (!$component) {
+            $this->error("Component '{$componentName}' not found");
+            $this->showAvailableComponents($discovery);
+            return 1;
+        }
+
+        // Check if command is available
+        if (!in_array($commandName, $component['commands'])) {
+            $this->error("Command '{$commandName}' not available in component '{$componentName}'");
+            $this->line("Available commands: " . implode(', ', $component['commands']));
+            return 1;
+        }
+
+        return $this->delegateToComponent($component, $commandName, $args);
+    }
+
+    private function delegateToComponent(array $component, string $command, array $args): int
+    {
+        $binaryPath = $component['binary'];
+        
+        // Build the delegation command
+        $delegationArgs = ['delegated', $command];
+        
+        // Add any additional arguments
+        foreach ($args as $arg) {
+            $delegationArgs[] = $arg;
+        }
+
+        $this->line("🔗 Delegating to {$component['name']}: {$command}");
+
+        // Set environment variable to indicate delegation
+        $process = new Process($delegationArgs, null, [
+            'CONDUIT_CALLER' => '1'
+        ]);
+        
+        $process->setWorkingDirectory(dirname($binaryPath));
+        $process->setTimeout(60);
+
+        // Run the process and stream output
+        $process->run(function ($type, $buffer) {
+            echo $buffer;
+        });
+
+        return $process->getExitCode();
+    }
+
+    private function showAvailableComponents(StandaloneComponentDiscovery $discovery): void
+    {
+        $components = $discovery->discover();
+        
+        if ($components->isEmpty()) {
+            $this->line('No components found. Install components to ~/.conduit/components/');
+            return;
+        }
+
+        $this->newLine();
+        $this->info('Available components:');
+        
+        foreach ($components as $name => $component) {
+            $commandCount = count($component['commands']);
+            $this->line("  <comment>{$name}</comment> ({$commandCount} commands)");
+        }
+    }
+}

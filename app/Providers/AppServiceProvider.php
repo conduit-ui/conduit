@@ -37,6 +37,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Load globally installed components
         $this->loadGlobalComponents();
+        
+        // Register dynamic component delegation
+        $this->registerComponentDelegation();
 
         // Register core commands
         $this->commands([
@@ -197,6 +200,97 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Exception $e) {
             // Fail gracefully - never break commands
         }
+    }
+
+    /**
+     * Register component delegation commands dynamically
+     */
+    private function registerComponentDelegation(): void
+    {
+        try {
+            $discovery = $this->app->make(\App\Services\StandaloneComponentDiscovery::class);
+            $components = $discovery->discover();
+
+            foreach ($components as $componentName => $component) {
+                foreach ($component['commands'] as $commandName) {
+                    $this->registerDelegatedCommand($componentName, $commandName, $component);
+                }
+            }
+        } catch (\Exception $e) {
+            // Fail gracefully - components are optional
+        }
+    }
+
+    private function registerDelegatedCommand(string $componentName, string $commandName, array $component): void
+    {
+        $signature = "{$componentName}:{$commandName}";
+        
+        // Create a dynamic command class
+        $commandClass = new class($signature, $component, $commandName) extends \LaravelZero\Framework\Commands\Command {
+            protected $signature;
+            protected $description;
+            private array $component;
+            private string $commandName;
+
+            public function __construct(string $signature, array $component, string $commandName)
+            {
+                $this->signature = $signature . ' {args?*}';  // Accept any arguments
+                $this->description = "Execute {$commandName} command via {$component['name']} component";
+                $this->component = $component;
+                $this->commandName = $commandName;
+                
+                parent::__construct();
+            }
+
+            public function handle(): int
+            {
+                // Get all arguments passed to the command
+                $allArgs = [];
+                
+                // Add positional arguments
+                $args = $this->argument('args') ?? [];
+                foreach ($args as $arg) {
+                    if ($arg !== null && $arg !== '') {
+                        $allArgs[] = $arg;
+                    }
+                }
+                
+                // Get all options
+                foreach ($this->options() as $key => $value) {
+                    if ($value !== false && $value !== null && $value !== '') {
+                        if ($value === true) {
+                            $allArgs[] = "--{$key}";
+                        } else {
+                            $allArgs[] = "--{$key}";
+                            $allArgs[] = $value;
+                        }
+                    }
+                }
+
+                return $this->delegateToComponent($allArgs);
+            }
+
+            private function delegateToComponent(array $args): int
+            {
+                $binaryPath = $this->component['binary'];
+                $delegationArgs = [$binaryPath, 'delegated', $this->commandName, ...$args];
+
+                $this->line("🔗 Delegating to {$this->component['name']}: {$this->commandName}");
+
+                $process = new \Symfony\Component\Process\Process($delegationArgs, null, [
+                    'CONDUIT_CALLER' => '1'
+                ]);
+                
+                $process->setTimeout(60);
+                $process->run(function ($type, $buffer) {
+                    echo $buffer;
+                });
+
+                return $process->getExitCode();
+            }
+        };
+        
+        $this->commands([$commandClass]);
     }
 
     /**
