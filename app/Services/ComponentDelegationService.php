@@ -2,16 +2,32 @@
 
 namespace App\Services;
 
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
 class ComponentDelegationService
 {
+    private LoggerInterface $logger;
+
+    public function __construct(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
     /**
      * Delegate a command to a standalone component
      */
     public function delegate(array $component, string $command, array $arguments = [], array $options = []): int
     {
         $binaryPath = $component['binary'];
+
+        $this->logger->info('Delegating command', [
+            'component' => $component['name'],
+            'command' => $command,
+            'arguments' => $arguments,
+            'options' => $options,
+        ]);
 
         // Build the delegation command
         $delegationArgs = [$binaryPath, 'delegated', $command];
@@ -47,6 +63,26 @@ class ComponentDelegationService
             echo $buffer;
         });
 
-        return $process->getExitCode();
+        try {
+            $exitCode = $process->getExitCode();
+
+            if ($exitCode !== 0) {
+                $this->logger->warning('Component delegation failed', [
+                    'component' => $component['name'],
+                    'command' => $command,
+                    'exit_code' => $exitCode,
+                ]);
+            }
+
+            return $exitCode;
+        } catch (ProcessFailedException $e) {
+            $this->logger->error('Component delegation process failed', [
+                'component' => $component['name'],
+                'command' => $command,
+                'error' => $e->getMessage(),
+            ]);
+
+            return 1;
+        }
     }
 }

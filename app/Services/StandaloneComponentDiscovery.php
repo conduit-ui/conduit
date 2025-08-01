@@ -3,10 +3,16 @@
 namespace App\Services;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Symfony\Component\Filesystem\Path;
 
 class StandaloneComponentDiscovery
 {
     private array $componentPaths;
+
+    private const CACHE_KEY = 'conduit.components';
+
+    private const CACHE_TTL = 3600; // 1 hour
 
     private ?Collection $cachedComponents = null;
 
@@ -35,6 +41,13 @@ class StandaloneComponentDiscovery
      */
     public function discover(): Collection
     {
+        // Try to retrieve from application-level cache first
+        $cachedComponents = Cache::get(self::CACHE_KEY);
+        if ($cachedComponents !== null) {
+            return $cachedComponents;
+        }
+
+        // Fallback to instance-level cache
         if ($this->cachedComponents !== null) {
             return $this->cachedComponents;
         }
@@ -66,6 +79,9 @@ class StandaloneComponentDiscovery
 
         $this->cachedComponents = $components;
 
+        // Cache for 1 hour
+        Cache::put(self::CACHE_KEY, $components, self::CACHE_TTL);
+
         return $components;
     }
 
@@ -74,6 +90,8 @@ class StandaloneComponentDiscovery
      */
     private function getComponentCommands(string $binaryPath): array
     {
+        // Ensure we're using a safe path resolution
+        $binaryPath = Path::canonicalize($binaryPath);
         try {
             $componentDir = dirname($binaryPath);
             $configPath = $componentDir.'/config/commands.php';
