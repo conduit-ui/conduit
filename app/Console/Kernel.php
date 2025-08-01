@@ -3,7 +3,6 @@
 namespace App\Console;
 
 use App\Commands\DynamicDelegationCommand;
-use App\Services\StandaloneComponentDiscovery;
 use Illuminate\Console\Scheduling\Schedule;
 use LaravelZero\Framework\Kernel as ConsoleKernel;
 use Symfony\Component\Console\Command\Command;
