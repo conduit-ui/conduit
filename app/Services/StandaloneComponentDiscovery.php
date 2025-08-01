@@ -8,6 +8,10 @@ class StandaloneComponentDiscovery
 {
     private array $componentPaths;
 
+    private ?Collection $cachedComponents = null;
+
+    private array $excludePatterns;
+
     public function __construct()
     {
         $this->componentPaths = [
@@ -20,6 +24,10 @@ class StandaloneComponentDiscovery
             // User components (installed via conduit)
             $this->getHomeDirectory().'/.conduit/components',
         ];
+
+        $this->excludePatterns = [
+            'list', 'help', 'delegated', 'make:', 'test', 'build',
+        ];
     }
 
     /**
@@ -27,6 +35,10 @@ class StandaloneComponentDiscovery
      */
     public function discover(): Collection
     {
+        if ($this->cachedComponents !== null) {
+            return $this->cachedComponents;
+        }
+
         $components = collect();
 
         foreach ($this->componentPaths as $path) {
@@ -40,8 +52,8 @@ class StandaloneComponentDiscovery
                 $componentName = basename($componentDir);
                 $binaryPath = $componentDir.'/'.$componentName;
 
-                // Check if component binary exists
-                if (file_exists($binaryPath) && is_executable($binaryPath)) {
+                // Check if component binary exists and is accessible
+                if (file_exists($binaryPath) && is_executable($binaryPath) && is_readable($binaryPath)) {
                     $components->put($componentName, [
                         'name' => $componentName,
                         'path' => $componentDir,
@@ -51,6 +63,8 @@ class StandaloneComponentDiscovery
                 }
             }
         }
+
+        $this->cachedComponents = $components;
 
         return $components;
     }
@@ -66,7 +80,10 @@ class StandaloneComponentDiscovery
 
             // Try to read published commands from component's config
             if (file_exists($configPath)) {
-                $config = include $configPath;
+                $config = @include $configPath;
+                if (! is_array($config)) {
+                    $config = [];
+                }
                 $publishedCommands = $config['published'] ?? [];
 
                 if (! empty($publishedCommands)) {
@@ -84,11 +101,6 @@ class StandaloneComponentDiscovery
             $commands = [];
             $lines = explode("\n", trim($output));
 
-            // Filter out development/internal commands
-            $excludePatterns = [
-                'list', 'help', 'delegated', 'make:', 'test', 'build',
-            ];
-
             foreach ($lines as $line) {
                 $line = trim($line);
                 if (empty($line) || str_starts_with($line, ' ')) {
@@ -105,7 +117,7 @@ class StandaloneComponentDiscovery
 
                 // Skip development/internal commands
                 $shouldExclude = false;
-                foreach ($excludePatterns as $pattern) {
+                foreach ($this->excludePatterns as $pattern) {
                     if ($command === $pattern || str_starts_with($command, $pattern)) {
                         $shouldExclude = true;
                         break;
@@ -137,6 +149,23 @@ class StandaloneComponentDiscovery
     public function getComponent(string $componentName): ?array
     {
         return $this->discover()->get($componentName);
+    }
+
+    /**
+     * Clear the component cache (useful for testing or when components change)
+     */
+    public function clearCache(): void
+    {
+        $this->cachedComponents = null;
+    }
+
+    /**
+     * Set exclude patterns for filtering commands
+     */
+    public function setExcludePatterns(array $patterns): void
+    {
+        $this->excludePatterns = $patterns;
+        $this->clearCache(); // Clear cache when patterns change
     }
 
     /**

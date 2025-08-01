@@ -107,6 +107,9 @@ class AppServiceProvider extends ServiceProvider
         // Register global component discovery
         $this->app->singleton(\App\Services\GlobalComponentDiscovery::class);
 
+        // Register component delegation service
+        $this->app->singleton(\App\Services\ComponentDelegationService::class);
+
         // Register voice narration system
         $this->registerVoiceNarrationSystem();
     }
@@ -249,48 +252,29 @@ class AppServiceProvider extends ServiceProvider
             public function handle(): int
             {
                 // Get all arguments passed to the command
-                $allArgs = [];
+                $arguments = [];
+                $options = [];
 
                 // Add positional arguments
                 $args = $this->argument('args') ?? [];
                 foreach ($args as $arg) {
                     if ($arg !== null && $arg !== '') {
-                        $allArgs[] = $arg;
+                        $arguments[] = $arg;
                     }
                 }
 
                 // Get all options
                 foreach ($this->options() as $key => $value) {
                     if ($value !== false && $value !== null && $value !== '') {
-                        if ($value === true) {
-                            $allArgs[] = "--{$key}";
-                        } else {
-                            $allArgs[] = "--{$key}";
-                            $allArgs[] = $value;
-                        }
+                        $options[$key] = $value;
                     }
                 }
 
-                return $this->delegateToComponent($allArgs);
-            }
-
-            private function delegateToComponent(array $args): int
-            {
-                $binaryPath = $this->component['binary'];
-                $delegationArgs = [$binaryPath, 'delegated', $this->commandName, ...$args];
-
                 $this->line("🔗 Delegating to {$this->component['name']}: {$this->commandName}");
 
-                $process = new \Symfony\Component\Process\Process($delegationArgs, null, [
-                    'CONDUIT_CALLER' => '1',
-                ]);
+                $delegationService = app(\App\Services\ComponentDelegationService::class);
 
-                $process->setTimeout(60);
-                $process->run(function ($type, $buffer) {
-                    echo $buffer;
-                });
-
-                return $process->getExitCode();
+                return $delegationService->delegate($this->component, $this->commandName, $arguments, $options);
             }
         };
 

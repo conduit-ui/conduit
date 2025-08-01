@@ -2,9 +2,9 @@
 
 namespace App\Commands;
 
+use App\Services\ComponentDelegationService;
 use App\Services\StandaloneComponentDiscovery;
 use LaravelZero\Framework\Commands\Command;
-use Symfony\Component\Process\Process;
 
 class DynamicDelegationCommand extends Command
 {
@@ -16,10 +16,13 @@ class DynamicDelegationCommand extends Command
 
     private StandaloneComponentDiscovery $discovery;
 
-    public function __construct(StandaloneComponentDiscovery $discovery)
+    private ComponentDelegationService $delegationService;
+
+    public function __construct(StandaloneComponentDiscovery $discovery, ComponentDelegationService $delegationService)
     {
         parent::__construct();
         $this->discovery = $discovery;
+        $this->delegationService = $delegationService;
     }
 
     protected function configure()
@@ -59,45 +62,9 @@ class DynamicDelegationCommand extends Command
 
     private function delegateToComponent(array $component, string $command, array $arguments, array $options): int
     {
-        $binaryPath = $component['binary'];
-
-        // Build the delegation command
-        $delegationArgs = [$binaryPath, 'delegated', $command];
-
-        // Add positional arguments
-        foreach ($arguments as $arg) {
-            if ($arg !== null && $arg !== '') {
-                $delegationArgs[] = $arg;
-            }
-        }
-
-        // Add options
-        foreach ($options as $key => $value) {
-            if ($value === true) {
-                // Boolean flag
-                $delegationArgs[] = "--{$key}";
-            } elseif ($value !== false && $value !== null && $value !== '') {
-                // Value option
-                $delegationArgs[] = "--{$key}";
-                $delegationArgs[] = $value;
-            }
-        }
-
         $this->line("🔗 Delegating to {$component['name']}: {$command}");
 
-        // Set environment variable to indicate delegation from conduit
-        $process = new Process($delegationArgs, null, [
-            'CONDUIT_CALLER' => '1',
-        ]);
-
-        $process->setTimeout(60);
-
-        // Run the process and stream output
-        $process->run(function ($type, $buffer) {
-            echo $buffer;
-        });
-
-        return $process->getExitCode();
+        return $this->delegationService->delegate($component, $command, $arguments, $options);
     }
 
     private function showAvailableComponents(): void

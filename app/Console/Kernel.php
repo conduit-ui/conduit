@@ -53,8 +53,7 @@ class Kernel extends ConsoleKernel
 
     private function tryComponentDelegation(string $commandName, InputInterface $input, OutputInterface $output): int
     {
-        $discovery = $this->getApplication()->getLaravel()->make(StandaloneComponentDiscovery::class);
-        $delegator = new DynamicDelegationCommand($discovery);
+        $delegator = $this->getApplication()->getLaravel()->make(DynamicDelegationCommand::class);
 
         // Extract arguments and options
         $arguments = array_slice($input->getArguments(), 1); // Skip command name
