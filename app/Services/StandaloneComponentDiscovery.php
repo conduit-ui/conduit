@@ -13,12 +13,12 @@ class StandaloneComponentDiscovery
         $this->componentPaths = [
             // Core components (ship with conduit)
             base_path('components/core'),
-            
+
             // Dev components (development only)
             base_path('components/dev'),
-            
+
             // User components (installed via conduit)
-            $this->getHomeDirectory() . '/.conduit/components'
+            $this->getHomeDirectory().'/.conduit/components',
         ];
     }
 
@@ -30,23 +30,23 @@ class StandaloneComponentDiscovery
         $components = collect();
 
         foreach ($this->componentPaths as $path) {
-            if (!is_dir($path)) {
+            if (! is_dir($path)) {
                 continue;
             }
 
-            $componentDirs = glob($path . '/*', GLOB_ONLYDIR);
-            
+            $componentDirs = glob($path.'/*', GLOB_ONLYDIR);
+
             foreach ($componentDirs as $componentDir) {
                 $componentName = basename($componentDir);
-                $binaryPath = $componentDir . '/' . $componentName;
-                
+                $binaryPath = $componentDir.'/'.$componentName;
+
                 // Check if component binary exists
                 if (file_exists($binaryPath) && is_executable($binaryPath)) {
                     $components->put($componentName, [
                         'name' => $componentName,
                         'path' => $componentDir,
                         'binary' => $binaryPath,
-                        'commands' => $this->getComponentCommands($binaryPath)
+                        'commands' => $this->getComponentCommands($binaryPath),
                     ]);
                 }
             }
@@ -62,47 +62,47 @@ class StandaloneComponentDiscovery
     {
         try {
             $componentDir = dirname($binaryPath);
-            $configPath = $componentDir . '/config/commands.php';
-            
+            $configPath = $componentDir.'/config/commands.php';
+
             // Try to read published commands from component's config
             if (file_exists($configPath)) {
                 $config = include $configPath;
                 $publishedCommands = $config['published'] ?? [];
-                
-                if (!empty($publishedCommands)) {
+
+                if (! empty($publishedCommands)) {
                     return $publishedCommands;
                 }
             }
-            
+
             // Fallback: parse list output but filter out dev commands
-            $output = shell_exec($binaryPath . ' list --raw 2>/dev/null');
-            
-            if (!$output) {
+            $output = shell_exec($binaryPath.' list --raw 2>/dev/null');
+
+            if (! $output) {
                 return [];
             }
 
             $commands = [];
             $lines = explode("\n", trim($output));
-            
+
             // Filter out development/internal commands
             $excludePatterns = [
-                'list', 'help', 'delegated', 'make:', 'test', 'build'
+                'list', 'help', 'delegated', 'make:', 'test', 'build',
             ];
-            
+
             foreach ($lines as $line) {
                 $line = trim($line);
                 if (empty($line) || str_starts_with($line, ' ')) {
                     continue;
                 }
-                
+
                 // Extract command name (first word)
                 $parts = explode(' ', $line);
                 $command = $parts[0] ?? '';
-                
+
                 if (empty($command)) {
                     continue;
                 }
-                
+
                 // Skip development/internal commands
                 $shouldExclude = false;
                 foreach ($excludePatterns as $pattern) {
@@ -111,12 +111,12 @@ class StandaloneComponentDiscovery
                         break;
                     }
                 }
-                
-                if (!$shouldExclude) {
+
+                if (! $shouldExclude) {
                     $commands[] = $command;
                 }
             }
-            
+
             return $commands;
         } catch (\Exception $e) {
             return [];
@@ -146,11 +146,11 @@ class StandaloneComponentDiscovery
     {
         $home = getenv('HOME') ?: getenv('USERPROFILE');
 
-        if (!$home && PHP_OS_FAMILY === 'Windows') {
+        if (! $home && PHP_OS_FAMILY === 'Windows') {
             $homeDrive = getenv('HOMEDRIVE');
             $homePath = getenv('HOMEPATH');
             if ($homeDrive && $homePath) {
-                $home = $homeDrive . $homePath;
+                $home = $homeDrive.$homePath;
             }
         }
 

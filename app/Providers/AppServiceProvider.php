@@ -37,7 +37,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Load globally installed components
         $this->loadGlobalComponents();
-        
+
         // Register dynamic component delegation
         $this->registerComponentDelegation();
 
@@ -224,21 +224,25 @@ class AppServiceProvider extends ServiceProvider
     private function registerDelegatedCommand(string $componentName, string $commandName, array $component): void
     {
         $signature = "{$componentName}:{$commandName}";
-        
+
         // Create a dynamic command class
-        $commandClass = new class($signature, $component, $commandName) extends \LaravelZero\Framework\Commands\Command {
+        $commandClass = new class($signature, $component, $commandName) extends \LaravelZero\Framework\Commands\Command
+        {
             protected $signature;
+
             protected $description;
+
             private array $component;
+
             private string $commandName;
 
             public function __construct(string $signature, array $component, string $commandName)
             {
-                $this->signature = $signature . ' {args?*}';  // Accept any arguments
+                $this->signature = $signature.' {args?*}';  // Accept any arguments
                 $this->description = "Execute {$commandName} command via {$component['name']} component";
                 $this->component = $component;
                 $this->commandName = $commandName;
-                
+
                 parent::__construct();
             }
 
@@ -246,7 +250,7 @@ class AppServiceProvider extends ServiceProvider
             {
                 // Get all arguments passed to the command
                 $allArgs = [];
-                
+
                 // Add positional arguments
                 $args = $this->argument('args') ?? [];
                 foreach ($args as $arg) {
@@ -254,7 +258,7 @@ class AppServiceProvider extends ServiceProvider
                         $allArgs[] = $arg;
                     }
                 }
-                
+
                 // Get all options
                 foreach ($this->options() as $key => $value) {
                     if ($value !== false && $value !== null && $value !== '') {
@@ -278,9 +282,9 @@ class AppServiceProvider extends ServiceProvider
                 $this->line("🔗 Delegating to {$this->component['name']}: {$this->commandName}");
 
                 $process = new \Symfony\Component\Process\Process($delegationArgs, null, [
-                    'CONDUIT_CALLER' => '1'
+                    'CONDUIT_CALLER' => '1',
                 ]);
-                
+
                 $process->setTimeout(60);
                 $process->run(function ($type, $buffer) {
                     echo $buffer;
@@ -289,7 +293,7 @@ class AppServiceProvider extends ServiceProvider
                 return $process->getExitCode();
             }
         };
-        
+
         $this->commands([$commandClass]);
     }
 

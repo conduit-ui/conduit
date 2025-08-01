@@ -10,7 +10,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 class FallbackDelegationCommand extends Command
 {
     protected $signature = 'fallback';
+
     protected $description = 'Fallback command for component delegation';
+
     protected $hidden = true;
 
     private StandaloneComponentDiscovery $discovery;
@@ -25,26 +27,28 @@ class FallbackDelegationCommand extends Command
     {
         // Get the raw command name that was attempted
         $commandName = $input->getFirstArgument();
-        
-        if (!$commandName || !str_contains($commandName, ':')) {
+
+        if (! $commandName || ! str_contains($commandName, ':')) {
             return parent::run($input, $output);
         }
 
         // Parse component:command format
         [$componentName, $subCommand] = explode(':', $commandName, 2);
-        
+
         // Check if this component exists
         $component = $this->discovery->getComponent($componentName);
-        
-        if (!$component) {
+
+        if (! $component) {
             $this->error("Command '{$commandName}' not found and component '{$componentName}' not available");
+
             return 1;
         }
 
         // Check if command is available in component
-        if (!in_array($subCommand, $component['commands'])) {
+        if (! in_array($subCommand, $component['commands'])) {
             $this->error("Command '{$subCommand}' not available in component '{$componentName}'");
-            $this->line("Available commands: " . implode(', ', $component['commands']));
+            $this->line('Available commands: '.implode(', ', $component['commands']));
+
             return 1;
         }
 
@@ -52,7 +56,7 @@ class FallbackDelegationCommand extends Command
         return $this->call('component:delegate', [
             'component' => $componentName,
             'command' => $subCommand,
-            '--args' => array_slice($input->getArguments(), 1) // Skip the command name
+            '--args' => array_slice($input->getArguments(), 1), // Skip the command name
         ]);
     }
 }

@@ -41,11 +41,11 @@ class Kernel extends ConsoleKernel
         } catch (CommandNotFoundException $e) {
             // Try component delegation for component:command format
             $commandName = $input->getFirstArgument();
-            
+
             if ($commandName && str_contains($commandName, ':')) {
                 return $this->tryComponentDelegation($commandName, $input, $output);
             }
-            
+
             // Re-throw if not a component command
             throw $e;
         }
@@ -55,17 +55,17 @@ class Kernel extends ConsoleKernel
     {
         $discovery = $this->getApplication()->getLaravel()->make(StandaloneComponentDiscovery::class);
         $delegator = new DynamicDelegationCommand($discovery);
-        
+
         // Extract arguments and options
         $arguments = array_slice($input->getArguments(), 1); // Skip command name
         $options = [];
-        
+
         foreach ($input->getOptions() as $name => $value) {
             if ($value !== false && $value !== null && $value !== '') {
                 $options[$name] = $value;
             }
         }
-        
+
         return $delegator->handleDynamicCommand($commandName, $arguments, $options);
     }
 }
