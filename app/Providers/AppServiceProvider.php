@@ -25,8 +25,10 @@ use App\Services\VoiceNarrationService;
 use Illuminate\Support\Collection;
 // GitHub client imports - only used if package is installed
 use Illuminate\Support\ServiceProvider;
-use JordanPartridge\GithubClient\Contracts\GithubConnectorInterface;
-use JordanPartridge\GithubClient\GithubConnector;
+
+// GitHub client connector imports disabled during refactoring
+// use JordanPartridge\GithubClient\Contracts\GithubConnectorInterface;
+// use JordanPartridge\GithubClient\GithubConnector;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -88,13 +90,14 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // Override GitHub client with optional auth after registration
-        $this->app->extend(GithubConnectorInterface::class, function ($connector, $app) {
-            $authService = $app->make(GithubAuthService::class);
-            $token = $authService->getToken();
-
-            // Return new connector with actual token or null
-            return new GithubConnector($token);
-        });
+        // Disabled during GitHub client refactoring
+        // $this->app->extend(GithubConnectorInterface::class, function ($connector, $app) {
+        //     $authService = $app->make(GithubAuthService::class);
+        //     $token = $authService->getToken();
+        //
+        //     // Return new connector with actual token or null
+        //     return new GithubConnector($token);
+        // });
 
         // Bind interfaces to implementations
         $this->app->singleton(PrCreateInterface::class, PrCreateService::class);
@@ -204,8 +207,9 @@ class AppServiceProvider extends ServiceProvider
         }
 
         try {
-            $checker = $this->app->make(ComponentUpdateChecker::class);
-            $checker->displayUpdateStatus();
+            // ComponentUpdateChecker disabled during architecture refactoring
+            // $checker = $this->app->make(ComponentUpdateChecker::class);
+            // $checker->displayUpdateStatus();
         } catch (\Exception $e) {
             // Fail gracefully - never break commands
         }

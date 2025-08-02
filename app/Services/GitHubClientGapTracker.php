@@ -95,9 +95,10 @@ class GitHubClientGapTracker
     {
         $gaps = [];
 
+        $reviews = null;
         try {
             // Test review list endpoint
-            $reviews = Github::pullRequests()->reviews($owner, $repo, $prNumber);
+            $reviews = Github::pullRequests()->reviews($owner, $repo, $prNumber) ?? [];
 
             if (is_array($reviews) && empty($reviews)) {
                 $gaps['no_reviews_data'] = [
@@ -210,10 +211,11 @@ class GitHubClientGapTracker
 
             // Test status checks endpoint
             try {
-                if (method_exists(Github::class, 'commits')) {
+                // Check if commit resource exists and has status method
+                if (method_exists(Github::class, 'commits') && method_exists(Github::commits(), 'status')) {
                     $statuses = Github::commits()->status($owner, $repo, $headSha);
                 } else {
-                    throw new \Exception('commits() resource does not exist');
+                    throw new \Exception('commit status endpoint not available');
                 }
             } catch (\Exception $e) {
                 $gaps['missing_commit_status'] = [
