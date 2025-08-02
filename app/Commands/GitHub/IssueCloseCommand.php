@@ -128,7 +128,7 @@ class IssueCloseCommand extends Command
         // Add comment if provided
         $comment = $this->option('comment');
         if ($comment) {
-            Github::issues()->createComment($owner, $repoName, $issueNumber, $comment);
+            Github::comments()->create($owner, $repoName, $issueNumber, $comment);
         }
 
         // Close the issue

@@ -9,7 +9,7 @@ trait RendersIssueDetails
     /**
      * Render markdown-like text with basic formatting
      */
-    protected function renderMarkdownText(Command $command, string $text): void
+    public function renderMarkdownText(Command $command, string $text): void
     {
         $lines = explode("\n", $text);
         $inCodeBlock = false;

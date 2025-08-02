@@ -225,11 +225,12 @@ class IssuesSpeakCommand extends Command
                 default => -2, // Default slower
             };
 
+            // PowerShell command string - \\$speak is PowerShell variable syntax, not PHP
             $psCommand = 'Add-Type -AssemblyName System.Speech; '.
-                        "\\$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; ".
-                        "\\$speak.Rate = {$rate}; ".
-                        "\\$speak.Speak({$trollEscaped}); ".
-                        "\\$speak.Dispose()";
+                        '$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; '.
+                        '$speak.Rate = '.$rate.'; '.
+                        '$speak.Speak('.$trollEscaped.'); '.
+                        '$speak.Dispose()';
 
             shell_exec("powershell -Command \"{$psCommand}\"");
 

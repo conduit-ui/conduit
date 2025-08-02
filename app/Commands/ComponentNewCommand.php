@@ -1055,32 +1055,13 @@ GITIGNORE;
 
     protected function automatePackagistSubmission(string $repoUrl): bool
     {
-        try {
-            $this->info('🤖 Starting browser automation...');
-
-            $this->browse(function ($browser) use ($repoUrl) {
-                $browser->visit('https://packagist.org/packages/submit')
-                    ->waitFor('input[name="repository[url]"]', 10)
-                    ->type('repository[url]', $repoUrl)
-                    ->press('Check')
-                    ->waitFor('.alert-success, .alert-danger', 15);
-
-                // If validation passed, submit the package
-                if ($browser->element('.alert-success')) {
-                    $browser->press('Submit')
-                        ->waitFor('.alert-success', 10);
-                }
-            });
-
-            $this->info('✅ Packagist submission completed!');
-
-            return true;
-
-        } catch (\Exception $e) {
-            $this->warn("Browser automation failed: {$e->getMessage()}");
-
-            return false;
-        }
+        $this->info('📦 Manual Packagist submission required:');
+        $this->line("   1. Visit: https://packagist.org/packages/submit");
+        $this->line("   2. Enter repository URL: {$repoUrl}");
+        $this->line("   3. Click 'Check' then 'Submit'");
+        $this->newLine();
+        
+        return confirm('Have you submitted the package to Packagist?', default: false);
     }
 
     protected function setupPackagistWebhook(string $name, string $organization): bool
@@ -1090,8 +1071,8 @@ GITIGNORE;
         try {
             $this->info('🔗 Setting up Packagist webhook...');
 
-            // Get Packagist username from environment or config
-            $packagistUser = env('PACKAGIST_USERNAME') ?: $organization;
+            // Get Packagist username from config or default to organization
+            $packagistUser = config('packagist.username', $organization);
             $webhookUrl = "https://packagist.org/api/github?username={$packagistUser}";
 
             $webhookProcess = new Process([
