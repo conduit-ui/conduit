@@ -10,13 +10,13 @@ use Symfony\Component\Process\Process;
 class ComponentDelegationService
 {
     private LoggerInterface $logger;
-    
+
     private ComponentSecurityValidator $securityValidator;
 
-    public function __construct(LoggerInterface $logger, ComponentSecurityValidator $securityValidator = null)
+    public function __construct(LoggerInterface $logger, ?ComponentSecurityValidator $securityValidator = null)
     {
         $this->logger = $logger;
-        $this->securityValidator = $securityValidator ?? new ComponentSecurityValidator();
+        $this->securityValidator = $securityValidator ?? new ComponentSecurityValidator;
     }
 
     /**
@@ -47,11 +47,12 @@ class ComponentDelegationService
                 'command' => $command,
                 'error' => $e->getMessage(),
             ]);
-            
+
             // Return error code without exposing security details to user
             if (app()->runningInConsole() && app()->bound('console')) {
                 app('console')->error('Invalid command or arguments provided');
             }
+
             return 1;
         }
 

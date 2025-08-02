@@ -59,16 +59,16 @@ class ComponentSecurityValidator
             }
         }
 
-        if (!$isAllowed) {
+        if (! $isAllowed) {
             throw new \InvalidArgumentException(
-                'Component path is outside allowed directories: ' . $path
+                'Component path is outside allowed directories: '.$path
             );
         }
 
         // Additional checks for path traversal attempts
         if (Str::contains($path, ['../', '..\\', '../', '.\\'])) {
             throw new \InvalidArgumentException(
-                'Path traversal attempt detected: ' . $path
+                'Path traversal attempt detected: '.$path
             );
         }
 
@@ -83,7 +83,7 @@ class ComponentSecurityValidator
     public function validateBinaryPath(string $binaryPath): string
     {
         $canonicalPath = Path::canonicalize($binaryPath);
-        
+
         // Binary must be within component directory
         $componentDir = dirname($canonicalPath);
         $this->validateComponentPath($componentDir);
@@ -111,16 +111,16 @@ class ComponentSecurityValidator
      */
     public function validateComponentName(string $name): string
     {
-        if (!preg_match(self::COMPONENT_NAME_PATTERN, $name)) {
+        if (! preg_match(self::COMPONENT_NAME_PATTERN, $name)) {
             throw new \InvalidArgumentException(
-                'Invalid component name. Only alphanumeric characters, hyphens, and underscores are allowed: ' . $name
+                'Invalid component name. Only alphanumeric characters, hyphens, and underscores are allowed: '.$name
             );
         }
 
         // Additional length check
         if (strlen($name) > 50) {
             throw new \InvalidArgumentException(
-                'Component name too long (max 50 characters): ' . $name
+                'Component name too long (max 50 characters): '.$name
             );
         }
 
@@ -134,16 +134,16 @@ class ComponentSecurityValidator
      */
     public function validateCommandName(string $command): string
     {
-        if (!preg_match(self::COMMAND_NAME_PATTERN, $command)) {
+        if (! preg_match(self::COMMAND_NAME_PATTERN, $command)) {
             throw new \InvalidArgumentException(
-                'Invalid command name. Only alphanumeric characters, hyphens, underscores, and colons are allowed: ' . $command
+                'Invalid command name. Only alphanumeric characters, hyphens, underscores, and colons are allowed: '.$command
             );
         }
 
         // Additional length check
         if (strlen($command) > 100) {
             throw new \InvalidArgumentException(
-                'Command name too long (max 100 characters): ' . $command
+                'Command name too long (max 100 characters): '.$command
             );
         }
 
@@ -176,9 +176,9 @@ class ComponentSecurityValidator
 
         foreach ($options as $key => $value) {
             // Validate option key (no special chars)
-            if (!preg_match('/^[a-zA-Z0-9\-_]+$/', $key)) {
+            if (! preg_match('/^[a-zA-Z0-9\-_]+$/', $key)) {
                 throw new \InvalidArgumentException(
-                    'Invalid option key: ' . $key
+                    'Invalid option key: '.$key
                 );
             }
 
@@ -201,15 +201,15 @@ class ComponentSecurityValidator
      */
     public function validateBinaryIntegrity(string $binaryPath): void
     {
-        if (!file_exists($binaryPath)) {
+        if (! file_exists($binaryPath)) {
             throw new \InvalidArgumentException(
-                'Binary does not exist: ' . $binaryPath
+                'Binary does not exist: '.$binaryPath
             );
         }
 
-        if (!is_executable($binaryPath)) {
+        if (! is_executable($binaryPath)) {
             throw new \InvalidArgumentException(
-                'Binary is not executable: ' . $binaryPath
+                'Binary is not executable: '.$binaryPath
             );
         }
 
@@ -217,7 +217,7 @@ class ComponentSecurityValidator
         $perms = fileperms($binaryPath);
         if ($perms & 0002) {
             throw new \InvalidArgumentException(
-                'Binary is world-writable, which is a security risk: ' . $binaryPath
+                'Binary is world-writable, which is a security risk: '.$binaryPath
             );
         }
 
@@ -265,9 +265,9 @@ class ComponentSecurityValidator
         $sanitizedOptions = $this->sanitizeOptions($options);
         foreach ($sanitizedOptions as $key => $value) {
             if ($value === true) {
-                $commandArray[] = '--' . $key;
+                $commandArray[] = '--'.$key;
             } elseif ($value !== false && $value !== null && $value !== '') {
-                $commandArray[] = '--' . $key;
+                $commandArray[] = '--'.$key;
                 $commandArray[] = $value; // Already sanitized
             }
         }
@@ -282,11 +282,11 @@ class ComponentSecurityValidator
     {
         $home = getenv('HOME') ?: getenv('USERPROFILE');
 
-        if (!$home && PHP_OS_FAMILY === 'Windows') {
+        if (! $home && PHP_OS_FAMILY === 'Windows') {
             $homeDrive = getenv('HOMEDRIVE');
             $homePath = getenv('HOMEPATH');
             if ($homeDrive && $homePath) {
-                $home = $homeDrive . $homePath;
+                $home = $homeDrive.$homePath;
             }
         }
 
