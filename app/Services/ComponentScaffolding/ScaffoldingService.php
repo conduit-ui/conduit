@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace App\Services\ComponentScaffolding;
 
+use App\Services\ComponentScaffolding\Builders\ComponentBuilder;
 use App\Services\ComponentScaffolding\Templates\TemplateManager;
 use App\Services\ComponentScaffolding\Validators\ComponentValidator;
-use App\Services\ComponentScaffolding\Builders\ComponentBuilder;
-use Illuminate\Support\Str;
 use LaravelZero\Framework\Commands\Command;
 
 /**
  * Enhanced component scaffolding service that addresses critical GitHub issues:
  * - Issue #85: Universal Output Format Interfaces
- * - Issue #84: Laravel Zero Database Patterns  
+ * - Issue #84: Laravel Zero Database Patterns
  * - Issue #76: Component Installation System
  * - Issue #65: Slack Integration patterns
  * - Issue #62: Service Architecture
@@ -35,7 +34,7 @@ class ScaffoldingService
     {
         // Validate configuration
         $validationResult = $this->validator->validate($config);
-        if (!$validationResult->isValid()) {
+        if (! $validationResult->isValid()) {
             return ComponentResult::failed($validationResult->getErrors());
         }
 
@@ -45,8 +44,8 @@ class ScaffoldingService
 
         // Build component structure
         $buildResult = $this->builder->build($config, $templates, $command);
-        
-        if (!$buildResult->isSuccessful()) {
+
+        if (! $buildResult->isSuccessful()) {
             return ComponentResult::failed($buildResult->getErrors());
         }
 
@@ -96,7 +95,7 @@ class ScaffoldingService
     }
 
     /**
-     * Generate git-tag based isolation structure (addresses Issue #76) 
+     * Generate git-tag based isolation structure (addresses Issue #76)
      */
     private function generateIsolationStructure(array $config, string $path): void
     {
@@ -111,19 +110,19 @@ class ScaffoldingService
         ];
 
         file_put_contents(
-            $path . '/.conduit-isolation',
+            $path.'/.conduit-isolation',
             json_encode($isolationConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
         );
 
         // Create installation script
         $installScript = $this->templateManager->getTemplate('isolation/install.stub', $config);
-        file_put_contents($path . '/install.sh', $installScript);
-        chmod($path . '/install.sh', 0755);
+        file_put_contents($path.'/install.sh', $installScript);
+        chmod($path.'/install.sh', 0755);
 
-        // Create rollback script  
+        // Create rollback script
         $rollbackScript = $this->templateManager->getTemplate('isolation/rollback.stub', $config);
-        file_put_contents($path . '/rollback.sh', $rollbackScript);
-        chmod($path . '/rollback.sh', 0755);
+        file_put_contents($path.'/rollback.sh', $rollbackScript);
+        chmod($path.'/rollback.sh', 0755);
     }
 
     /**
@@ -131,20 +130,20 @@ class ScaffoldingService
      */
     private function generateCiCdWorkflows(array $config, string $path): void
     {
-        $workflowsDir = $path . '/.github/workflows';
+        $workflowsDir = $path.'/.github/workflows';
         mkdir($workflowsDir, 0755, true);
 
         // PR readiness workflow
         $prWorkflow = $this->templateManager->getTemplate('workflows/pr-readiness.yml.stub', $config);
-        file_put_contents($workflowsDir . '/pr-readiness.yml', $prWorkflow);
+        file_put_contents($workflowsDir.'/pr-readiness.yml', $prWorkflow);
 
         // Component testing workflow
         $testWorkflow = $this->templateManager->getTemplate('workflows/component-testing.yml.stub', $config);
-        file_put_contents($workflowsDir . '/component-testing.yml', $testWorkflow);
+        file_put_contents($workflowsDir.'/component-testing.yml', $testWorkflow);
 
         // Release automation workflow
         $releaseWorkflow = $this->templateManager->getTemplate('workflows/release-automation.yml.stub', $config);
-        file_put_contents($workflowsDir . '/release-automation.yml', $releaseWorkflow);
+        file_put_contents($workflowsDir.'/release-automation.yml', $releaseWorkflow);
     }
 
     /**
