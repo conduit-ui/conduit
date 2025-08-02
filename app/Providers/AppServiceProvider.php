@@ -106,7 +106,13 @@ class AppServiceProvider extends ServiceProvider
 
         // Register global component discovery
         $this->app->singleton(\App\Services\GlobalComponentDiscovery::class);
+        
+        // Register standalone component discovery
+        $this->app->singleton(\App\Services\StandaloneComponentDiscovery::class);
 
+        // Register security validator
+        $this->app->singleton(\App\Services\Security\ComponentSecurityValidator::class);
+        
         // Register component delegation service
         $this->app->singleton(\App\Services\ComponentDelegationService::class);
 

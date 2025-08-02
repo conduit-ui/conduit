@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\Security\ComponentSecurityValidator;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
@@ -9,10 +10,13 @@ use Symfony\Component\Process\Process;
 class ComponentDelegationService
 {
     private LoggerInterface $logger;
+    
+    private ComponentSecurityValidator $securityValidator;
 
-    public function __construct(LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger, ComponentSecurityValidator $securityValidator = null)
     {
         $this->logger = $logger;
+        $this->securityValidator = $securityValidator ?? new ComponentSecurityValidator();
     }
 
     /**
@@ -29,26 +33,26 @@ class ComponentDelegationService
             'options' => $options,
         ]);
 
-        // Build the delegation command
-        $delegationArgs = [$binaryPath, 'delegated', $command];
-
-        // Add positional arguments
-        foreach ($arguments as $arg) {
-            if ($arg !== null && $arg !== '') {
-                $delegationArgs[] = $arg;
+        try {
+            // Build secure command array
+            $delegationArgs = $this->securityValidator->buildSafeCommand(
+                $binaryPath,
+                $command,
+                $arguments,
+                $options
+            );
+        } catch (\InvalidArgumentException $e) {
+            $this->logger->error('Security validation failed for component delegation', [
+                'component' => $component['name'],
+                'command' => $command,
+                'error' => $e->getMessage(),
+            ]);
+            
+            // Return error code without exposing security details to user
+            if (app()->runningInConsole() && app()->bound('console')) {
+                app('console')->error('Invalid command or arguments provided');
             }
-        }
-
-        // Add options
-        foreach ($options as $key => $value) {
-            if ($value === true) {
-                // Boolean flag
-                $delegationArgs[] = "--{$key}";
-            } elseif ($value !== false && $value !== null && $value !== '') {
-                // Value option
-                $delegationArgs[] = "--{$key}";
-                $delegationArgs[] = $value;
-            }
+            return 1;
         }
 
         // Set environment variable to indicate delegation from conduit

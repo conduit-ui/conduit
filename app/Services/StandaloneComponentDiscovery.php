@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\Security\ComponentSecurityValidator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\Filesystem\Path;
@@ -18,8 +19,11 @@ class StandaloneComponentDiscovery
 
     private array $excludePatterns;
 
-    public function __construct()
+    private ComponentSecurityValidator $securityValidator;
+
+    public function __construct(ComponentSecurityValidator $securityValidator = null)
     {
+        $this->securityValidator = $securityValidator ?? new ComponentSecurityValidator();
         $this->componentPaths = [
             // Core components (ship with conduit)
             base_path('components/core'),
@@ -62,17 +66,36 @@ class StandaloneComponentDiscovery
             $componentDirs = glob($path.'/*', GLOB_ONLYDIR);
 
             foreach ($componentDirs as $componentDir) {
-                $componentName = basename($componentDir);
-                $binaryPath = $componentDir.'/'.$componentName;
+                try {
+                    $componentName = basename($componentDir);
+                    $binaryPath = $componentDir.'/'.$componentName;
 
-                // Check if component binary exists and is accessible
-                if (file_exists($binaryPath) && is_executable($binaryPath) && is_readable($binaryPath)) {
-                    $components->put($componentName, [
-                        'name' => $componentName,
-                        'path' => $componentDir,
-                        'binary' => $binaryPath,
-                        'commands' => $this->getComponentCommands($binaryPath),
-                    ]);
+                    // Validate component and binary paths
+                    $this->securityValidator->validateComponentPath($componentDir);
+                    $this->securityValidator->validateComponentName($componentName);
+                    $validatedBinaryPath = $this->securityValidator->validateBinaryPath($binaryPath);
+
+                    // Check if component binary exists and is accessible
+                    if (file_exists($validatedBinaryPath) && is_executable($validatedBinaryPath) && is_readable($validatedBinaryPath)) {
+                        // Additional integrity check
+                        $this->securityValidator->validateBinaryIntegrity($validatedBinaryPath);
+                        
+                        $components->put($componentName, [
+                            'name' => $componentName,
+                            'path' => $componentDir,
+                            'binary' => $validatedBinaryPath,
+                            'commands' => $this->getComponentCommands($validatedBinaryPath),
+                        ]);
+                    }
+                } catch (\InvalidArgumentException $e) {
+                    // Log security violation but continue discovery
+                    // This prevents a malicious component from breaking discovery
+                    if (app()->bound('log')) {
+                        app('log')->warning('Component discovery security check failed', [
+                            'component' => $componentName ?? 'unknown',
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
                 }
             }
         }
@@ -90,14 +113,18 @@ class StandaloneComponentDiscovery
      */
     private function getComponentCommands(string $binaryPath): array
     {
-        // Ensure we're using a safe path resolution
-        $binaryPath = Path::canonicalize($binaryPath);
         try {
-            $componentDir = dirname($binaryPath);
+            // Validate binary path first
+            $validatedBinaryPath = $this->securityValidator->validateBinaryPath($binaryPath);
+            
+            $componentDir = dirname($validatedBinaryPath);
             $configPath = $componentDir.'/config/commands.php';
 
             // Try to read published commands from component's config
             if (file_exists($configPath)) {
+                // Validate config path is within component directory
+                $this->securityValidator->validateComponentPath($configPath);
+                
                 $config = @include $configPath;
                 if (! is_array($config)) {
                     $config = [];
@@ -105,12 +132,30 @@ class StandaloneComponentDiscovery
                 $publishedCommands = $config['published'] ?? [];
 
                 if (! empty($publishedCommands)) {
-                    return $publishedCommands;
+                    // Validate each command name
+                    $validatedCommands = [];
+                    foreach ($publishedCommands as $cmd) {
+                        try {
+                            $validatedCommands[] = $this->securityValidator->validateCommandName($cmd);
+                        } catch (\InvalidArgumentException $e) {
+                            // Skip invalid command names
+                        }
+                    }
+                    return $validatedCommands;
                 }
             }
 
             // Fallback: parse list output but filter out dev commands
-            $output = shell_exec($binaryPath.' list --raw 2>/dev/null');
+            // Use Process instead of shell_exec for safety
+            $process = new \Symfony\Component\Process\Process([$validatedBinaryPath, 'list', '--raw']);
+            $process->setTimeout(5); // 5 second timeout
+            $process->run();
+            
+            if (!$process->isSuccessful()) {
+                return [];
+            }
+            
+            $output = $process->getOutput();
 
             if (! $output) {
                 return [];
@@ -143,7 +188,13 @@ class StandaloneComponentDiscovery
                 }
 
                 if (! $shouldExclude) {
-                    $commands[] = $command;
+                    try {
+                        // Validate command name before adding
+                        $validatedCommand = $this->securityValidator->validateCommandName($command);
+                        $commands[] = $validatedCommand;
+                    } catch (\InvalidArgumentException $e) {
+                        // Skip invalid command names
+                    }
                 }
             }
 
