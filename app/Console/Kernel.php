@@ -8,10 +8,20 @@ use LaravelZero\Framework\Kernel as ConsoleKernel;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\CommandNotFoundException;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class Kernel extends ConsoleKernel
 {
+    private const CORE_COMMANDS = [
+        'discover',
+        'install',
+        'uninstall',
+        'list:components',
+        'list',
+        'help',
+    ];
+
     /**
      * Define the application's command schedule.
      */
@@ -28,6 +38,31 @@ class Kernel extends ConsoleKernel
         $this->load(__DIR__.'/../Commands');
 
         require base_path('routes/console.php');
+
+        // Hide non-core commands
+        $commands = $this->getApplication()->all();
+        foreach ($commands as $command) {
+            $name = $command->getName();
+            // Hide command if not in core commands and not a dynamic delegation command
+            if (! in_array($name, self::CORE_COMMANDS) &&
+                $name !== 'dynamic-delegate' &&
+                ! str_contains($name, ':')) {
+                $command->setHidden(true);
+            }
+        }
+    }
+
+    protected function getDefaultInputDefinition()
+    {
+        $definition = parent::getDefaultInputDefinition();
+        $definition->addOption(new InputOption(
+            'all',
+            null,
+            InputOption::VALUE_NONE,
+            'Show all commands including non-core commands'
+        ));
+
+        return $definition;
     }
 
     /**
@@ -35,6 +70,14 @@ class Kernel extends ConsoleKernel
      */
     public function handle(InputInterface $input, OutputInterface $output): int
     {
+        // If --all flag is set, restore all commands
+        if ($input->getOption('all')) {
+            $commands = $this->getApplication()->all();
+            foreach ($commands as $command) {
+                $command->setHidden(false);
+            }
+        }
+
         try {
             return parent::handle($input, $output);
         } catch (CommandNotFoundException $e) {
