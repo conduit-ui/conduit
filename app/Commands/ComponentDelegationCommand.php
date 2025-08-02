@@ -39,7 +39,7 @@ class ComponentDelegationCommand extends Command
         return $this->delegateToComponent($component, $commandName, $args);
     }
 
-    private function delegateToComponent(array $component, string $command, array $args): int
+    private function delegateToComponent(array $component, string $commandName, array $args): int
     {
         $binaryPath = $component['binary'];
 
@@ -51,7 +51,7 @@ class ComponentDelegationCommand extends Command
         }
 
         // Build the delegation command
-        $delegationArgs = [$binaryPath, 'delegated', $command];
+        $delegationArgs = [$binaryPath, 'delegated', $commandName];
 
         // Add any additional arguments
         foreach ($args as $arg) {
@@ -62,6 +62,10 @@ class ComponentDelegationCommand extends Command
             $delegationArgs[] = $arg;
         }
 
+        // Create and run the process
+        $process = new Process($delegationArgs);
+        $process->setTimeout(60);
+        
         // Run the process and stream output
         $process->run(function ($type, $buffer) {
             echo $buffer;

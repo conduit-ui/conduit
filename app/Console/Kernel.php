@@ -68,7 +68,7 @@ class Kernel extends ConsoleKernel
     /**
      * Handle command not found by trying component delegation
      */
-    public function handle(InputInterface $input, OutputInterface $output): int
+    public function handle($input, $output = null)
     {
         // If --all flag is set, restore all commands
         if ($input->getOption('all')) {

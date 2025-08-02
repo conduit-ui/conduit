@@ -1,0 +1,22 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 3
+    paths:
+        - app
+        - config
+        - tests
+    
+    excludePaths:
+        - vendor
+        - bootstrap/cache (?)
+        - storage (?)
+        - app/Console/Kernel.php
+        - app/Commands/ComponentDelegationCommand.php
+        
+    ignoreErrors:
+        # Laravel Zero specific patterns
+        - '#Call to an undefined method Laravel\\Zero\\Exceptions\\ConsoleExceptionHandler::#'
+        - '#Parameter .* of method .* has no value type specified in iterable type array#'
+        
