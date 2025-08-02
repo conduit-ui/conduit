@@ -44,8 +44,9 @@ class ComponentDelegationCommand extends Command
         $binaryPath = $component['binary'];
 
         // Validate binary path exists and is executable
-        if (!file_exists($binaryPath) || !is_executable($binaryPath)) {
+        if (! file_exists($binaryPath) || ! is_executable($binaryPath)) {
             $this->error("Component binary is not accessible: {$binaryPath}");
+
             return 1;
         }
 
