@@ -172,6 +172,7 @@ trait RendersIssuePreviews
     {
         return array_map(function ($label) {
             $name = is_array($label) ? $label['name'] : (string) $label;
+
             return "<fg=yellow>{$name}</fg=yellow>";
         }, $labels);
     }

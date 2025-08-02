@@ -95,13 +95,14 @@ class ComponentService implements ComponentInterface
      */
     public function getGlobalSetting(string $key, mixed $default = null): mixed
     {
-        $configFile = $_SERVER['HOME'] . '/.conduit/config.json';
-        
-        if (!file_exists($configFile)) {
+        $configFile = $_SERVER['HOME'].'/.conduit/config.json';
+
+        if (! file_exists($configFile)) {
             return $default;
         }
 
         $config = json_decode(file_get_contents($configFile), true);
+
         return $config[$key] ?? $default;
     }
 
@@ -110,11 +111,11 @@ class ComponentService implements ComponentInterface
      */
     public function updateGlobalSetting(string $key, mixed $value): void
     {
-        $configDir = $_SERVER['HOME'] . '/.conduit';
-        $configFile = $configDir . '/config.json';
+        $configDir = $_SERVER['HOME'].'/.conduit';
+        $configFile = $configDir.'/config.json';
 
         // Ensure config directory exists
-        if (!is_dir($configDir)) {
+        if (! is_dir($configDir)) {
             mkdir($configDir, 0755, true);
         }
 
@@ -136,9 +137,9 @@ class ComponentService implements ComponentInterface
      */
     public function getGlobalSettings(): array
     {
-        $configFile = $_SERVER['HOME'] . '/.conduit/config.json';
-        
-        if (!file_exists($configFile)) {
+        $configFile = $_SERVER['HOME'].'/.conduit/config.json';
+
+        if (! file_exists($configFile)) {
             return [];
         }
 

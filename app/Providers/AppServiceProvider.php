@@ -25,6 +25,7 @@ use App\Services\VoiceNarrationService;
 use Illuminate\Support\Collection;
 // GitHub client imports - only used if package is installed
 use Illuminate\Support\ServiceProvider;
+
 // GitHub client connector imports disabled during refactoring
 // use JordanPartridge\GithubClient\Contracts\GithubConnectorInterface;
 // use JordanPartridge\GithubClient\GithubConnector;

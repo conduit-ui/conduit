@@ -432,8 +432,8 @@ class PrAnalysisService
 
     private function assessPerformanceRisk(array $metadata): string
     {
-        $totalChanges = (int)($metadata['additions'] ?? 0) + (int)($metadata['deletions'] ?? 0);
-        $changedFiles = (int)($metadata['changed_files'] ?? 0);
+        $totalChanges = (int) ($metadata['additions'] ?? 0) + (int) ($metadata['deletions'] ?? 0);
+        $changedFiles = (int) ($metadata['changed_files'] ?? 0);
 
         if ($totalChanges > 1000 || $changedFiles > 20) {
             return 'High';

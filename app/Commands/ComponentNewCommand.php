@@ -1056,11 +1056,11 @@ GITIGNORE;
     protected function automatePackagistSubmission(string $repoUrl): bool
     {
         $this->info('📦 Manual Packagist submission required:');
-        $this->line("   1. Visit: https://packagist.org/packages/submit");
+        $this->line('   1. Visit: https://packagist.org/packages/submit');
         $this->line("   2. Enter repository URL: {$repoUrl}");
         $this->line("   3. Click 'Check' then 'Submit'");
         $this->newLine();
-        
+
         return confirm('Have you submitted the package to Packagist?', default: false);
     }
 

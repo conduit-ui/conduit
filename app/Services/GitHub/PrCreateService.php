@@ -10,7 +10,6 @@ use App\Services\GitHub\Concerns\OpensExternalEditor;
 use App\Services\GitHub\Concerns\RendersIssueDetails;
 use App\Services\GitHub\Concerns\RendersIssuePreviews;
 use App\Services\GitHub\Concerns\ValidatesPrData;
-use JordanPartridge\GithubClient\Data\Pulls\PullRequestDetailDTO;
 use JordanPartridge\GithubClient\Data\Pulls\PullRequestDTO;
 use JordanPartridge\GithubClient\Facades\Github;
 

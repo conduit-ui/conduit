@@ -138,12 +138,13 @@ trait RendersIssueDetails
     }
 
     /**
-     * Format labels for display  
+     * Format labels for display
      */
     protected function formatLabels(array $labels): array
     {
         return array_map(function ($label) {
             $name = is_array($label) ? $label['name'] : (string) $label;
+
             return "<fg=yellow>{$name}</fg=yellow>";
         }, $labels);
     }
