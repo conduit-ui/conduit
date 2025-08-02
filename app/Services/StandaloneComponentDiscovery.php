@@ -21,9 +21,9 @@ class StandaloneComponentDiscovery
 
     private ComponentSecurityValidator $securityValidator;
 
-    public function __construct(ComponentSecurityValidator $securityValidator = null)
+    public function __construct(?ComponentSecurityValidator $securityValidator = null)
     {
-        $this->securityValidator = $securityValidator ?? new ComponentSecurityValidator();
+        $this->securityValidator = $securityValidator ?? new ComponentSecurityValidator;
         $this->componentPaths = [
             // Core components (ship with conduit)
             base_path('components/core'),
@@ -79,7 +79,7 @@ class StandaloneComponentDiscovery
                     if (file_exists($validatedBinaryPath) && is_executable($validatedBinaryPath) && is_readable($validatedBinaryPath)) {
                         // Additional integrity check
                         $this->securityValidator->validateBinaryIntegrity($validatedBinaryPath);
-                        
+
                         $components->put($componentName, [
                             'name' => $componentName,
                             'path' => $componentDir,
@@ -116,7 +116,7 @@ class StandaloneComponentDiscovery
         try {
             // Validate binary path first
             $validatedBinaryPath = $this->securityValidator->validateBinaryPath($binaryPath);
-            
+
             $componentDir = dirname($validatedBinaryPath);
             $configPath = $componentDir.'/config/commands.php';
 
@@ -124,7 +124,7 @@ class StandaloneComponentDiscovery
             if (file_exists($configPath)) {
                 // Validate config path is within component directory
                 $this->securityValidator->validateComponentPath($configPath);
-                
+
                 $config = @include $configPath;
                 if (! is_array($config)) {
                     $config = [];
@@ -141,6 +141,7 @@ class StandaloneComponentDiscovery
                             // Skip invalid command names
                         }
                     }
+
                     return $validatedCommands;
                 }
             }
@@ -150,11 +151,11 @@ class StandaloneComponentDiscovery
             $process = new \Symfony\Component\Process\Process([$validatedBinaryPath, 'list', '--raw']);
             $process->setTimeout(5); // 5 second timeout
             $process->run();
-            
-            if (!$process->isSuccessful()) {
+
+            if (! $process->isSuccessful()) {
                 return [];
             }
-            
+
             $output = $process->getOutput();
 
             if (! $output) {
