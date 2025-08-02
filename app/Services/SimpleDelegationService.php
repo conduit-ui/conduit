@@ -49,7 +49,6 @@ class SimpleDelegationService
             'process_args' => $processArgs,
         ]);
 
-
         try {
             // Execute using Laravel's Process facade
             $result = Process::run($processArgs);
