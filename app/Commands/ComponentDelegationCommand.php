@@ -43,23 +43,23 @@ class ComponentDelegationCommand extends Command
     {
         $binaryPath = $component['binary'];
 
+        // Validate binary path exists and is executable
+        if (!file_exists($binaryPath) || !is_executable($binaryPath)) {
+            $this->error("Component binary is not accessible: {$binaryPath}");
+            return 1;
+        }
+
         // Build the delegation command
-        $delegationArgs = ['delegated', $command];
+        $delegationArgs = [$binaryPath, 'delegated', $command];
 
         // Add any additional arguments
         foreach ($args as $arg) {
+            // Basic argument sanitization
+            if (empty(trim($arg))) {
+                continue;
+            }
             $delegationArgs[] = $arg;
         }
-
-        $this->line("🔗 Delegating to {$component['name']}: {$command}");
-
-        // Set environment variable to indicate delegation
-        $process = new Process($delegationArgs, null, [
-            'CONDUIT_CALLER' => '1',
-        ]);
-
-        $process->setWorkingDirectory(dirname($binaryPath));
-        $process->setTimeout(60);
 
         // Run the process and stream output
         $process->run(function ($type, $buffer) {
