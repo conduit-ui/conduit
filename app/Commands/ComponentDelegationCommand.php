@@ -65,7 +65,7 @@ class ComponentDelegationCommand extends Command
         // Create and run the process
         $process = new Process($delegationArgs);
         $process->setTimeout(60);
-        
+
         // Run the process and stream output
         $process->run(function ($type, $buffer) {
             echo $buffer;
