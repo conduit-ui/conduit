@@ -16,7 +16,6 @@
         "chillerlan/php-qrcode": "^5.0",
         "guzzlehttp/guzzle": "^7.8",
         "illuminate/database": "^11.45",
-        "jordanpartridge/conduit-interfaces": "dev-master",
         "jordanpartridge/github-client": "^2.9",
         "laravel-zero/framework": "^11.36.1",
         "symfony/filesystem": "^6.0|^7.0",
@@ -68,11 +67,5 @@
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
-    "bin": ["conduit"],
-    "repositories": {
-        "interfaces": {
-            "type": "path",
-            "url": "/Users/jordanpartridge/packages/conduit/conduit-components/interfaces"
-        }
-    }
+    "bin": ["conduit"]
 }

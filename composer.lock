@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6525945506cefa2945cdb374f67f8eb8",
+    "content-hash": "98fc067e5a561ad0996532867decb105",
     "packages": [
         {
             "name": "brick/math",
@@ -2102,69 +2102,6 @@
                 "source": "https://github.com/jolicode/php-os-helper/tree/v0.1.0"
             },
             "time": "2023-12-03T12:46:03+00:00"
-        },
-        {
-            "name": "jordanpartridge/conduit-interfaces",
-            "version": "dev-master",
-            "dist": {
-                "type": "path",
-                "url": "/Users/jordanpartridge/packages/conduit/conduit-components/interfaces",
-                "reference": "7680410b9e9b40a80b3df4a469701fcbba6c5b89"
-            },
-            "require": {
-                "illuminate/console": "^11.0",
-                "laravel-zero/framework": "^11.0",
-                "php": "^8.2"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.18",
-                "pestphp/pest": "^3.0",
-                "phpstan/phpstan": "^1.12"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "JordanPartridge\\ConduitInterfaces\\ServiceProvider"
-                    ]
-                },
-                "conduit": {
-                    "component": true,
-                    "commands": [
-                        "init"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "JordanPartridge\\ConduitInterfaces\\": "src/"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "JordanPartridge\\ConduitInterfaces\\Tests\\": "tests/"
-                }
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Jordan Partridge",
-                    "email": "jordan@partridge.rocks"
-                }
-            ],
-            "description": "A Conduit component for interfaces functionality",
-            "keywords": [
-                "cli",
-                "component",
-                "conduit",
-                "conduit-component",
-                "laravel"
-            ],
-            "transport-options": {
-                "relative": false
-            }
         },
         {
             "name": "jordanpartridge/github-client",
@@ -8744,9 +8681,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "jordanpartridge/conduit-interfaces": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
