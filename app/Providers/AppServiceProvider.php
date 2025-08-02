@@ -38,6 +38,12 @@ class AppServiceProvider extends ServiceProvider
         // Load globally installed components
         $this->loadGlobalComponents();
 
+        // Load components from development path
+        // $this->loadDevPathComponents();
+
+        // Load components from JSON registry
+        $this->registerOptionalComponents();
+
         // Register dynamic component delegation
         $this->registerComponentDelegation();
 
@@ -106,15 +112,15 @@ class AppServiceProvider extends ServiceProvider
 
         // Register global component discovery
         $this->app->singleton(\App\Services\GlobalComponentDiscovery::class);
-        
+
         // Register standalone component discovery
         $this->app->singleton(\App\Services\StandaloneComponentDiscovery::class);
 
-        // Register security validator
-        $this->app->singleton(\App\Services\Security\ComponentSecurityValidator::class);
-        
-        // Register component delegation service
-        $this->app->singleton(\App\Services\ComponentDelegationService::class);
+        // Register development path component discovery
+        $this->app->singleton(\App\Services\DevPathComponentDiscovery::class);
+
+        // Register simple delegation service
+        $this->app->singleton(\App\Services\SimpleDelegationService::class);
 
         // Register voice narration system
         $this->registerVoiceNarrationSystem();
@@ -232,7 +238,8 @@ class AppServiceProvider extends ServiceProvider
 
     private function registerDelegatedCommand(string $componentName, string $commandName, array $component): void
     {
-        $signature = "{$componentName}:{$commandName}";
+        // Build signature with component-specific options
+        $signature = $this->buildCommandSignature($componentName, $commandName);
 
         // Create a dynamic command class
         $commandClass = new class($signature, $component, $commandName) extends \LaravelZero\Framework\Commands\Command
@@ -247,7 +254,7 @@ class AppServiceProvider extends ServiceProvider
 
             public function __construct(string $signature, array $component, string $commandName)
             {
-                $this->signature = $signature.' {args?*}';  // Accept any arguments
+                $this->signature = $signature.' {args?* : Arguments to pass to the component}';  // Accept any arguments
                 $this->description = "Execute {$commandName} command via {$component['name']} component";
                 $this->component = $component;
                 $this->commandName = $commandName;
@@ -257,11 +264,10 @@ class AppServiceProvider extends ServiceProvider
 
             public function handle(): int
             {
-                // Get all arguments passed to the command
                 $arguments = [];
                 $options = [];
 
-                // Add positional arguments
+                // Collect arguments
                 $args = $this->argument('args') ?? [];
                 foreach ($args as $arg) {
                     if ($arg !== null && $arg !== '') {
@@ -269,22 +275,37 @@ class AppServiceProvider extends ServiceProvider
                     }
                 }
 
-                // Get all options
+                // Collect ALL options (exclude only framework-specific ones)
+                $frameworkOptions = ['help', 'silent', 'ansi', 'no-interaction', 'env'];
                 foreach ($this->options() as $key => $value) {
-                    if ($value !== false && $value !== null && $value !== '') {
+                    if (! in_array($key, $frameworkOptions) && $value !== false && $value !== null && $value !== '') {
                         $options[$key] = $value;
                     }
                 }
 
-                $this->line("🔗 Delegating to {$this->component['name']}: {$this->commandName}");
+                $this->line("🔗 Executing {$this->component['name']}: {$this->commandName}");
 
-                $delegationService = app(\App\Services\ComponentDelegationService::class);
+                $delegationService = app(\App\Services\SimpleDelegationService::class);
 
-                return $delegationService->delegate($this->component, $this->commandName, $arguments, $options);
+                return $delegationService->execute($this->component, $this->commandName, $arguments, $options);
             }
         };
 
         $this->commands([$commandClass]);
+    }
+
+    /**
+     * Build command signature - comprehensive common options
+     */
+    private function buildCommandSignature(string $componentName, string $commandName): string
+    {
+        // Comprehensive set of common CLI options that components might use
+        return "{$componentName}:{$commandName} {args?*}
+            {--type=} {--limit=} {--device=} {--volume=} {--shuffle} {--play} {--urls}
+            {--query=} {--song=} {--artist=} {--playlist=} {--album=} {--genre=}
+            {--format=} {--output=} {--file=} {--path=} {--config=} {--profile=}
+            {--force} {--dry-run} {--verbose} {--debug} {--quiet} {--json} {--csv}
+            {--all} {--recursive} {--follow} {--interactive} {--confirm}";
     }
 
     /**
@@ -310,6 +331,37 @@ class AppServiceProvider extends ServiceProvider
             // Fail gracefully - global components are optional
             if ($isVerbose) {
                 $this->app->make('log')->warning('Failed to load global components: '.$e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Load components from development path
+     */
+    private function loadDevPathComponents(): void
+    {
+        $isVerbose = in_array('-v', $_SERVER['argv'] ?? []) || in_array('--verbose', $_SERVER['argv'] ?? []);
+
+        try {
+            $discovery = $this->app->make(\App\Services\DevPathComponentDiscovery::class);
+
+            if (! $discovery->hasDevPath()) {
+                return;
+            }
+
+            $components = $discovery->discover();
+
+            foreach ($components as $component) {
+                $discovery->loadComponent($component);
+            }
+
+            if ($isVerbose && $components->count() > 0) {
+                $this->app->make('log')->info("Discovered {$components->count()} dev-path components");
+            }
+        } catch (\Exception $e) {
+            // Fail gracefully - dev components are optional
+            if ($isVerbose) {
+                $this->app->make('log')->warning('Failed to load dev-path components: '.$e->getMessage());
             }
         }
     }
