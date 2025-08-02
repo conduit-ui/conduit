@@ -38,6 +38,9 @@ class AppServiceProvider extends ServiceProvider
         // Load globally installed components
         $this->loadGlobalComponents();
 
+        // Register dynamic component delegation
+        $this->registerComponentDelegation();
+
         // Register core commands
         $this->commands([
             StatusCommand::class,
@@ -103,6 +106,15 @@ class AppServiceProvider extends ServiceProvider
 
         // Register global component discovery
         $this->app->singleton(\App\Services\GlobalComponentDiscovery::class);
+        
+        // Register standalone component discovery
+        $this->app->singleton(\App\Services\StandaloneComponentDiscovery::class);
+
+        // Register security validator
+        $this->app->singleton(\App\Services\Security\ComponentSecurityValidator::class);
+        
+        // Register component delegation service
+        $this->app->singleton(\App\Services\ComponentDelegationService::class);
 
         // Register voice narration system
         $this->registerVoiceNarrationSystem();
@@ -197,6 +209,82 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Exception $e) {
             // Fail gracefully - never break commands
         }
+    }
+
+    /**
+     * Register component delegation commands dynamically
+     */
+    private function registerComponentDelegation(): void
+    {
+        try {
+            $discovery = $this->app->make(\App\Services\StandaloneComponentDiscovery::class);
+            $components = $discovery->discover();
+
+            foreach ($components as $componentName => $component) {
+                foreach ($component['commands'] as $commandName) {
+                    $this->registerDelegatedCommand($componentName, $commandName, $component);
+                }
+            }
+        } catch (\Exception $e) {
+            // Fail gracefully - components are optional
+        }
+    }
+
+    private function registerDelegatedCommand(string $componentName, string $commandName, array $component): void
+    {
+        $signature = "{$componentName}:{$commandName}";
+
+        // Create a dynamic command class
+        $commandClass = new class($signature, $component, $commandName) extends \LaravelZero\Framework\Commands\Command
+        {
+            protected $signature;
+
+            protected $description;
+
+            private array $component;
+
+            private string $commandName;
+
+            public function __construct(string $signature, array $component, string $commandName)
+            {
+                $this->signature = $signature.' {args?*}';  // Accept any arguments
+                $this->description = "Execute {$commandName} command via {$component['name']} component";
+                $this->component = $component;
+                $this->commandName = $commandName;
+
+                parent::__construct();
+            }
+
+            public function handle(): int
+            {
+                // Get all arguments passed to the command
+                $arguments = [];
+                $options = [];
+
+                // Add positional arguments
+                $args = $this->argument('args') ?? [];
+                foreach ($args as $arg) {
+                    if ($arg !== null && $arg !== '') {
+                        $arguments[] = $arg;
+                    }
+                }
+
+                // Get all options
+                foreach ($this->options() as $key => $value) {
+                    if ($value !== false && $value !== null && $value !== '') {
+                        $options[$key] = $value;
+                    }
+                }
+
+                $this->line("🔗 Delegating to {$this->component['name']}: {$this->commandName}");
+
+                $delegationService = app(\App\Services\ComponentDelegationService::class);
+
+                return $delegationService->delegate($this->component, $this->commandName, $arguments, $options);
+            }
+        };
+
+        $this->commands([$commandClass]);
     }
 
     /**

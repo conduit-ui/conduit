@@ -66,7 +66,8 @@ class KnowFallbackCommand extends Command
             note('💡 If commands aren\'t working, try restarting your terminal or running:');
             note('composer global update jordanpartridge/conduit-knowledge');
 
-            return false;
+            // Exit early with failure since the know command should not be used
+            exit(Command::FAILURE);
         }
 
         if ($nonInteractive) {
