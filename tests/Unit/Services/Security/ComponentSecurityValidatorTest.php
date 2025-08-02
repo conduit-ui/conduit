@@ -12,7 +12,7 @@ class ComponentSecurityValidatorTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->validator = new ComponentSecurityValidator();
+        $this->validator = new ComponentSecurityValidator;
     }
 
     /** @test */
@@ -110,11 +110,11 @@ class ComponentSecurityValidatorTest extends TestCase
 
         foreach ($dangerousInputs as $input => $expected) {
             $result = $this->validator->sanitizeArgument($input);
-            
+
             // For simple comparison, just ensure it's the same as PHP's escapeshellarg
             $phpExpected = escapeshellarg($input);
             $this->assertEquals($phpExpected, $result, "Failed for input: $input");
-            
+
             // Additional safety check: ensure the result is safe to use in shell
             // by checking it's properly quoted when needed
             if (preg_match('/[^a-zA-Z0-9_\-.]/', $input)) {
@@ -131,7 +131,7 @@ class ComponentSecurityValidatorTest extends TestCase
     public function it_validates_component_paths_within_allowed_directories()
     {
         $basePath = base_path('components/core');
-        $validPath = $basePath . '/github';
+        $validPath = $basePath.'/github';
 
         $result = $this->validator->validateComponentPath($validPath);
         $this->assertStringStartsWith($basePath, $result);
@@ -173,13 +173,13 @@ class ComponentSecurityValidatorTest extends TestCase
     {
         // Create a test directory structure
         $testComponentDir = base_path('components/core/test-component');
-        $testBinary = $testComponentDir . '/test-component';
+        $testBinary = $testComponentDir.'/test-component';
 
         // Add test path to allowed paths
         $this->validator->addAllowedPath($testComponentDir);
 
         // Mock the binary existence check
-        if (!is_dir($testComponentDir)) {
+        if (! is_dir($testComponentDir)) {
             mkdir($testComponentDir, 0755, true);
         }
         touch($testBinary);
@@ -214,12 +214,12 @@ class ComponentSecurityValidatorTest extends TestCase
     public function it_validates_binary_integrity()
     {
         $testComponentDir = base_path('components/core/test-component');
-        $testBinary = $testComponentDir . '/test-component';
+        $testBinary = $testComponentDir.'/test-component';
 
         // Add test path to allowed paths
         $this->validator->addAllowedPath($testComponentDir);
 
-        if (!is_dir($testComponentDir)) {
+        if (! is_dir($testComponentDir)) {
             mkdir($testComponentDir, 0755, true);
         }
 
