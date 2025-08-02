@@ -151,4 +151,28 @@ trait RendersIssuePreviews
         $command->line("🔗 <href={$issue->html_url}>{$issue->html_url}</>");
         $command->newLine();
     }
+
+    /**
+     * Get issue status icon
+     */
+    protected function getIssueStatusIcon(array $issue): string
+    {
+        return match ($issue['state'] ?? 'open') {
+            'open' => '🟢',
+            'closed' => '🔴',
+            'draft' => '📝',
+            default => '⚪'
+        };
+    }
+
+    /**
+     * Format labels for display
+     */
+    protected function formatLabels(array $labels): array
+    {
+        return array_map(function ($label) {
+            $name = is_array($label) ? $label['name'] : (string) $label;
+            return "<fg=yellow>{$name}</fg=yellow>";
+        }, $labels);
+    }
 }

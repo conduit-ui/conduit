@@ -7,12 +7,12 @@ namespace App\Services\GitHub;
 use App\ValueObjects\CommentThread;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use JordanPartridge\GithubClient\GitHub;
+use JordanPartridge\GithubClient\Github;
 
 class CommentThreadService
 {
     public function __construct(
-        private readonly GitHub $github
+        private readonly Github $github
     ) {}
 
     public function getThreadsForPullRequest(string $owner, string $repo, int $prNumber): Collection
@@ -78,7 +78,7 @@ class CommentThreadService
         $resolutionMessage = "🔒 Thread resolved by @{$resolvedBy}";
 
         try {
-            $this->github->pullRequests()->createComment($owner, $repo, $number, $resolutionMessage);
+            $this->github->issues()->addComment($owner, $repo, $number, $resolutionMessage);
 
             return true;
         } catch (\Exception $e) {

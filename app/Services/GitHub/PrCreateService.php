@@ -11,6 +11,7 @@ use App\Services\GitHub\Concerns\RendersIssueDetails;
 use App\Services\GitHub\Concerns\RendersIssuePreviews;
 use App\Services\GitHub\Concerns\ValidatesPrData;
 use JordanPartridge\GithubClient\Data\Pulls\PullRequestDetailDTO;
+use JordanPartridge\GithubClient\Data\Pulls\PullRequestDTO;
 use JordanPartridge\GithubClient\Facades\Github;
 
 class PrCreateService implements PrCreateInterface
@@ -32,7 +33,7 @@ class PrCreateService implements PrCreateInterface
     /**
      * Create a new GitHub pull request
      */
-    public function createPullRequest(string $repo, array $prData): ?PullRequestDetailDTO
+    public function createPullRequest(string $repo, array $prData): ?PullRequestDTO
     {
         $parts = explode('/', $repo);
         if (count($parts) !== 2) {
@@ -74,7 +75,7 @@ class PrCreateService implements PrCreateInterface
             throw $e;
         } catch (\Exception $e) {
             // Log the error for debugging
-            logger()->error('Failed to create PR', [
+            \Log::error('Failed to create PR', [
                 'repo' => $repo,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -172,20 +173,9 @@ class PrCreateService implements PrCreateInterface
      */
     private function fetchRepositoryContributors(string $owner, string $repo): array
     {
-        try {
-            // Use github-client's connector for authenticated requests
-            $response = Github::getConnector()->get("/repos/{$owner}/{$repo}/contributors", [
-                'per_page' => 20,
-            ]);
-
-            if ($response->ok()) {
-                return $response->json() ?? [];
-            }
-
-            return [];
-        } catch (\Exception $e) {
-            return [];
-        }
+        // Contributors API not available in current github-client version
+        // Return empty array for now - reviewers will come from PR history
+        return [];
     }
 
     /**

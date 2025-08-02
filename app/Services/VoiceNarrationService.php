@@ -32,9 +32,7 @@ class VoiceNarrationService
     private function handleNarratorFailure(NarrationContent $content, \RuntimeException $e): void
     {
         // Log the error for debugging
-        if (function_exists('logger')) {
-            logger()->warning("Voice narrator failed: {$e->getMessage()}");
-        }
+        \Log::warning("Voice narrator failed: {$e->getMessage()}");
 
         // Fallback to basic text summary
         $fallbackText = $this->generateFallbackText($content);

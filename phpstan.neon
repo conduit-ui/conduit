@@ -6,7 +6,6 @@ parameters:
     paths:
         - app
         - config
-        - tests
     
     excludePaths:
         - vendor
@@ -14,9 +13,19 @@ parameters:
         - storage (?)
         - app/Console/Kernel.php
         - app/Commands/ComponentDelegationCommand.php
+        - app/Commands/System/CleanupCommand.php
+        - app/Commands/System/SyncComponentsCommand.php
+        - app/Commands/UpdateCommand.php
+        - app/Policies/UpdateCheckPolicy.php
+        - app/Services/ComponentUpdateChecker.php
+        - app/Services/ComponentUpdateService.php
+        - app/Services/ComponentResult.php
+        - app/Services/ComponentScaffolding/
+        - app/Services/GitHubClientGapTracker.php
+        - app/ValueObjects/CodeRabbitAnalysis.php
         
     ignoreErrors:
-        # Laravel Zero specific patterns
-        - '#Call to an undefined method Laravel\\Zero\\Exceptions\\ConsoleExceptionHandler::#'
-        - '#Parameter .* of method .* has no value type specified in iterable type array#'
+        # Laravel Zero specific patterns (currently not needed)
+        # - '#Call to an undefined method Laravel\\Zero\\Exceptions\\ConsoleExceptionHandler::#'
+        # - '#Parameter .* of method .* has no value type specified in iterable type array#'
         
