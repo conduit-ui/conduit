@@ -1,0 +1,60 @@
+name: Build PHAR
+
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [published]
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  phar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite
+          tools: composer:v2, box
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-8.2-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-8.2-
+
+      - name: Install Dependencies (Production Only)
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Build PHAR
+        run: |
+          php -d phar.readonly=off vendor/bin/box compile --no-parallel
+          chmod +x conduit.phar
+
+      - name: Test PHAR
+        run: |
+          ./conduit.phar --version
+          ./conduit.phar list
+
+      - name: Upload PHAR as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: conduit-phar
+          path: conduit.phar
+          retention-days: 30
+
+      - name: Upload PHAR to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: conduit.phar
+          token: ${{ secrets.GITHUB_TOKEN }}
