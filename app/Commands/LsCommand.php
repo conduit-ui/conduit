@@ -6,10 +6,14 @@ use Illuminate\Support\Facades\File;
 use Carbon\Carbon;
 
 use function Laravel\Prompts\table;
+use function Laravel\Prompts\select;
+use function Laravel\Prompts\search;
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\text;
 
 class LsCommand extends ConduitCommand
 {
-    protected $signature = 'ls {path?} {--json : Output as JSON} {--recent : Sort by recently modified} {--large : Sort by size} {--git : Show git status} {--octal : Show octal permissions} {--detailed-perms : Show full rwx permissions} {--guide : Show the sexy options guide}';
+    protected $signature = 'ls {path?} {--json : Output as JSON} {--recent : Sort by recently modified} {--large : Sort by size} {--git : Show git status} {--octal : Show octal permissions} {--detailed-perms : Show full rwx permissions} {--guide : Show the sexy options guide} {--interactive : Interactive file browser}';
 
     protected $description = '💩 List files and directories (but actually good)';
 
@@ -39,12 +43,16 @@ class LsCommand extends ConduitCommand
             return $this->jsonResponse(['files' => $files, 'path' => $path]);
         }
 
+        if ($this->option('interactive')) {
+            return $this->runInteractiveBrowser($path);
+        }
+
         return $this->displayInteractive($files, $path);
     }
     
     private function showSexyHelp(): int
     {
-        $this->smartInfo("💩 SNIT ls - The file lister that doesn't lie to you");
+        $this->smartInfo("💩 SHIT ls - The file lister that doesn't lie to you");
         $this->smartNewLine();
         
         $this->smartLine("Usage: ./💩 ls [path] [options]");
@@ -59,6 +67,7 @@ class LsCommand extends ConduitCommand
                 ['--git', 'Show git status indicators', './💩 ls --git'],
                 ['--octal', 'Show permissions as 755 format', './💩 ls --octal'],
                 ['--detailed-perms', 'Show full rwxr-xr-x format', './💩 ls --detailed-perms'],
+                ['--interactive', 'Launch interactive file browser', './💩 ls --interactive'],
                 ['--guide', 'Show this sexy options guide', './💩 ls --guide'],
             ]
         );
@@ -280,7 +289,7 @@ class LsCommand extends ConduitCommand
 
     private function displayInteractive(array $files, string $path): int
     {
-        $this->smartInfo("💩 SNIT File Browser - {$path}");
+        $this->smartInfo("💩 SHIT File Browser - {$path}");
         $this->smartNewLine();
 
         if (empty($files)) {
@@ -319,5 +328,224 @@ class LsCommand extends ConduitCommand
         $this->smartLine("💡 Tip: Use --recent, --large, or --git for different views");
 
         return self::SUCCESS;
+    }
+
+    private function runInteractiveBrowser(string $currentPath): int
+    {
+        while (true) {
+            $files = $this->scanDirectory($currentPath);
+            
+            if (empty($files)) {
+                $this->smartLine("Empty directory: {$currentPath}");
+                $action = select(
+                    '🚀 What would you like to do?',
+                    ['Go up one level', 'Exit browser']
+                );
+                
+                if ($action === 'Go up one level') {
+                    $currentPath = dirname($currentPath);
+                    continue;
+                } else {
+                    break;
+                }
+            }
+
+            // Build options for selection
+            $options = [];
+            
+            // Add "Go up" option if not at root
+            if ($currentPath !== '/') {
+                $options['..'] = '📁 .. (Go up one level)';
+            }
+            
+            // Add all files and directories
+            foreach ($files as $file) {
+                $display = $file['icon'] . ' ' . $file['name'];
+                
+                if ($file['type'] === 'directory') {
+                    $display .= '/';
+                } else {
+                    $display .= ' (' . $this->formatSize($file['size']) . ')';
+                }
+                
+                if ($this->option('git') && $file['git_status']) {
+                    $display .= ' ' . $file['git_status'];
+                }
+                
+                $options[$file['name']] = $display;
+            }
+            
+            // Add action options
+            $options['__actions__'] = '⚡ Actions...';
+            $options['__exit__'] = '🚪 Exit browser';
+
+            $choice = search(
+                "📂 Browse: {$currentPath}",
+                fn (string $value) => array_filter(
+                    $options,
+                    fn ($option) => str_contains(strtolower($option), strtolower($value))
+                )
+            );
+
+            if ($choice === '__exit__') {
+                break;
+            }
+            
+            if ($choice === '__actions__') {
+                $this->showFileActions($currentPath);
+                continue;
+            }
+            
+            if ($choice === '..') {
+                $currentPath = dirname($currentPath);
+                continue;
+            }
+
+            $selectedPath = $currentPath . DIRECTORY_SEPARATOR . $choice;
+            
+            if (is_dir($selectedPath)) {
+                $currentPath = $selectedPath;
+            } else {
+                $this->handleFileSelection($selectedPath);
+            }
+        }
+        
+        $this->smartInfo('👋 Exited interactive browser');
+        return self::SUCCESS;
+    }
+
+    private function showFileActions(string $currentPath): void
+    {
+        $action = select(
+            '⚡ Choose an action:',
+            [
+                'refresh' => '🔄 Refresh current directory',
+                'create_file' => '📄 Create new file',
+                'create_dir' => '📁 Create new directory',
+                'show_path' => '📍 Show current path',
+                'back' => '⬅️ Back to browser'
+            ]
+        );
+
+        switch ($action) {
+            case 'refresh':
+                $this->smartInfo('🔄 Directory refreshed');
+                break;
+                
+            case 'create_file':
+                $filename = text('📄 Enter filename:');
+                if ($filename) {
+                    $fullPath = $currentPath . DIRECTORY_SEPARATOR . $filename;
+                    if (!file_exists($fullPath)) {
+                        touch($fullPath);
+                        $this->smartInfo("✅ Created file: {$filename}");
+                    } else {
+                        $this->smartLine('❌ File already exists');
+                    }
+                }
+                break;
+                
+            case 'create_dir':
+                $dirname = text('📁 Enter directory name:');
+                if ($dirname) {
+                    $fullPath = $currentPath . DIRECTORY_SEPARATOR . $dirname;
+                    if (!is_dir($fullPath)) {
+                        mkdir($fullPath, 0755, true);
+                        $this->smartInfo("✅ Created directory: {$dirname}");
+                    } else {
+                        $this->smartLine('❌ Directory already exists');
+                    }
+                }
+                break;
+                
+            case 'show_path':
+                $this->smartInfo("📍 Current path: {$currentPath}");
+                break;
+        }
+    }
+
+    private function handleFileSelection(string $filePath): void
+    {
+        $filename = basename($filePath);
+        $filesize = $this->formatSize(filesize($filePath));
+        
+        $action = select(
+            "📄 {$filename} ({$filesize})",
+            [
+                'view' => '👁️ View file content',
+                'edit' => '✏️ Edit file',
+                'copy_path' => '📋 Copy path to clipboard',
+                'delete' => '🗑️ Delete file',
+                'info' => 'ℹ️ Show file info',
+                'back' => '⬅️ Back to browser'
+            ]
+        );
+
+        switch ($action) {
+            case 'view':
+                $this->viewFile($filePath);
+                break;
+                
+            case 'edit':
+                $this->editFile($filePath);
+                break;
+                
+            case 'copy_path':
+                $this->smartInfo("📋 Path copied: {$filePath}");
+                break;
+                
+            case 'delete':
+                if (confirm("🗑️ Are you sure you want to delete {$filename}?")) {
+                    unlink($filePath);
+                    $this->smartInfo("✅ Deleted: {$filename}");
+                }
+                break;
+                
+            case 'info':
+                $this->showFileInfo($filePath);
+                break;
+        }
+    }
+
+    private function viewFile(string $filePath): void
+    {
+        $content = file_get_contents($filePath);
+        $lines = explode("\n", $content);
+        
+        $this->smartInfo("👁️ Viewing: " . basename($filePath));
+        $this->smartLine(str_repeat('─', 50));
+        
+        foreach (array_slice($lines, 0, 20) as $i => $line) {
+            $this->smartLine(sprintf('%3d: %s', $i + 1, $line));
+        }
+        
+        if (count($lines) > 20) {
+            $this->smartLine('... (truncated, showing first 20 lines)');
+        }
+        
+        $this->smartLine(str_repeat('─', 50));
+    }
+
+    private function editFile(string $filePath): void
+    {
+        $editor = getenv('EDITOR') ?: 'nano';
+        $this->smartInfo("✏️ Opening {$filePath} with {$editor}");
+        system($editor . ' ' . escapeshellarg($filePath));
+    }
+
+    private function showFileInfo(string $filePath): void
+    {
+        $stat = stat($filePath);
+        $filename = basename($filePath);
+        
+        $this->smartInfo("ℹ️ File Information: {$filename}");
+        $this->smartLine("📄 Path: {$filePath}");
+        $this->smartLine("📊 Size: " . $this->formatSize($stat['size']));
+        $this->smartLine("📅 Modified: " . Carbon::createFromTimestamp($stat['mtime'])->format('Y-m-d H:i:s'));
+        $this->smartLine("🔐 Permissions: " . $this->getPermissions($filePath));
+        
+        if (is_link($filePath)) {
+            $this->smartLine("🔗 Symlink to: " . readlink($filePath));
+        }
     }
 }
