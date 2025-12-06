@@ -161,7 +161,7 @@ class AppServiceProvider extends ServiceProvider
         // Try multiple possible component file locations
         $possiblePaths = [
             config_path('components.json'),  // Development
-            $_SERVER['HOME'].'/.conduit/config/components.json',  // Global installation
+            ($_SERVER['HOME'] ?? $_SERVER['USERPROFILE']).'/.conduit/config/components.json',  // Global installation
             base_path('config/components.json'),  // Fallback
         ];
 

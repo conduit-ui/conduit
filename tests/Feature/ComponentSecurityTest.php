@@ -81,7 +81,7 @@ class ComponentSecurityTest extends TestCase
             // Should be within allowed directories
             $this->assertTrue(
                 str_starts_with($path, base_path('components/')) ||
-                str_starts_with($path, $_SERVER['HOME'].'/.conduit/components/'),
+                str_starts_with($path, ($_SERVER['HOME'] ?? $_SERVER['USERPROFILE']).'/.conduit/components/'),
                 "Component path should be within allowed directories: $path"
             );
         }

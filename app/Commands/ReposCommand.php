@@ -404,7 +404,7 @@ if (! function_exists('expanduser')) {
     function expanduser(string $path): string
     {
         if (str_starts_with($path, '~/')) {
-            return $_SERVER['HOME'].substr($path, 1);
+            return ($_SERVER['HOME'] ?? $_SERVER['USERPROFILE']).substr($path, 1);
         }
 
         return $path;
