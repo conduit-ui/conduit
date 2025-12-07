@@ -15,7 +15,7 @@ class ComponentSecurityValidatorTest extends TestCase
         $this->validator = new ComponentSecurityValidator;
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_validates_safe_component_names()
     {
         $validNames = [
@@ -32,7 +32,7 @@ class ComponentSecurityValidatorTest extends TestCase
         }
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_rejects_dangerous_component_names()
     {
         $dangerousNames = [
@@ -55,7 +55,7 @@ class ComponentSecurityValidatorTest extends TestCase
         }
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_validates_safe_command_names()
     {
         $validCommands = [
@@ -72,7 +72,7 @@ class ComponentSecurityValidatorTest extends TestCase
         }
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_rejects_dangerous_command_names()
     {
         $dangerousCommands = [
@@ -92,7 +92,7 @@ class ComponentSecurityValidatorTest extends TestCase
         }
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_sanitizes_arguments_properly()
     {
         // Test that dangerous characters are properly escaped
@@ -127,7 +127,7 @@ class ComponentSecurityValidatorTest extends TestCase
         }
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_validates_component_paths_within_allowed_directories()
     {
         $basePath = base_path('components/core');
@@ -137,7 +137,7 @@ class ComponentSecurityValidatorTest extends TestCase
         $this->assertStringStartsWith($basePath, $result);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_rejects_paths_outside_allowed_directories()
     {
         $dangerousPaths = [
@@ -153,7 +153,7 @@ class ComponentSecurityValidatorTest extends TestCase
         }
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_detects_path_traversal_attempts()
     {
         $pathTraversalAttempts = [
@@ -168,7 +168,7 @@ class ComponentSecurityValidatorTest extends TestCase
         }
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_builds_safe_command_arrays()
     {
         // Create a test directory structure
@@ -210,7 +210,7 @@ class ComponentSecurityValidatorTest extends TestCase
         rmdir($testComponentDir);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_validates_binary_integrity()
     {
         $testComponentDir = base_path('components/core/test-component');

@@ -3,7 +3,6 @@
 namespace App\Services\Security;
 
 use Illuminate\Support\Str;
-use Symfony\Component\Filesystem\Path;
 
 /**
  * Security validator for component system
@@ -34,9 +33,9 @@ class ComponentSecurityValidator
     public function __construct()
     {
         $this->allowedPaths = [
-            Path::canonicalize(base_path('components/core')),
-            Path::canonicalize(base_path('components/dev')),
-            Path::canonicalize($this->getHomeDirectory().'/.conduit/components'),
+            $this->canonicalizePath(base_path('components/core')),
+            $this->canonicalizePath(base_path('components/dev')),
+            $this->canonicalizePath($this->getHomeDirectory().'/.conduit/components'),
         ];
     }
 
@@ -48,7 +47,7 @@ class ComponentSecurityValidator
     public function validateComponentPath(string $path): string
     {
         // Canonicalize the path to resolve .. and .
-        $canonicalPath = Path::canonicalize($path);
+        $canonicalPath = $this->canonicalizePath($path);
 
         // Check if path is within allowed directories
         $isAllowed = false;
@@ -82,7 +81,7 @@ class ComponentSecurityValidator
      */
     public function validateBinaryPath(string $binaryPath): string
     {
-        $canonicalPath = Path::canonicalize($binaryPath);
+        $canonicalPath = $this->canonicalizePath($binaryPath);
 
         // Binary must be within component directory
         $componentDir = dirname($canonicalPath);
@@ -298,6 +297,47 @@ class ComponentSecurityValidator
      */
     public function addAllowedPath(string $path): void
     {
-        $this->allowedPaths[] = Path::canonicalize($path);
+        $this->allowedPaths[] = $this->canonicalizePath($path);
+    }
+
+    /**
+     * Canonicalize a path by resolving relative components
+     * Alternative to Symfony\Component\Filesystem\Path::canonicalize()
+     */
+    private function canonicalizePath(string $path): string
+    {
+        // Convert backslashes to forward slashes
+        $path = str_replace('\\', '/', $path);
+
+        // Split path into components
+        $parts = explode('/', $path);
+        $canonical = [];
+
+        foreach ($parts as $part) {
+            if ($part === '' || $part === '.') {
+                // Skip empty parts and current directory references
+                continue;
+            }
+
+            if ($part === '..') {
+                // Go up one directory
+                if (! empty($canonical)) {
+                    array_pop($canonical);
+                }
+            } else {
+                // Add the part to the canonical path
+                $canonical[] = $part;
+            }
+        }
+
+        // Reconstruct the path
+        $canonicalPath = implode('/', $canonical);
+
+        // Preserve absolute path indicator
+        if (str_starts_with($path, '/')) {
+            $canonicalPath = '/'.$canonicalPath;
+        }
+
+        return $canonicalPath;
     }
 }

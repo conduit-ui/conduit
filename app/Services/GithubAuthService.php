@@ -12,7 +12,7 @@ class GithubAuthService
     public function getToken(): ?string
     {
         // Strategy 1: Environment variable
-        $envToken = env('GITHUB_TOKEN');
+        $envToken = config('github.token');
         if (! empty($envToken)) {
             return $envToken;
         }
@@ -59,7 +59,7 @@ class GithubAuthService
      */
     public function getAuthStatus(): array
     {
-        $envToken = env('GITHUB_TOKEN');
+        $envToken = config('github.token');
         $ghToken = $this->getGitHubCliToken();
 
         return [

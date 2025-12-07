@@ -1,0 +1,93 @@
+name: Rector
+
+on:
+  pull_request:
+    branches: [master]
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  rector:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite
+          tools: composer:v2
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-8.2-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-8.2-
+
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Install Rector
+        run: composer require --dev rector/rector --no-update && composer update rector/rector
+
+      - name: Create Rector Config
+        run: |
+          cat > rector.php << 'EOF'
+          <?php
+
+          declare(strict_types=1);
+
+          use Rector\Config\RectorConfig;
+          use Rector\Set\ValueObject\LevelSetList;
+          use Rector\Set\ValueObject\SetList;
+
+          return static function (RectorConfig $rectorConfig): void {
+              $rectorConfig->paths([
+                  __DIR__ . '/app',
+                  __DIR__ . '/tests',
+              ]);
+
+              $rectorConfig->sets([
+                  LevelSetList::UP_TO_PHP_82,
+                  SetList::CODE_QUALITY,
+                  SetList::DEAD_CODE,
+                  SetList::EARLY_RETURN,
+                  SetList::TYPE_DECLARATION,
+                  SetList::PRIVATIZATION,
+              ]);
+
+              $rectorConfig->skip([
+                  __DIR__ . '/vendor',
+                  __DIR__ . '/bootstrap/cache',
+                  __DIR__ . '/storage',
+              ]);
+          };
+          EOF
+
+      - name: Run Rector
+        run: vendor/bin/rector process --dry-run --no-progress-bar
+
+      - name: Run Rector with Changes
+        if: github.event_name == 'workflow_dispatch'
+        run: vendor/bin/rector process --no-progress-bar
+
+      - name: Commit Rector Changes
+        if: github.event_name == 'workflow_dispatch'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'refactor: Apply Rector code modernization'
+          branch: ${{ github.head_ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

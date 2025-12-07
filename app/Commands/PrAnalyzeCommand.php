@@ -306,7 +306,7 @@ class PrAnalyzeCommand extends Command
 
     private function calculateSizeImpact(array $meta): string
     {
-        $total = $meta['additions'] + $meta['deletions'];
+        $total = (int) ($meta['additions'] ?? 0) + (int) ($meta['deletions'] ?? 0);
 
         return match (true) {
             $total < 100 => 'Small',
@@ -318,7 +318,7 @@ class PrAnalyzeCommand extends Command
 
     private function getSizeColor(array $meta): string
     {
-        $total = $meta['additions'] + $meta['deletions'];
+        $total = (int) ($meta['additions'] ?? 0) + (int) ($meta['deletions'] ?? 0);
 
         return match (true) {
             $total < 100 => 'green',

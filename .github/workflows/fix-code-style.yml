@@ -2,7 +2,7 @@ name: Fix Code Style
 
 on:
   pull_request:
-    branches: [master, main, develop]
+    branches: [master]
   workflow_dispatch: # Allow manual triggering
 
 jobs:

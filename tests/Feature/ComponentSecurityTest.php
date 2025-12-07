@@ -10,7 +10,7 @@ use Tests\TestCase;
 
 class ComponentSecurityTest extends TestCase
 {
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_prevents_command_injection_in_component_discovery()
     {
         $discovery = app(StandaloneComponentDiscovery::class);
@@ -25,7 +25,7 @@ class ComponentSecurityTest extends TestCase
         $this->assertFalse($components->has('evil; rm -rf /'));
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_prevents_command_injection_in_delegation()
     {
         $delegationService = app(ComponentDelegationService::class);
@@ -65,7 +65,7 @@ class ComponentSecurityTest extends TestCase
         $this->assertEquals(1, $exitCode);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_prevents_path_traversal_in_component_paths()
     {
         $discovery = app(StandaloneComponentDiscovery::class);
@@ -78,16 +78,29 @@ class ComponentSecurityTest extends TestCase
         foreach ($components as $component) {
             $path = $component['path'];
 
-            // Should be within allowed directories
+            // Should be within allowed directories (including global Conduit installation)
+            $allowedPaths = [
+                base_path('components/'),
+                $_SERVER['HOME'].'/.conduit/components/',
+                $_SERVER['HOME'].'/.composer/vendor/conduit-ui/conduit/components/', // Global installation
+            ];
+
+            $isAllowed = false;
+            foreach ($allowedPaths as $allowedPath) {
+                if (str_starts_with($path, $allowedPath)) {
+                    $isAllowed = true;
+                    break;
+                }
+            }
+
             $this->assertTrue(
-                str_starts_with($path, base_path('components/')) ||
-                str_starts_with($path, $_SERVER['HOME'].'/.conduit/components/'),
+                $isAllowed,
                 "Component path should be within allowed directories: $path"
             );
         }
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_sanitizes_user_arguments_before_delegation()
     {
         // Create a test component directory
@@ -133,7 +146,7 @@ class ComponentSecurityTest extends TestCase
         rmdir($testDir);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_validates_binary_permissions_before_execution()
     {
         $validator = app(ComponentSecurityValidator::class);
@@ -161,7 +174,7 @@ class ComponentSecurityTest extends TestCase
         rmdir($testDir);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_handles_malformed_component_commands_safely()
     {
         $discovery = app(StandaloneComponentDiscovery::class);

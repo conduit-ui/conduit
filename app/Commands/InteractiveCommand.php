@@ -2,7 +2,7 @@
 
 namespace App\Commands;
 
-use App\Services\ComponentManager;
+use App\Services\ComponentService;
 use LaravelZero\Framework\Commands\Command;
 
 /**
@@ -18,7 +18,7 @@ class InteractiveCommand extends Command
 
     protected $description = 'Manage global interactive mode setting';
 
-    public function handle(ComponentManager $manager): int
+    public function handle(ComponentService $manager): int
     {
         $action = $this->argument('action');
 
@@ -35,7 +35,7 @@ class InteractiveCommand extends Command
         };
     }
 
-    protected function enableInteractive(ComponentManager $manager): int
+    protected function enableInteractive(ComponentService $manager): int
     {
         $manager->updateGlobalSetting('interactive_mode', true);
 
@@ -46,7 +46,7 @@ class InteractiveCommand extends Command
         return Command::SUCCESS;
     }
 
-    protected function disableInteractive(ComponentManager $manager): int
+    protected function disableInteractive(ComponentService $manager): int
     {
         $manager->updateGlobalSetting('interactive_mode', false);
 
@@ -57,7 +57,7 @@ class InteractiveCommand extends Command
         return Command::SUCCESS;
     }
 
-    protected function showStatus(ComponentManager $manager): int
+    protected function showStatus(ComponentService $manager): int
     {
         $interactiveMode = $manager->getGlobalSetting('interactive_mode', true);
 

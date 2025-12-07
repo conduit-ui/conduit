@@ -30,7 +30,7 @@ class PrThreadsCommand extends Command
     public function handle(CommentThreadService $threadService): int
     {
         $prNumber = (int) $this->argument('number');
-        $repo = $this->detectCurrentRepo($this->option('repo'));
+        $repo = $this->option('repo') ?: $this->detectCurrentRepo();
 
         if (! $repo) {
             $this->error('❌ Repository not specified and not in a git repository');

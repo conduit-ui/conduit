@@ -22,10 +22,12 @@
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.6",
         "laravel-zero/phar-updater": "^1.3",
         "laravel/pint": "^1.18.3",
         "mockery/mockery": "^1.6.12",
-        "pestphp/pest": "^3.7.1"
+        "pestphp/pest": "^3.7.1",
+        "phpstan/phpstan": "^2.1"
     },
     "autoload": {
         "psr-4": {

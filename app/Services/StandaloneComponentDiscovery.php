@@ -92,7 +92,7 @@ class StandaloneComponentDiscovery
                     // This prevents a malicious component from breaking discovery
                     if (app()->bound('log')) {
                         app('log')->warning('Component discovery security check failed', [
-                            'component' => $componentName ?? 'unknown',
+                            'component' => $componentName ?: 'unknown',
                             'error' => $e->getMessage(),
                         ]);
                     }

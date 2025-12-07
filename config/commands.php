@@ -105,8 +105,8 @@ return [
     */
 
     'remove' => [
-        // Remove redundant spotify:play2 command (use spotify:play instead)
-        App\Commands\SpotifyClientPlayCommand::class,
+        // Remove commands that don't exist or are problematic
+        // App\Commands\SpotifyClientPlayCommand::class, // Class doesn't exist
     ],
 
 ];

@@ -9,7 +9,7 @@ trait RendersIssueDetails
     /**
      * Render markdown-like text with basic formatting
      */
-    protected function renderMarkdownText(Command $command, string $text): void
+    public function renderMarkdownText(Command $command, string $text): void
     {
         $lines = explode("\n", $text);
         $inCodeBlock = false;
@@ -135,5 +135,17 @@ trait RendersIssueDetails
         } else {
             $command->line('<fg=gray>'.str_repeat('─', $width).'</fg=gray>');
         }
+    }
+
+    /**
+     * Format labels for display
+     */
+    protected function formatLabels(array $labels): array
+    {
+        return array_map(function ($label) {
+            $name = is_array($label) ? $label['name'] : (string) $label;
+
+            return "<fg=yellow>{$name}</fg=yellow>";
+        }, $labels);
     }
 }
