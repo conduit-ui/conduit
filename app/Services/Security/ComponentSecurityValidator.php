@@ -51,9 +51,12 @@ class ComponentSecurityValidator
         $canonicalPath = Path::canonicalize($path);
 
         // Check if path is within allowed directories
+        // Normalize both paths to forward slashes for consistent comparison
+        $normalizedPath = str_replace('\\', '/', $canonicalPath);
         $isAllowed = false;
         foreach ($this->allowedPaths as $allowedPath) {
-            if (str_starts_with($canonicalPath, $allowedPath)) {
+            $normalizedAllowed = str_replace('\\', '/', $allowedPath);
+            if (str_starts_with($normalizedPath, $normalizedAllowed)) {
                 $isAllowed = true;
                 break;
             }
@@ -207,27 +210,37 @@ class ComponentSecurityValidator
             );
         }
 
-        if (! is_executable($binaryPath)) {
-            throw new \InvalidArgumentException(
-                'Binary is not executable: '.$binaryPath
-            );
-        }
+        // On Windows, is_executable() only checks file extension, not actual permissions
+        // So we check if the file is readable and has an executable extension or is a PHP file
+        if (PHP_OS_FAMILY === 'Windows') {
+            if (! is_readable($binaryPath)) {
+                throw new \InvalidArgumentException(
+                    'Binary is not readable: '.$binaryPath
+                );
+            }
+            // Windows considers files executable based on extension or if it's a script
+            $ext = strtolower(pathinfo($binaryPath, PATHINFO_EXTENSION));
+            $executableExtensions = ['exe', 'bat', 'cmd', 'com', 'php', 'phar', ''];
+            if (! in_array($ext, $executableExtensions) && ! is_executable($binaryPath)) {
+                throw new \InvalidArgumentException(
+                    'Binary is not executable: '.$binaryPath
+                );
+            }
+        } else {
+            if (! is_executable($binaryPath)) {
+                throw new \InvalidArgumentException(
+                    'Binary is not executable: '.$binaryPath
+                );
+            }
 
-        // Check file permissions (should not be world-writable)
-        $perms = fileperms($binaryPath);
-        if ($perms & 0002) {
-            throw new \InvalidArgumentException(
-                'Binary is world-writable, which is a security risk: '.$binaryPath
-            );
+            // Check file permissions on Unix (should not be world-writable)
+            $perms = fileperms($binaryPath);
+            if ($perms & 0002) {
+                throw new \InvalidArgumentException(
+                    'Binary is world-writable, which is a security risk: '.$binaryPath
+                );
+            }
         }
-
-        // Optionally check file ownership (uncomment if needed)
-        // $owner = fileowner($binaryPath);
-        // if ($owner !== getmyuid()) {
-        //     throw new \InvalidArgumentException(
-        //         'Binary is not owned by current user: ' . $binaryPath
-        //     );
-        // }
     }
 
     /**

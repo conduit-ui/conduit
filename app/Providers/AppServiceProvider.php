@@ -56,12 +56,6 @@ class AppServiceProvider extends ServiceProvider
             PrCommentsCommand::class,
             PrThreadsCommand::class,
             \App\Commands\PrAnalyzeCommand::class,
-            \App\Commands\GitHubClientGapAnalysisCommand::class,
-            \App\Commands\CodeRabbitStatusCommand::class,
-            \App\Commands\IssuesSpeakCommand::class,
-            \App\Commands\PrsSpeakCommand::class,
-            \App\Commands\CodeRabbitSpeakCommand::class,
-            \App\Commands\VoiceCommand::class,
             \App\Commands\ComponentConfigCommand::class,
             // \App\Commands\UpdateCommand::class, // Disabled - needs refactoring for new architecture
             // \App\Commands\System\CleanupCommand::class, // Disabled - uses old ComponentManager

@@ -134,7 +134,10 @@ class ComponentSecurityValidatorTest extends TestCase
         $validPath = $basePath.'/github';
 
         $result = $this->validator->validateComponentPath($validPath);
-        $this->assertStringStartsWith($basePath, $result);
+        // Normalize both paths to forward slashes for comparison (cross-platform)
+        $normalizedResult = str_replace('\\', '/', $result);
+        $normalizedBase = str_replace('\\', '/', $basePath);
+        $this->assertStringStartsWith($normalizedBase, $normalizedResult);
     }
 
     /** @test */
@@ -171,9 +174,9 @@ class ComponentSecurityValidatorTest extends TestCase
     /** @test */
     public function it_builds_safe_command_arrays()
     {
-        // Create a test directory structure
-        $testComponentDir = base_path('components/core/test-component');
-        $testBinary = $testComponentDir.'/test-component';
+        // Create a test directory structure with unique name
+        $testComponentDir = base_path('components/core/test-cmd-arrays');
+        $testBinary = $testComponentDir.'/test-cmd-arrays';
 
         // Add test path to allowed paths
         $this->validator->addAllowedPath($testComponentDir);
@@ -183,7 +186,9 @@ class ComponentSecurityValidatorTest extends TestCase
             mkdir($testComponentDir, 0755, true);
         }
         touch($testBinary);
-        chmod($testBinary, 0755);
+        if (PHP_OS_FAMILY !== 'Windows') {
+            chmod($testBinary, 0755);
+        }
 
         $result = $this->validator->buildSafeCommand(
             $testBinary,
@@ -193,17 +198,20 @@ class ComponentSecurityValidatorTest extends TestCase
         );
 
         // Check the command array is properly sanitized
-        $this->assertEquals($testBinary, $result[0]);
+        // Normalize path separators for cross-platform comparison
+        $this->assertEquals(str_replace('\\', '/', $testBinary), str_replace('\\', '/', $result[0]));
         $this->assertEquals('delegated', $result[1]);
         $this->assertEquals('test:command', $result[2]);
-        $this->assertEquals("'arg1'", $result[3]);
-        $this->assertEquals("'arg with space'", $result[4]);
-        $this->assertEquals("'arg;with;semicolon'", $result[5]);
+        // escapeshellarg() uses double quotes on Windows
+        $quote = PHP_OS_FAMILY === 'Windows' ? '"' : "'";
+        $this->assertEquals("{$quote}arg1{$quote}", $result[3]);
+        $this->assertEquals("{$quote}arg with space{$quote}", $result[4]);
+        $this->assertEquals("{$quote}arg;with;semicolon{$quote}", $result[5]);
         $this->assertEquals('--option1', $result[6]);
-        $this->assertEquals("'value1'", $result[7]);
+        $this->assertEquals("{$quote}value1{$quote}", $result[7]);
         $this->assertEquals('--flag', $result[8]);
         $this->assertEquals('--dangerous', $result[9]);
-        $this->assertEquals("'val;ue'", $result[10]);
+        $this->assertEquals("{$quote}val;ue{$quote}", $result[10]);
 
         // Clean up
         unlink($testBinary);
@@ -213,8 +221,8 @@ class ComponentSecurityValidatorTest extends TestCase
     /** @test */
     public function it_validates_binary_integrity()
     {
-        $testComponentDir = base_path('components/core/test-component');
-        $testBinary = $testComponentDir.'/test-component';
+        $testComponentDir = base_path('components/core/test-binary-integrity');
+        $testBinary = $testComponentDir.'/test-binary-integrity';
 
         // Add test path to allowed paths
         $this->validator->addAllowedPath($testComponentDir);
@@ -224,33 +232,41 @@ class ComponentSecurityValidatorTest extends TestCase
         }
 
         // Test non-existent binary
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Binary does not exist');
-        $this->validator->validateBinaryIntegrity($testBinary);
+        try {
+            $this->validator->validateBinaryIntegrity($testBinary);
+            $this->fail('Should have thrown exception for non-existent binary');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('does not exist', $e->getMessage());
+        }
 
         // Create binary
         touch($testBinary);
 
-        // Test non-executable binary
-        chmod($testBinary, 0644);
-        try {
-            $this->validator->validateBinaryIntegrity($testBinary);
-            $this->fail('Should have thrown exception for non-executable binary');
-        } catch (\InvalidArgumentException $e) {
-            $this->assertStringContainsString('not executable', $e->getMessage());
+        // Skip Unix-specific permission tests on Windows (chmod doesn't work the same)
+        if (PHP_OS_FAMILY !== 'Windows') {
+            // Test non-executable binary
+            chmod($testBinary, 0644);
+            try {
+                $this->validator->validateBinaryIntegrity($testBinary);
+                $this->fail('Should have thrown exception for non-executable binary');
+            } catch (\InvalidArgumentException $e) {
+                $this->assertStringContainsString('not executable', $e->getMessage());
+            }
+
+            // Test world-writable binary
+            chmod($testBinary, 0777);
+            try {
+                $this->validator->validateBinaryIntegrity($testBinary);
+                $this->fail('Should have thrown exception for world-writable binary');
+            } catch (\InvalidArgumentException $e) {
+                $this->assertStringContainsString('world-writable', $e->getMessage());
+            }
+
+            // Test valid binary
+            chmod($testBinary, 0755);
         }
 
-        // Test world-writable binary
-        chmod($testBinary, 0777);
-        try {
-            $this->validator->validateBinaryIntegrity($testBinary);
-            $this->fail('Should have thrown exception for world-writable binary');
-        } catch (\InvalidArgumentException $e) {
-            $this->assertStringContainsString('world-writable', $e->getMessage());
-        }
-
-        // Test valid binary
-        chmod($testBinary, 0755);
+        // On all platforms, a readable file should pass (Windows uses different permission model)
         $this->validator->validateBinaryIntegrity($testBinary); // Should not throw
 
         // Clean up

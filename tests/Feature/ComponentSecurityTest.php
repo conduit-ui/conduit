@@ -74,14 +74,19 @@ class ComponentSecurityTest extends TestCase
         // This should be caught by the security validator
         $components = $discovery->discover();
 
+        // Get home directory (cross-platform)
+        $home = getenv('HOME') ?: getenv('USERPROFILE') ?: sys_get_temp_dir();
+
         // Verify no components from outside allowed paths
         foreach ($components as $component) {
-            $path = $component['path'];
+            $path = str_replace('\\', '/', $component['path']);
+            $basePath = str_replace('\\', '/', base_path('components/'));
+            $homePath = str_replace('\\', '/', $home . '/.conduit/components/');
 
             // Should be within allowed directories
             $this->assertTrue(
-                str_starts_with($path, base_path('components/')) ||
-                str_starts_with($path, $_SERVER['HOME'].'/.conduit/components/'),
+                str_starts_with($path, $basePath) ||
+                str_starts_with($path, $homePath),
                 "Component path should be within allowed directories: $path"
             );
         }
@@ -90,6 +95,11 @@ class ComponentSecurityTest extends TestCase
     /** @test */
     public function it_sanitizes_user_arguments_before_delegation()
     {
+        // Skip on Windows - bash scripts don't work the same way
+        if (PHP_OS_FAMILY === 'Windows') {
+            $this->markTestSkipped('Test requires bash, skipped on Windows');
+        }
+
         // Create a test component directory
         $testDir = base_path('components/core/test');
         $testBinary = $testDir.'/test';
@@ -136,6 +146,11 @@ class ComponentSecurityTest extends TestCase
     /** @test */
     public function it_validates_binary_permissions_before_execution()
     {
+        // Skip on Windows - chmod doesn't work the same way
+        if (PHP_OS_FAMILY === 'Windows') {
+            $this->markTestSkipped('Unix permissions test, skipped on Windows');
+        }
+
         $validator = app(ComponentSecurityValidator::class);
 
         // Create test directory
@@ -164,6 +179,11 @@ class ComponentSecurityTest extends TestCase
     /** @test */
     public function it_handles_malformed_component_commands_safely()
     {
+        // Skip on Windows - bash scripts don't work the same way
+        if (PHP_OS_FAMILY === 'Windows') {
+            $this->markTestSkipped('Test requires bash, skipped on Windows');
+        }
+
         $discovery = app(StandaloneComponentDiscovery::class);
 
         // Create a test component with malicious command names in config
