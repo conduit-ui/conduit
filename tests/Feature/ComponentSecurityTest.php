@@ -81,7 +81,7 @@ class ComponentSecurityTest extends TestCase
         foreach ($components as $component) {
             $path = str_replace('\\', '/', $component['path']);
             $basePath = str_replace('\\', '/', base_path('components/'));
-            $homePath = str_replace('\\', '/', $home . '/.conduit/components/');
+            $homePath = str_replace('\\', '/', $home.'/.conduit/components/');
 
             // Should be within allowed directories
             $this->assertTrue(
