@@ -2,7 +2,6 @@
 
 namespace App\Commands\System;
 
-use App\Services\ComponentManager;
 use App\Services\JsonComponentRegistrar;
 use App\Services\ServiceProviderDetector;
 use Illuminate\Console\Command;
@@ -16,7 +15,6 @@ class SyncComponentsCommand extends Command
     protected $description = 'Sync component registry with installed packages (post-install hook)';
 
     public function handle(
-        ComponentManager $componentManager,
         JsonComponentRegistrar $registrar,
         ServiceProviderDetector $detector
     ): int {
