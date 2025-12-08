@@ -21,7 +21,6 @@ use App\Services\GitHub\CommentThreadService;
 use App\Services\GitHub\PrAnalysisService;
 use App\Services\GitHub\PrCreateService;
 use App\Services\GithubAuthService;
-use Illuminate\Support\Collection;
 // GitHub client imports - only used if package is installed
 use Illuminate\Support\ServiceProvider;
 use JordanPartridge\GithubClient\Contracts\GithubConnectorInterface;
