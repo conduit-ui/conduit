@@ -21,8 +21,6 @@ use App\Services\GitHub\CommentThreadService;
 use App\Services\GitHub\PrAnalysisService;
 use App\Services\GitHub\PrCreateService;
 use App\Services\GithubAuthService;
-use App\Services\VoiceNarrationService;
-use Illuminate\Support\Collection;
 // GitHub client imports - only used if package is installed
 use Illuminate\Support\ServiceProvider;
 use JordanPartridge\GithubClient\Contracts\GithubConnectorInterface;
@@ -56,12 +54,6 @@ class AppServiceProvider extends ServiceProvider
             PrCommentsCommand::class,
             PrThreadsCommand::class,
             \App\Commands\PrAnalyzeCommand::class,
-            \App\Commands\GitHubClientGapAnalysisCommand::class,
-            \App\Commands\CodeRabbitStatusCommand::class,
-            \App\Commands\IssuesSpeakCommand::class,
-            \App\Commands\PrsSpeakCommand::class,
-            \App\Commands\CodeRabbitSpeakCommand::class,
-            \App\Commands\VoiceCommand::class,
             \App\Commands\ComponentConfigCommand::class,
             // \App\Commands\UpdateCommand::class, // Disabled - needs refactoring for new architecture
             // \App\Commands\System\CleanupCommand::class, // Disabled - uses old ComponentManager
@@ -115,42 +107,6 @@ class AppServiceProvider extends ServiceProvider
 
         // Register component delegation service
         $this->app->singleton(\App\Services\ComponentDelegationService::class);
-
-        // Register voice narration system
-        $this->registerVoiceNarrationSystem();
-    }
-
-    /**
-     * Register the voice narration system with dependency injection
-     */
-    private function registerVoiceNarrationSystem(): void
-    {
-        // Register narrator collection factory
-        $this->app->singleton('voice.narrators', function ($app) {
-            $narrators = collect();
-
-            // Register available narrators
-            if (class_exists('App\Narrators\DefaultNarrator')) {
-                $narrators->put('default', $app->make('App\Narrators\DefaultNarrator'));
-            }
-
-            if (class_exists('App\Narrators\ClaudeNarrator')) {
-                $narrators->put('claude', $app->make('App\Narrators\ClaudeNarrator'));
-            }
-
-            // Add more narrators as they're implemented
-            // $narrators->put('dramatic', $app->make('App\Narrators\DramaticNarrator'));
-            // $narrators->put('sarcastic', $app->make('App\Narrators\SarcasticNarrator'));
-
-            return $narrators;
-        });
-
-        // Register VoiceNarrationService with narrator collection
-        $this->app->singleton(VoiceNarrationService::class, function ($app) {
-            return new VoiceNarrationService(
-                $app->make('voice.narrators')
-            );
-        });
     }
 
     /**
